@@ -29,7 +29,7 @@ def Dn_calc(m, x, nstop):
     
     if abs(z.imag) < 13.78*m.real**2 - 10.8*m.real + 3.9 :
         # upward recurrence
-        D[0] = np.cos(z)/np.sin(z)
+        D[0] = 1/math.tan(z)
         for n in range(1,nstop) :
             D[n] = 1/(n/z-D[n-1])-n/z
 

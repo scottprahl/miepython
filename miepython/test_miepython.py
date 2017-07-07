@@ -26,6 +26,38 @@ def run_tests():
 
 class MieTests(unittest.TestCase):
 
+    def test_log_derivatives(self):
+        m = 1.0
+        x = 1.0
+        nstop = 11
+        dn = miepython.Dn_calc(m,x,nstop)
+        self.assertAlmostEqual(dn[10].real, 9.95228198, delta=0.00001)
+
+        x = 62
+        m = 1.28 - 1.37j
+        nstop = 50
+        dn = miepython.Dn_calc(m,x,nstop)
+        self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
+        self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
+
+    def test_an_bn(self):
+        m = 1.5-1.1j
+        x = 2
+        a, b = miepython.Mie_An_Bn(m,x)
+        self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
+        self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
+        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
+        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
+
+        m = 1.1-25j
+        x = 2
+        a, b = miepython.Mie_An_Bn(m,x)
+        self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
+        self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
+        self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
+        self.assertAlmostEqual(b[1].imag,-0.236805417045, delta=0.0001)
+
+
     def test_bh_dielectric(self):
         m = 1.55
         lambdaa = 0.6328
