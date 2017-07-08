@@ -20,17 +20,14 @@ def run_tests():
        Runs several tests that test the mie code. All tests should return ok.
        If they don't, please contact the author.
     """
-    suite = unittest.TestLoader().loadTestsFromTestCase(low_level)
-    unittest.TextTestRunner().run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(non_absorbing)
-    unittest.TextTestRunner().run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(absorbing)
-    unittest.TextTestRunner().run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(small)
-    unittest.TextTestRunner().run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(conducting)
-    unittest.TextTestRunner().run(suite)
-    suite = unittest.TestLoader().loadTestsFromTestCase(angle_scattering)
+    loader = unittest.TestLoader()
+    suite = unittest.TestSuite()
+    suite.addTest(loader.loadTestsFromTestCase(low_level))
+    suite.addTest(loader.loadTestsFromTestCase(non_absorbing))
+    suite.addTest(loader.loadTestsFromTestCase(absorbing))
+    suite.addTest(loader.loadTestsFromTestCase(small))
+    suite.addTest(loader.loadTestsFromTestCase(conducting))
+    suite.addTest(loader.loadTestsFromTestCase(angle_scattering))
     unittest.TextTestRunner().run(suite)
 
 
