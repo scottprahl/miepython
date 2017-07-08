@@ -47,8 +47,8 @@ def Dn_calc(m, x, nstop):
     else :
         return Dn_downwards(z, nstop)    
         
-# calculate coefficients An & Bn needed for Mie calculations
-def Mie_An_Bn(m,x):
+# calculate coefficients An & Bn needed for mie calculations
+def mie_An_Bn(m,x):
 
     nstop = int(x + 4.05 * x**0.33333 + 2.0)+1
  
@@ -128,7 +128,7 @@ def small_mie(m,x):
     qback = 2.25*x4*abs(ahat1-bhat1-5*ahat2/3)**2
     return [qext, qsca, qabs, qback, g]
         
-# return list of Mie efficiencies and scattering anisotropy g
+# return list of mie efficiencies and scattering anisotropy g
 def mie(m, x):
     if m.real==0 and x < 0.1 :
         small_conducting_mie(m,x)
@@ -136,7 +136,7 @@ def mie(m, x):
     if m.real>0.0 and abs(m) * x < 0.1 :
         return small_mie(m,x)
 
-    a,b = Mie_An_Bn(m,x)    
+    a,b = mie_An_Bn(m,x)    
 
     nmax = len(a)
     n    = np.arange(1,nmax+1)
@@ -164,10 +164,10 @@ def mie(m, x):
     return [qext, qsca, qabs, qback, g]
     
 # calculate S1 and S2 arrays needed to find scattering function
-def Mie_S1_S2(m,x,mu_array):  
+def mie_S1_S2(m,x,mu):  
     nangles = len(mu)
     
-    a,b = Mie_An_Bn(m,x)
+    a,b = mie_An_Bn(m,x)
     nstop = len(a)
        
     S1 = np.zeros(nangles, dtype=complex)  
