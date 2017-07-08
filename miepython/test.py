@@ -239,30 +239,6 @@ class absorbing(unittest.TestCase):
         self.assertAlmostEqual(qback,0.123586468179818, delta=1e-7)
         self.assertAlmostEqual(g,    0.748905978948507, delta=1e-7)
 
-    #        S12_ref = (complex(-0.49958438416709694,-0.24032581667666403),
-    #                   complex(0.11666852712178288,0.051661382367147853))
-    #        S12 = mie.S12(-0.6)
-    #        self.assertLess(abs(S12_ref[0]-S12[0])/S12_ref[0], epsilon)
-    #        self.assertLess(abs(S12_ref[1]-S12[1])/S12_ref[1], epsilon)
-
-    #     def test_12_magnetic(self):
-    #         m = 1.6 - 1.4j
-    #         x = 4.0
-    #         qext, qsca, qabs, qback, g = miepython.mie(m,x)
-    # 
-    #         self.assertAlmostEqual(qext, 2.666558259429107, delta=1e-7)
-    #         self.assertAlmostEqual(qsca, 1.125546094688389, delta=1e-7)
-    #         self.assertAlmostEqual(qabs, 1.541012164740718, delta=1e-7)
-    #         self.assertAlmostEqual(qback,0.007245317404096, delta=1e-7)
-    #         self.assertAlmostEqual(g,    0.899559819378382, delta=1e-7)
-            
-
-    #        S12_ref = (complex(0.14683196954000932,-0.017479181764394575),
-    #                   complex(-0.12475414168001844,0.28120475717321358))
-    #        S12 = mie.S12(-0.6)
-    #        self.assertLess(abs(S12_ref[0]-S12[0])/S12_ref[0], epsilon)
-    #        self.assertLess(abs(S12_ref[1]-S12[1])/S12_ref[1], epsilon)
-
 class perfectly_reflecting(unittest.TestCase):
 
     def test_11_wiscombe_perfectly_reflecting(self):
@@ -270,7 +246,7 @@ class perfectly_reflecting(unittest.TestCase):
         x=0.099
         qext, qsca, qabs, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.000321, delta=1e-4)
-        self.assertAlmostEqual(g,   -0.397357, delta=1e-4)
+        self.assertAlmostEqual(g,   -0.397357, delta=1e-3)
 
         x=0.101
         qext, qsca, qabs, qback, g = miepython.mie(m,x)
@@ -310,24 +286,24 @@ class small(unittest.TestCase):
         self.assertAlmostEqual(qext, 0.103347, delta=1e-6)
         self.assertAlmostEqual(g,    0.000509, delta=1e-6)
 
-    #       m = 1e-10 - 1e10j
-    #       x=0.099
-    #       qext, qsca, qabs, qback, g = miepython.mie(m,x)
-    #       self.assertAlmostEqual(qext, 0.000321, delta=1e-6)
-    #       self.assertAlmostEqual(g,   -0.397357, delta=1e-6)
-    #       x=0.101
-    #       qext, qsca, qabs, qback, g = miepython.mie(m,x)
-    #       self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
-    #       self.assertAlmostEqual(g,   -0.397262, delta=1e-6)
+        m = 1e-10 - 1e10j
+        x=0.099
+        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qext, 0.000321, delta=1e-6)
+        self.assertAlmostEqual(g,   -0.397357, delta=1e-4)
+        x=0.101
+        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
+        self.assertAlmostEqual(g,   -0.397262, delta=1e-6)
 
         m = 0 - 1e10j
         x=0.099
         qext, qsca, qabs, qback, g = miepython.mie(m,x)
-        self.assertAlmostEqual(qext, 0.000321, delta=1e-5)
+        self.assertAlmostEqual(qext, 0.000321, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397357, delta=1e-4)
         x=0.101
         qext, qsca, qabs, qback, g = miepython.mie(m,x)
-        self.assertAlmostEqual(qext, 0.000348, delta=1e-5)
+        self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397262, delta=1e-4)  
 
 class angle_scattering(unittest.TestCase):

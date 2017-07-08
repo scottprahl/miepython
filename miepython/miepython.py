@@ -139,7 +139,6 @@ def mie(m, x):
         return small_mie(m,x)
 
     a,b = mie_An_Bn(m,x)
-    print(a)
 
     nmax = len(a)
     n    = np.arange(1,nmax+1)
