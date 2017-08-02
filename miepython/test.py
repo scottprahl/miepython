@@ -12,7 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 import unittest
 import numpy as np
-from . import miepython
+import miepython
 
 #class interface(unittest.TestCase):
 
@@ -52,13 +52,13 @@ class low_level(unittest.TestCase):
         m = 1.0
         x = 1.0
         nstop = 10
-        dn = miepython.Dn_calc(m,x,nstop)
+        dn = miepython.D_calc(m,x,nstop)
         self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
 
         x = 62
         m = 1.28 - 1.37j
         nstop = 50
-        dn = miepython.Dn_calc(m,x,nstop)
+        dn = miepython.D_calc(m,x,nstop)
         self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
         self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
 
@@ -66,7 +66,7 @@ class low_level(unittest.TestCase):
         m = 4.0/3.0
         x = 50
         a, b = miepython.mie_An_Bn(m,x)
-        print(a)
+#        print(a)
     #        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
     #        self.assertAlmostEqual(a[1].imag,-0.4990314856310943073, delta=0.00000001)
     #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
@@ -98,11 +98,10 @@ class non_absorbing(unittest.TestCase):
         lambdaa = 0.6328
         radius = 0.525
         x = 2*np.pi*radius/lambdaa
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
 
         self.assertAlmostEqual(qext, 3.10543, delta=0.00001)
         self.assertAlmostEqual(qsca, 3.10543, delta=0.00001)
-        self.assertAlmostEqual(qabs, 0.00000, delta=0.00001)
         self.assertAlmostEqual(qback,2.92534, delta=0.00001)
         self.assertAlmostEqual(g    ,0.63314, delta=0.00001)
 
@@ -111,14 +110,14 @@ class non_absorbing(unittest.TestCase):
 		# MIEV0 Test Case 7
         m=complex(0.75, 0.0)
         x=10.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.232265, delta=1e-6)
         self.assertAlmostEqual(g,    0.896473, delta=1e-6)
 
 		# MIEV0 Test Case 8
         m=complex(0.75, 0.0)
         x=1000.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 1.997908, delta=1e-6)
         self.assertAlmostEqual(g,    0.844944, delta=1e-6)
 
@@ -127,11 +126,10 @@ class non_absorbing(unittest.TestCase):
         lambdaa = 0.6328
         radius = 0.525
         x = 2*np.pi*radius/lambdaa
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
 
         self.assertAlmostEqual(qext, 2.86165188243, delta=1e-7)
         self.assertAlmostEqual(qsca, 1.66424911991, delta=1e-7)
-        self.assertAlmostEqual(qabs, 1.19740276252, delta=1e-7)
         self.assertAlmostEqual(qback,0.20599534080, delta=1e-7)
         self.assertAlmostEqual(g,    0.80128972639, delta=1e-7)
 
@@ -141,21 +139,21 @@ class absorbing(unittest.TestCase):
         #MIEV0 Test Case 9
         m=complex(1.33, -0.00001)
         x=1.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.093923, delta=1e-6)
         self.assertAlmostEqual(g,    0.184517, delta=1e-6)
 
         #MIEV0 Test Case 10
         m=complex(1.33, -0.00001)
         x=100.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.096594, delta=1e-6)
         self.assertAlmostEqual(g,    0.868959, delta=1e-6)
 
         #MIEV0 Test Case 11
         m=complex(1.33, -0.00001)
         x=10000.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(g,    0.907840, delta=1e-6)
         self.assertAlmostEqual(qsca, 1.723857, delta=1e-6)
 
@@ -164,21 +162,21 @@ class absorbing(unittest.TestCase):
         #MIEV0 Test Case 12
         m = 1.5-1j
         x = 0.055
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.000011, delta=1e-6)
         self.assertAlmostEqual(g,    0.000491, delta=1e-6)
 
         #MIEV0 Test Case 13
         m = 1.5-1j
         x = 0.056
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.000012, delta=1e-6)
         self.assertAlmostEqual(g,    0.000509, delta=1e-6)
 
         #MIEV0 Test Case 14
         m = 1.5-1j
         x = 1
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.6634538, delta=1e-6)
         self.assertAlmostEqual(g,    0.192136, delta=1e-6)
 
@@ -186,18 +184,16 @@ class absorbing(unittest.TestCase):
         m = 1.5-1j
         x = 100
         x=100.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 1.283697, delta=1e-3)
-        self.assertAlmostEqual(qabs, 0.813805, delta=1e-2)
         self.assertAlmostEqual(qext, 2.097502, delta=1e-2)
         self.assertAlmostEqual(g,    0.850252, delta=1e-3)
 
 #         #MIEV0 Test Case 16
 #         m = 1.5-1j
 #         x = 10000
-#         qext, qsca, qabs, qback, g = miepython.mie(m,x)
+#         qext, qsca, qback, g = miepython.mie(m,x)
 #         self.assertAlmostEqual(qsca, 1.236575, delta=1e-6)
-#         self.assertAlmostEqual(qabs, 0.767794, delta=1e-6)
 #         self.assertAlmostEqual(qext, 2.004368, delta=1e-6)
 #         self.assertAlmostEqual(g,    0.846309, delta=1e-6)
 
@@ -206,32 +202,31 @@ class absorbing(unittest.TestCase):
         #MIEV0 Test Case 17
         m = 10.0 - 10.0j
         x = 1.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.049405, delta=1e-6)
         self.assertAlmostEqual(g,   -0.110664, delta=1e-6)
 
         #MIEV0 Test Case 18
         m = 10.0 - 10.0j
         x = 100.0
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 1.836785, delta=1e-6)
         self.assertAlmostEqual(g,    0.556215, delta=1e-6)
 
 #         #MIEV0 Test Case 19
 #         m = 10.0 - 10.0j
 #         x = 10000.0
-#         qext, qsca, qabs, qback, g = miepython.mie(m,x)
+#         qext, qsca, qback, g = miepython.mie(m,x)
 #         self.assertAlmostEqual(qsca, 1.795393, delta=1e-6)
 #         self.assertAlmostEqual(g,    0.548194, delta=1e-6)
 
     def test_09_single_nonmagnetic(self):
         m = 1.5-0.5j
         x = 2.5
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
 
         self.assertAlmostEqual(qext, 2.562873497454734, delta=1e-7)
         self.assertAlmostEqual(qsca, 1.097071819088392, delta=1e-7)
-        self.assertAlmostEqual(qabs, 1.465801678366342, delta=1e-7)
         self.assertAlmostEqual(qback,0.123586468179818, delta=1e-7)
         self.assertAlmostEqual(g,    0.748905978948507, delta=1e-7)
 
@@ -242,34 +237,34 @@ class perfectly_reflecting(unittest.TestCase):
 		# MIEV0 Test Case 0
         m=0
         x=0.001
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 3.3333E-12, delta=1e-13)
 
 		# MIEV0 Test Case 1
         m=0
         x=0.099
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.000321, delta=1e-4)
         self.assertAlmostEqual(g,   -0.397357, delta=1e-3)
 
 		# MIEV0 Test Case 2
         m=0
         x=0.101
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 0.000348, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397262, delta=1e-6)
 
 		# MIEV0 Test Case 3
         m=0
         x=100
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.008102, delta=1e-6)
         self.assertAlmostEqual(g,    0.500926, delta=1e-6)
 
 		# MIEV0 Test Case 4
         m=0
         x=10000
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.000289, delta=1e-6)
         self.assertAlmostEqual(g,    0.500070, delta=1e-6)
 
@@ -279,44 +274,44 @@ class small(unittest.TestCase):
 		# MIEV0 Test Case 5
         m = 0.75
         x = 0.099
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000007, delta=1e-6)
         self.assertAlmostEqual(g,    0.001448, delta=1e-6)
 
 		# MIEV0 Test Case 6
         m = 0.75
         x=0.101
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000008, delta=1e-6)
         self.assertAlmostEqual(g,    0.001507, delta=1e-6)
 
         m = 1.5 -1j
         x = 0.055
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.101491, delta=1e-6)
         self.assertAlmostEqual(g,    0.000491, delta=1e-6)
         x=0.056
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.103347, delta=1e-6)
         self.assertAlmostEqual(g,    0.000509, delta=1e-6)
 
         m = 1e-10 - 1e10j
         x=0.099
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000321, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397357, delta=1e-4)
         x=0.101
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397262, delta=1e-6)
 
         m = 0 - 1e10j
         x=0.099
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000321, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397357, delta=1e-4)
         x=0.101
-        qext, qsca, qabs, qback, g = miepython.mie(m,x)
+        qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
         self.assertAlmostEqual(g,   -0.397262, delta=1e-4)  
 

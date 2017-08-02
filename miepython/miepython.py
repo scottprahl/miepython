@@ -1,12 +1,14 @@
 from __future__ import division
 import numpy as np
 
-# compute a logarithmic derivative using continued fractions
-def Lentz_Dn(z, nstop):
-
+def Lentz_Dn(z, N):
+    """ Compute the logarithmic derivative of the Ricatti-Bessel function of order N
+        with argument z using the continued fraction technique of Lentz, Appl. Opt.,
+        15, 668-671, (1976).
+    """
     zinv     =  2.0/z
-    alpha    =  (nstop+0.5) * zinv
-    aj       = -(nstop+1.5) * zinv
+    alpha    =  (N+0.5) * zinv
+    aj       = -(N+1.5) * zinv
     alpha_j1 = aj+1/alpha
     alpha_j2 = aj
     ratio    = alpha_j1/alpha_j2
@@ -20,42 +22,51 @@ def Lentz_Dn(z, nstop):
         zinv  *= -1
         runratio = ratio*runratio
 
-    return -nstop/z+runratio
+    return -N/z+runratio
 
-# downward recurrence
-def Dn_downwards(z, nstop):
-    D = np.zeros(nstop, dtype=complex)
-    temp = Lentz_Dn(z, nstop)
-    for n in range(nstop,0,-1) :
-        temp =  n/z - 1.0/(temp+n/z)
-        D[n-1] = temp
+def D_downwards(z, N):
+    """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
+        orders (from 0 to N) with argument z using the downwards recurrence relations
+    """
+    D = np.zeros(N, dtype=complex)
+    last_D = Lentz_Dn(z, N)
+    for n in range(N,0,-1) :
+        last_D =  n/z - 1.0/(last_D+n/z)
+        D[n-1] = last_D
     return D
 
-# upward recurrence
-def Dn_upwards(z, nstop):
-    D = np.zeros(nstop, dtype=complex)
-    D[0] = 0 #unused
+def D_upwards(z, N):
+    """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
+        orders (from 0 to N) with argument z using the upwards recurrence relations
+    """
+    D = np.zeros(N, dtype=complex)
     exp = np.exp(-2j*z)
     D[1] = -1/z + (1-exp)/((1-exp)/z-1j*(1+exp))
-    for n in range(2,nstop) :
+    for n in range(2,N) :
         D[n] = 1/(n/z-D[n-1])-n/z
     return D
 
-# return array of nstop logarithmic derivatives
-def Dn_calc(m, x, nstop):
+def D_calc(m, x, N):
+    """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
+        orders (from 0 to N) with argument z
+    """
     z = m * x
     if abs(z.imag) > 13.78*m.real**2 - 10.8*m.real + 3.9 :
-        return Dn_upwards(z, nstop)
+        return D_upwards(z, N)
     else :
-        return Dn_downwards(z, nstop)
+        return D_downwards(z, N)
 
-# calculate coefficients An & Bn needed for mie calculations
 def mie_An_Bn(m,x):
+    """ Compute the Mie coefficients A and B at all orders (from 0 to N) for
+        a sphere with complex index m and non-dimensional size x.  The length
+        of the returned arrays is chosen so that the error when the series are
+        summed is around 1e-6.
+    """
 
     nstop = int(x + 4.05 * x**0.33333 + 2.0)+1
 
     if m.real > 0.0 :
-        D = Dn_calc(m, x, nstop+1)
+        D = D_calc(m, x, nstop+1)
 
     a = np.zeros(nstop-1, dtype=complex)
     b = np.zeros(nstop-1, dtype=complex)
@@ -84,7 +95,10 @@ def mie_An_Bn(m,x):
     return [a,b]
 
 def small_conducting_mie(m,x):
-
+    """ Compute the efficiencies for total extinction, scattering, and backscattering
+        as well as scattering asymmetry for small spheres (x<0.1) and that is perfectly
+        conducting (m.re == 0)
+    """
     ahat1 = complex(0.0,2.0/3.0*(1.0-0.2*x**2))/complex(1.0-0.5*x**2,2.0/3.0*x**3)
     bhat1 = complex(0.0,(x**2-10.0)/30.0)/complex(1+0.5*x**2,-x**3/3.0)
     ahat2 = complex(0.0, x**2/30.)
@@ -92,19 +106,20 @@ def small_conducting_mie(m,x):
 
     qsca = x**4*(6*abs(ahat1)**2 + 6*abs(bhat1)**2 + 10*abs(ahat2)**2 + 10*abs(bhat2)**2)
     qext = qsca
-    qabs = 0
     g =  ahat1.imag * (ahat2.imag+bhat1.imag)
     g += bhat2.imag * (5.0/9.0*ahat2.imag+bhat1.imag)
     g += ahat1.real * bhat1.real
     g *= 6*x**4/qsca
 
-    qback1 = ahat1.real-bhat1.real
-    qback2 = ahat1.imag-bhat1.imag-(5.0/3.0)*(ahat2.imag+bhat2.imag)
-    qback = 6*x**2*(qback1**2+qback2**2)
+    qback = 3*np.pi*x**4 * abs(ahat1-bhat1-5/3*(ahat2-bhat2))**2
 
-    return [qext, qsca, qabs, qback, g]
+    return [qext, qsca, qback, g]
 
 def small_mie(m,x):
+    """ Compute the efficiencies for total extinction, scattering, and backscattering
+        as well as scattering asymmetry for small spheres (x<0.1) and has index of
+        refraction m
+    """
     m2 = m * m
     m4 = m2 * m2
     x2 = x * x
@@ -121,19 +136,20 @@ def small_mie(m,x):
     temp = ahat2+bhat1
     g = (ahat1*temp.conjugate()).real/T
 
-    qabs = 0
     qsca = qext
     if m.imag < 0 :
         qsca = 6*x4*T
-        qabs = qext-qsca
 
-    qback = 2.25*x4*abs(ahat1-bhat1-5*ahat2/3)**2
-    return [qext, qsca, qabs, qback, g]
+    qback = 3*np.pi*x4*abs(ahat1-bhat1-5*ahat2/3)**2
+    return [qext, qsca, qback, g]
 
-# return list of mie efficiencies and scattering anisotropy g
 def mie(m, x):
+    """Calculate the extinction efficiency qext, the scattering efficiency qsca,
+       the backscatter efficiency qback, and the anisotropy g for a sphere
+       with complex index of refraction m and size parameter x.
+    """
     if m.real==0 and x < 0.1 :
-        small_conducting_mie(m,x)
+        return small_conducting_mie(m,x)
 
     if m.real>0.0 and abs(m) * x < 0.1 :
         return small_mie(m,x)
@@ -146,12 +162,10 @@ def mie(m, x):
     x2   = x*x
 
     qext = 2*np.sum(cn * (a.real + b.real))/x2
-    qabs = 0
     qsca = qext
 
     if m.imag != 0:
         qsca = 2*np.sum(cn*(abs(a)**2 + abs(b)**2))/x2
-        qabs = qext-qsca
 
     qback = abs(np.sum( (-1)**n * cn * (a - b) ))**2/x2
 
@@ -163,15 +177,103 @@ def mie(m, x):
         asy2 = c2n[i] * (a[i] * b[i].conjugate()).real
         g += 4*(asy1 + asy2)/qsca/x2
 
-    return [qext, qsca, qabs, qback, g]
+    return [qext, qsca, qback, g]
 
-# calculate S1 and S2 arrays needed to find scattering function
+def small_mie_conducting_S1_S2(m,x,mu):
+    """Calculate the scattering amplitude functions S1 and S2 for a small
+       perfectly conducting (reflecting) sphere (x<0.1) at each cos(theta) angle
+       specified in the array mu.  The amplitude functions have been normalized
+       so that when integrated over all 4*pi solid angles, the integral will
+       be qext*pi*x**2.  The units are weird, sr**(-0.5)
+
+       Returns S1 and S2 at each angle in the array mu.
+    """
+
+    ahat1 = 2j/3*(1-0.2*x**2)/(1-0.5*x**2+2j/3*x**3)
+    bhat1 = 1j/3*(0.1*x**2-1)/(1+0.5*x**2-1j/3*x**3)
+    ahat2 = 1j/30*x**2
+    bhat2 = -1j*x**2/45
+
+    S1 = 1.5*x3*( ahat1 + bhat1*mu + 5/3*ahat2*mu + 5/3*bhat2*(2*mu**2-1) )
+    S2 = 1.5*x3*( bhat1 + ahat1*mu + 5/3*bhat2*mu + 5/3*ahat2*(2*mu**2-1) )
+
+    return [S1,S2]
+
+def small_mie_S1_S2(m,x,mu):
+    """Calculate the scattering amplitude functions S1 and S2 for a complex
+       index of refraction m, a size parameter x<0.1, at each cos(theta) angle
+       specified in the array mu.  The amplitude functions have been normalized
+       so that when integrated over all 4*pi solid angles, the integral will
+       be qext*pi*x**2.  The units are weird, sr**(-0.5)
+
+       Returns S1 and S2 at each angle in the array mu.
+    """
+    m2 = m * m
+    m4 = m2 * m2
+    x2 = x * x
+    x3 = x2 * x
+    x4 = x2 * x2
+
+    D=m2+2+(1-0.7*m2)*x2-(8*m4-385*m2+350)*x4/1400.0 + 2j*(m2-1)*x3*(1-0.1*x2)/3
+    ahat1 = 2j*(m2-1)/3*(1-0.1*x2+(4*m2+5)*x4/1400)/D
+    bhat1 = 1j*x2*(m2-1)/45 * (1+(2*m2-5)/70*x2)/(1-(2*m2-5)/30*x2)
+    ahat2 = 1j*x2*(m2-1)/15 * (1-x2/14)/(2*m2+3-(2*m2-7)/14*x2)
+
+    S1 = 1.5*x3*(ahat1 + bhat1*mu + 5/3*ahat2*mu         )
+    S2 = 1.5*x3*(bhat1 + ahat1*mu + 5/3*ahat2*(2*mu**2-1))
+
+    return [S1,S2]
+
 def mie_S1_S2(m,x,mu):
-    nangles = len(mu)
+    """Calculate the scattering amplitude functions S1 and S2 for a complex
+       index of refraction m, a size parameter x, at each cos(theta) angle
+       specified in the array mu.  The amplitude functions have been normalized
+       so that when integrated over all 4*pi solid angles, the integral will
+       be qext*pi*x**2.  The units are weird, sr**(-0.5)
+
+       Returns S1 and S2 at each angle in the array mu.
+    """
+
+    if m.real==0 and x < 0.1 :
+        return small_conducting_mie_S1_S2(m,x)
+
+    if m.real>0.0 and abs(m) * x < 0.1 :
+        return small_mie_S1_S2(m,x)
 
     a,b = mie_An_Bn(m,x)
-    nstop = len(a)
 
+    nangles = len(mu)
+    S1 = np.zeros(nangles, dtype=complex)
+    S2 = np.zeros(nangles, dtype=complex)
+
+    nstop = len(a)
+    for k in range(nangles):
+        pi_nm2 = 0
+        pi_nm1 = 1
+        for n in range(1,nstop):
+            tau_nm1 =  n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
+            S1[k] += (2*n+1)*(pi_nm1 * a[n-1] + tau_nm1 * b[n-1])/(n+1)/n
+            S2[k] += (2*n+1)*(tau_nm1 * a[n-1] + pi_nm1 * b[n-1])/(n+1)/n
+
+            temp = pi_nm1
+            pi_nm1 = ((2*n+1) * mu[k] * pi_nm1 - (n+1) * pi_nm2)/n
+            pi_nm2 = temp
+
+    return [S1,S2]
+
+def mie_S1_S2_norm(m,x,mu):
+    """Calculate the scattering amplitude functions S1 and S2 for a complex
+       index of refraction m, a size parameter x, at each cos(theta) angle
+       specified in the array mu.  The amplitude functions have been normalized
+       so that when integrated over all 4*pi solid angles, the integral will
+       be 1.  The units are weird, sr**(-0.5)
+
+       Returns S1 and S2 at each angle in the array mu.
+    """
+
+    a,b = mie_An_Bn(m,x)
+
+    nangles = len(mu)
     S1 = np.zeros(nangles, dtype=complex)
     S2 = np.zeros(nangles, dtype=complex)
 
@@ -187,4 +289,91 @@ def mie_S1_S2(m,x,mu):
             pi_nm1 = ((2*n+1) * mu[k] * pi_nm1 - (n+1) * pi_nm2)/n
             pi_nm2 = temp
 
+    # calculate pi * Qext * x**2
+    nstop = len(a)
+    n    = np.arange(1,nstop+1)
+    qextx2 = np.sqrt(2*np.pi*np.sum((2*n + 1) * (a.real + b.real)))
+
+    S1 /= qextx2
+    S2 /= qextx2
+
     return [S1,S2]
+
+def mie_cdf(m,x,num):
+    """Calculate the cumulative distribution function for unpolarized scattering
+       for exit angles ranging from 180 to 0 degrees.  The cosines are uniformly
+       distributed over -1 to 1.  Since this is a cumulative distribution
+       function, the maximum value should be 1.
+
+       Returns the mu and cdf
+    """
+    mu = np.linspace(-1,1,num)
+    s1, s2 = mie_S1_S2_norm(m,x,mu)
+
+    # need the extra 2pi because the function above is normalized 4pi steradians
+    s =  (abs(s1)**2+abs(s2)**2)/2
+
+    cdf = np.zeros(num)
+    sum = 0;
+    for i in range(num) :
+        sum += s[i] * 2 * np.pi * (2/num)
+        cdf[i] = sum
+
+    return mu, cdf
+
+def mie_mu_at_delta_cdf(m,x,num):
+    """Find the angles mu that correspond to uniform intervals on the cumulative
+       distribution function for unpolarized Mie scattering.
+
+       This is a brute force implementation that solves the problem by
+       calculating the CDF at many points and then scanning to find the
+       specific angles that correspond to uniform interval of the CDF.
+
+       Returns mu and cdf with points uniformly spaced across the cdf, e.g.,
+       cdf[i] = i/(num-1)  and mu[i] corresponds to this cdf value
+    """
+
+    big_num = 2000                  # large to work with x up to 10
+    big_mu, big_cdf = mie_cdf(m,x,big_num)
+    mu = np.empty(num)
+    cdf = np.empty(num)
+
+    mu[0] = -1                       # cos[180 degrees] is -1
+    cdf[0] = 0                       # initial cdf is zero
+
+    big_k = 0                        # index into big_cdf
+    for k in range(1,num-1):
+
+        target = k/(num-1)
+        while big_cdf[big_k] < target :
+            big_k += 1
+
+        delta     = big_cdf[big_k] - target
+        delta_cdf = big_cdf[big_k] - big_cdf[big_k-1]
+        delta_mu  = big_mu[big_k] - big_mu[big_k-1]
+
+        mu[k] = big_mu[big_k] - delta/delta_cdf*delta_mu   #interpolate
+        cdf[k] = target
+#       print(' mu[',k,']=% .5f'%mu[k],' cdf[',k,']=% .5f'%cdf[k], 'cdf=',big_cdf[big_k], fraction)
+
+    mu[num-1] = 1                    # cos[0 degrees] is 1
+    cdf[num-1] = 1                   # last cdf is one
+
+    return [mu,cdf]
+
+def generate_mie_costheta(mu_cdf):
+    """
+    Generate a new scattering angle from a uniformly spaced cumulative
+    distribution function (CDF). This is done by selecting a random interval
+    mu[i] to mu[i+1] and then return an angle uniformly distributed over
+    the interval.
+
+    returns the cosine of the scattering angle
+    """
+
+    num = len(mu_cdf)-1
+    index = int(np.random.random_sample()*num)
+    if index >= num :
+        index = num-1
+
+    return mu_cdf[index] + (mu_cdf[index+1]-mu_cdf[index]) * np.random.random_sample()
