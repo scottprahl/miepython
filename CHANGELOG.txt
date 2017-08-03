@@ -3,4 +3,25 @@ Change Log
 
 0.3.0 (07/07/2017)
 ------------------
-- First release
+- Update README again. [Work Prahl]
+- Update README. [Work Prahl]
+- More packaging issues. [Work Prahl]
+- Only include normalized scattering functions. [Work Prahl]
+- Tweak setup.py and add .gitignore. [Work Prahl]
+- Rename README. [Work Prahl]
+- Add small sphere calc for S1 and S2. [Work Prahl]
+- Label tests with MIEV0 cases. [Work Prahl]
+- Rename example. [Scott Prahl]
+- Add gold sphere example. [Scott Prahl]
+- Add a few example programs. [Scott Prahl]
+- Remove unused tests. [Scott Prahl]
+- Remove extraneous ; simplify test.py, add tests. [Scott Prahl]
+- Simplify test suite management. [Scott Prahl]
+- Rename awkward test_miepython to just test. [Scott Prahl]
+- Reorganize tests, add S1 & S2 test. [Scott Prahl]
+- Added capabilities. Barely working test suite. [Scott Prahl]
+- Add more tests that fail. [Scott Prahl]
+- Move files around. [Scott Prahl]
+- Add boilerplate files and start adding unit tests. [Scott Prahl]
+- Rename to miepython. [Scott Prahl]
+- Initial check in. [Work Prahl]

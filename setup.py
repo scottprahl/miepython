@@ -15,7 +15,7 @@ setup(
 	packages=['miepython'],
 	version='0.3.0',
 	description='Mie scattering of a plane wave by a sphere',
-	url='http://omlc.org/software/mie/',  
+	url='https://github.com/scottprahl/miepython.git',  
 	author='Scott Prahl',
 	author_email='scott.prahl@oit.edu',
 	license='MIT',
