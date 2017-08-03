@@ -194,9 +194,15 @@ def small_mie_conducting_S1_S2(m,x,mu):
     ahat2 = 1j/30*x**2
     bhat2 = -1j*x**2/45
 
+
     S1 = 1.5*x3*( ahat1 + bhat1*mu + 5/3*ahat2*mu + 5/3*bhat2*(2*mu**2-1) )
     S2 = 1.5*x3*( bhat1 + ahat1*mu + 5/3*bhat2*mu + 5/3*ahat2*(2*mu**2-1) )
 
+    qext = x**4*(6*abs(ahat1)**2 + 6*abs(bhat1)**2 + 10*abs(ahat2)**2 + 10*abs(bhat2)**2)
+    norm = np.sqrt(qext*np.pi*x**2)
+    S1 /= norm
+    S2 /= norm
+    
     return [S1,S2]
 
 def small_mie_S1_S2(m,x,mu):
@@ -222,46 +228,15 @@ def small_mie_S1_S2(m,x,mu):
     S1 = 1.5*x3*(ahat1 + bhat1*mu + 5/3*ahat2*mu         )
     S2 = 1.5*x3*(bhat1 + ahat1*mu + 5/3*ahat2*(2*mu**2-1))
 
+    #norm = sqrt(qext*pi*x**2)
+    norm = np.sqrt(np.pi* 6*x**3*(ahat1+bhat1+5*ahat2/3).real)
+    S1 /= norm
+    S2 /= norm
+
     return [S1,S2]
+
 
 def mie_S1_S2(m,x,mu):
-    """Calculate the scattering amplitude functions S1 and S2 for a complex
-       index of refraction m, a size parameter x, at each cos(theta) angle
-       specified in the array mu.  The amplitude functions have been normalized
-       so that when integrated over all 4*pi solid angles, the integral will
-       be qext*pi*x**2.  The units are weird, sr**(-0.5)
-
-       Returns S1 and S2 at each angle in the array mu.
-    """
-
-    if m.real==0 and x < 0.1 :
-        return small_conducting_mie_S1_S2(m,x)
-
-    if m.real>0.0 and abs(m) * x < 0.1 :
-        return small_mie_S1_S2(m,x)
-
-    a,b = mie_An_Bn(m,x)
-
-    nangles = len(mu)
-    S1 = np.zeros(nangles, dtype=complex)
-    S2 = np.zeros(nangles, dtype=complex)
-
-    nstop = len(a)
-    for k in range(nangles):
-        pi_nm2 = 0
-        pi_nm1 = 1
-        for n in range(1,nstop):
-            tau_nm1 =  n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            S1[k] += (2*n+1)*(pi_nm1 * a[n-1] + tau_nm1 * b[n-1])/(n+1)/n
-            S2[k] += (2*n+1)*(tau_nm1 * a[n-1] + pi_nm1 * b[n-1])/(n+1)/n
-
-            temp = pi_nm1
-            pi_nm1 = ((2*n+1) * mu[k] * pi_nm1 - (n+1) * pi_nm2)/n
-            pi_nm2 = temp
-
-    return [S1,S2]
-
-def mie_S1_S2_norm(m,x,mu):
     """Calculate the scattering amplitude functions S1 and S2 for a complex
        index of refraction m, a size parameter x, at each cos(theta) angle
        specified in the array mu.  The amplitude functions have been normalized
@@ -277,6 +252,7 @@ def mie_S1_S2_norm(m,x,mu):
     S1 = np.zeros(nangles, dtype=complex)
     S2 = np.zeros(nangles, dtype=complex)
 
+    nstop = len(a)
     for k in range(nangles):
         pi_nm2 = 0
         pi_nm1 = 1
@@ -289,13 +265,13 @@ def mie_S1_S2_norm(m,x,mu):
             pi_nm1 = ((2*n+1) * mu[k] * pi_nm1 - (n+1) * pi_nm2)/n
             pi_nm2 = temp
 
-    # calculate pi * Qext * x**2
+    # calculate norm = sqrt(pi * Qext * x**2)
     nstop = len(a)
     n    = np.arange(1,nstop+1)
-    qextx2 = np.sqrt(2*np.pi*np.sum((2*n + 1) * (a.real + b.real)))
+    norm = np.sqrt(2*np.pi*np.sum((2*n + 1) * (a.real + b.real)))
 
-    S1 /= qextx2
-    S2 /= qextx2
+    S1 /= norm
+    S2 /= norm
 
     return [S1,S2]
 
@@ -308,14 +284,14 @@ def mie_cdf(m,x,num):
        Returns the mu and cdf
     """
     mu = np.linspace(-1,1,num)
-    s1, s2 = mie_S1_S2_norm(m,x,mu)
+    s1, s2 = mie_S1_S2(m,x,mu)
 
-    # need the extra 2pi because the function above is normalized 4pi steradians
     s =  (abs(s1)**2+abs(s2)**2)/2
 
     cdf = np.zeros(num)
     sum = 0;
     for i in range(num) :
+        # need the extra 2pi because scattering is normalized over 4pi steradians
         sum += s[i] * 2 * np.pi * (2/num)
         cdf[i] = sum
 

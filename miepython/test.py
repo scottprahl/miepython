@@ -323,8 +323,11 @@ class angle_scattering(unittest.TestCase):
         theta = np.arange(0,181,30)
         mu = np.cos(theta * np.pi/180)
 
+        qext, qsca, qback, g = miepython.mie(m,x)
         S1, S2 = miepython.mie_S1_S2(m,x,mu)
-
+        S1 *= np.sqrt(np.pi*x**2*qext)
+        S2 *= np.sqrt(np.pi*x**2*qext)
+        
         self.assertAlmostEqual(S1[0].real, 0.584080, delta=1e-6)
         self.assertAlmostEqual(S1[0].imag, 0.190515, delta=1e-6)
         self.assertAlmostEqual(S2[0].real, 0.584080, delta=1e-6)
