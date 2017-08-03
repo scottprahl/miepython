@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+0.3.2 (07/07/2017)
+------------------
+- Fix examples so they work. [Work Prahl]
+
+0.3.1 (07/07/2017)
+------------------
+- Bump version. [Work Prahl]
+- Add functions to __init__.py. [Work Prahl]
+
 0.3.0 (07/07/2017)
 ------------------
 - Update README again. [Work Prahl]

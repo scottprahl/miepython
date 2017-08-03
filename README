@@ -6,24 +6,21 @@ Usage
 --------------
 For examples and use cases, see test folder
 
-Installation
+Installation via pip
 --------------
-First, clone (or download) this repository and cd into it:
+   pip install miepython
 
+Installation via github
+--------------
+Clone repository
    git clone https://github.com/scottprahl/miepython.git
-   cd miepython
 
-Then, install miepython via pip (or use just setuptools):
-
-   pip install .                    #using pip
-   python setup.py install          #using just setuptools
+Then, add the miepython directory to your PYTHONPATH or install using pip
+   pip install miepython
 
 To uninstall:
-
-pip uninstall miepython
-
-To use miepython without installation, add the miepython directory to your PYTHONPATH
-
+--------------
+   pip uninstall miepython
 
 Dependencies
 --------------
