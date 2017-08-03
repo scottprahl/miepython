@@ -8,13 +8,13 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from setuptools import setup
+from distutils.core import setup
 
 setup(
 	name='miepython',
+	packages=['miepython'],
 	version='0.3.0',
 	description='Mie scattering of a plane wave by a sphere',
-	long_description=read('README.md'),
 	url='http://omlc.org/software/mie/',  
 	author='Scott Prahl',
 	author_email='scott.prahl@oit.edu',
@@ -24,10 +24,9 @@ setup(
 		'License :: OSI Approved :: MIT License',
 		'Intended Audience :: Science/Research'
 		'Programming Language :: Python :: 3.5',
-		'Topic :: Scientific/Engineering :: Physics",
+		'Topic :: Scientific/Engineering :: Physics',
 	],
-	keywords='mie scattering rainbow droplet',
-	packages=['miepython'],
+	keywords=['mie', 'scattering', 'rainbow', 'droplet'],
 	install_requires=['numpy'],
 	test_suite='nose.collector',
 	tests_require=['nose', 'nose-cover3', 'matplotlib', 'numpy'],
