@@ -19,7 +19,7 @@ m=(1+5.666959820E-1/(1-5.084151894E-3/lam**2)+1.731900098E-1/(1-1.818488474E-2/l
 qqsca = np.zeros(num)
 
 for i in range(num) :
-    qext, qsca, qabs, qback, g = miepython.mie(m[i],x[i])
+    qext, qsca, qback, g = miepython.mie(m[i],x[i])
     qqsca[i]=qsca*np.pi*radius**2
     
 plt.plot(lam*1000,qqsca)

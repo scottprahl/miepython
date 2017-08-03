@@ -19,7 +19,7 @@ m=np.sqrt(1+1.03961212/(1-0.00600069867/lam**2)+0.231792344/(1-0.0200179144/lam*
 qqsca = np.zeros(num)
 
 for i in range(num) :
-    qext, qsca, qabs, qback, g = miepython.mie(m[i],x[i])
+    qext, qsca, qback, g = miepython.mie(m[i],x[i])
     qqsca[i]=qsca
     
 plt.plot(lam*1000,qqsca)
