@@ -1,6 +1,6 @@
 miepython
 ==============
-miepython is a Python module to calculate light scattering of solid spheres. Mie theory is used, following the procedure in given by Wiscombe http://opensky.ucar.edu/islandora/object/technotes:232
+miepython is a Python module to calculate light scattering of solid spheres. Mie theory is used, following the procedure in given by Wiscombe <http://opensky.ucar.edu/islandora/object/technotes:232>
 
 
 Usage
