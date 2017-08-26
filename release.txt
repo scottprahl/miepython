@@ -3,12 +3,18 @@ Releasing a new version
 # versioning
 update the version in setup.py
 update CHANGELOG.txt
-> git --tag v0.0.0
-> git commit -a -m 'update CHANGELOG.txt and version'
-> git push origin v0.0.0
+
+> git tag v0.0.0
+> git commit -m 'update recent changes' CHANGELOG.txt
+> git commit -m 'update version' setup.py
+> git push
 
 # create release tag on github
 
 # upload source to pypi
+> rm -rf dist/*
 > python setup.py sdist
-> twine dist/*
+> twine upload dist/*
+
+# install the new version locally
+> pip install --upgrade miepython
