@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+0.4.0 (08/26/2017)
+------------------
+- update README to include basic testing
+- mie(m,x) work automatically with arrays
+- adding MANIFEST.in so examples get included
+
+0.3.2 (07/07/2017)
+------------------
+- update README, bump to 0.3.2
+- Fix examples so they work. [Work Prahl]
+
 0.3.2 (07/07/2017)
 ------------------
 - Fix examples so they work. [Work Prahl]
