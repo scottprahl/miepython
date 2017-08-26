@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+0.4.1 (08/26/2017)
+------------------
+- fix typo
+
 0.4.0 (08/26/2017)
 ------------------
 - update README to include basic testing
