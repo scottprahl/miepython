@@ -13,7 +13,7 @@ from setuptools import setup
 setup(
 	name='miepython',
 	packages=['miepython'],
-	version='0.4.1',
+	version='0.4.2',
 	description='Mie scattering of a plane wave by a sphere',
 	url='https://github.com/scottprahl/miepython.git',  
 	author='Scott Prahl',
