@@ -15,7 +15,12 @@ Installation via github
 Clone repository
    git clone https://github.com/scottprahl/miepython.git
 
-Then, add the miepython directory to your PYTHONPATH or install using pip
+Test by changing the miepython directory and doing
+	nosetests miepython/test/test.py
+
+Then, add the miepython directory to your PYTHONPATH 
+
+Alternatively, just install using pip
    pip install miepython
 
 To uninstall:

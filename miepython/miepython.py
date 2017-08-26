@@ -143,10 +143,12 @@ def small_mie(m,x):
     qback = 3*np.pi*x4*abs(ahat1-bhat1-5*ahat2/3)**2
     return [qext, qsca, qback, g]
 
-def mie(m, x):
-    """Calculate the extinction efficiency qext, the scattering efficiency qsca,
-       the backscatter efficiency qback, and the anisotropy g for a sphere
-       with complex index of refraction m and size parameter x.
+def mie_scalar(m, x):
+    """ mie_scalar(m,x) returns [qext,qsca,qback,g] for a sphere with complex index of
+        refraction m and size parameter x.  Both m and x must be scalars. 
+        The extinction efficiency is qext, the scattering efficiency is qsca,
+        the backscatter efficiency is qback, and the average cosine of the scattering
+        phase function is g.
     """
     if m.real==0 and x < 0.1 :
         return small_conducting_mie(m,x)
@@ -179,6 +181,49 @@ def mie(m, x):
 
     return [qext, qsca, qback, g]
 
+def mie(m,x):
+    """ mie(m,x) returns [qext,qsca,qback,g] for a sphere with complex index of
+        refraction m and size parameter x.  The returned efficiencies will be arrays
+        if m or x is an array.  This is a convenience wrapper for mie_scalar(m,x).
+        The extinction efficiency is qext, the scattering efficiency is qsca,
+        the backscatter efficiency is qback, and the average cosine of the scattering
+        phase function is g.
+    """
+    try:
+        mlen = len(m)
+    except:
+        mlen = 0
+        mm = m  
+
+    try:
+        xlen = len(x)
+    except:
+        xlen = 0
+        xx = x  
+
+    if xlen==0 and mlen==0 :
+        return mie_scalar(mm,xx)
+    
+    if xlen and mlen and xlen!=mlen :
+        raise RuntimeError('m and x arrays to mie must be same length')
+ 
+    thelen = max(xlen,mlen)
+    qext  = np.empty(thelen)
+    qsca  = np.empty(thelen)
+    qback = np.empty(thelen)
+    g     = np.empty(thelen)
+
+    for i in range(thelen):
+        if mlen>0 :
+            mm = m[i]
+
+        if mlen>0 :
+            xx = x[i]
+        
+        qext[i], qsca[i], qback[i], g[i] = mie_scalar(mm,xx)
+
+    return qext, qsca, qback, g     
+    
 def small_mie_conducting_S1_S2(m,x,mu):
     """Calculate the scattering amplitude functions S1 and S2 for a small
        perfectly conducting (reflecting) sphere (x<0.1) at each cos(theta) angle
