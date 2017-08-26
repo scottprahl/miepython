@@ -217,7 +217,7 @@ def mie(m,x):
         if mlen>0 :
             mm = m[i]
 
-        if mlen>0 :
+        if xlen>0 :
             xx = x[i]
         
         qext[i], qsca[i], qback[i], g[i] = mie_scalar(mm,xx)
