@@ -1,0 +1,14 @@
+Releasing a new version
+
+# versioning
+update the version in setup.py
+update CHANGELOG.txt
+> git --tag v0.0.0
+> git commit -a -m 'update CHANGELOG.txt and version'
+> git push origin v0.0.0
+
+# create release tag on github
+
+# upload source to pypi
+> python setup.py sdist
+> twine dist/*
