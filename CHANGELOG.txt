@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+1.0.0 (08/27/2017)
+------------------
+- Added docs in form of Jupyter notebooks
+
 0.4.2 (08/26/2017)
 ------------------
 - messed up github release 0.4.1
