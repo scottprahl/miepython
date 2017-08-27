@@ -2,7 +2,7 @@ Releasing a new version
 
 # versioning
 update the version in setup.py
-update CHANGELOG.txt
+update CHANGELOG.txt  `git log --oneline`
 
 > git tag v0.0.0
 > git commit -m 'update recent changes' CHANGELOG.txt
