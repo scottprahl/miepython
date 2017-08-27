@@ -342,9 +342,9 @@ def mie_cdf(m,x,num):
 
     return mu, cdf
 
-def mie_mu_at_delta_cdf(m,x,num):
-    """Find the angles mu that correspond to uniform intervals on the cumulative
-       distribution function for unpolarized Mie scattering.
+def mie_mu_with_uniform_cdf(m,x,num):
+    """Find the cosine angles mu that correspond to uniform spacing of the 
+       cumulative distribution function for unpolarized Mie scattering.
 
        This is a brute force implementation that solves the problem by
        calculating the CDF at many points and then scanning to find the
