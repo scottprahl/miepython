@@ -2,14 +2,16 @@ Releasing a new version
 
 # versioning
 update the version in setup.py
-update CHANGELOG.txt  `git log --oneline`
-
-> git tag v0.0.0
-> git commit -m 'update recent changes' CHANGELOG.txt
 > git commit -m 'update version' setup.py
 > git push
 
+update CHANGELOG.txt  `git shortlog`
+> git commit -m 'update recent changes' CHANGELOG.txt
+> git push
+
 # create release tag on github
+> git tag v1.0.1
+> git push origin v1.0.1
 
 # upload source to pypi
 > rm -rf dist/*
