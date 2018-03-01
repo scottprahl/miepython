@@ -1,3 +1,7 @@
 .DS_Store
 *.pyc
 miepython/__pycache__/*
+build/*
+dist/*
+doc/ipynb_checkpoints/*
+miepython.egg-info/*
