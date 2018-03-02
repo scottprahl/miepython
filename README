@@ -4,7 +4,7 @@ miepython is a Python module to calculate light scattering of solid spheres. Mie
 
 Usage
 --------------
-For examples and use cases, see test folder
+For examples and use cases, see test and doc folders
 
 Installation via pip
 --------------
@@ -18,10 +18,7 @@ Clone repository
 Test by changing the miepython directory and doing
 	nosetests miepython/test/test.py
 
-Then, add the miepython directory to your PYTHONPATH 
-
-Alternatively, just install using pip
-   pip install miepython
+Finally, add the miepython directory to PYTHONPATH 
 
 To uninstall:
 --------------
