@@ -3,5 +3,7 @@
 miepython/__pycache__/*
 build/*
 dist/*
-doc/ipynb_checkpoints/*
+doc/.ipynb_checkpoints/*
+doc/omlc.org
+doc/refractiveindex.info
 miepython.egg-info/*
