@@ -1,5 +1,25 @@
 Change Log
 ==========
+1.1.0 (03/02/2018)
+------------------
+    update version
+    initial commit of 04_rayleigh.ipynb
+    renamed doc files
+    use new functions from miepython
+    omit low level tests
+    add __author__ and __version__
+    add i_par, i_per, i_unpolarized, and hide private functions
+    rename doc files
+    add quantitative comparisons of angular scattering
+    tweak verbiage
+    ignore more
+    initial commit
+    more cleanup
+    ignore dist files
+    minor reorg of contents
+    fix typos, add more refraction stuff
+    Changes to match PEP8 style
+    add minor comments, fix typos
 
 1.0.0 (08/27/2017)
 ------------------
