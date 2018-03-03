@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 """
-Copyright 2017 Scott Prahl
+Copyright 2017-18 Scott Prahl
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -14,81 +14,52 @@ import unittest
 import numpy as np
 import miepython
 
-#class interface(unittest.TestCase):
+# the low level tests use functions that should not be exported.  These work
+# but now that the higher level tests pass, these are skipped
 
-#     def test_errors(self):
-#         mie = mie()
+# class low_level(unittest.TestCase):
 # 
-#         #test that negative values of x fail
-#         def test_x():
-#             mie.x = -1.0
-#         self.assertRaises(ValueError, test_x)
-#         mie.x = 1.0
+#     def test_01_log_derivatives(self):
+#         m = 1.0
+#         x = 1.0
+#         nstop = 10
+#         dn = miepython._D_calc(m,x,nstop)
+#         self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
 # 
-#         #test that a missing m fails
-#         self.assertRaises(ValueError, mie.qext)
-#         mie.m = complex(1.5,0.5)
+#         x = 62
+#         m = 1.28 - 1.37j
+#         nstop = 50
+#         dn = _D_calc(m,x,nstop)
+#         self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
+#         self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
 # 
-#         #test that y<x fails (y==x is permitted)
-#         def test_y():
-#             mie.y = 0.5
-#         self.assertRaises(ValueError, test_y)
-#         mie.y = 1.5
+#     def test_02_an_bn(self):
+#         m = 4.0/3.0
+#         x = 50
+#         a, b = miepython.mie_An_Bn(m,x)
+# #        print(a)
+#     #        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
+#     #        self.assertAlmostEqual(a[1].imag,-0.4990314856310943073, delta=0.00000001)
+#     #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
+#     #        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
 # 
-#         #test that setting y without m2 fails
-#         self.assertRaises(ValueError, mie.qext)
-#         mie.m2 = complex(1.2,0.5)
+#         m = 1.5-1.1j
+#         x = 2
+#         a, b = miepython.mie_An_Bn(m,x)
+#         self.assertAlmostEqual(a[0].real, 0.555091767665, delta=0.00001)
+#         self.assertAlmostEqual(a[0].imag, 0.158587776121, delta=0.00001)
+#         self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
+#         self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
+#         self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
+#         self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
 # 
-#         #test that invalid values of u fail
-#         self.assertRaises(ValueError, mie.S12, -1.5)
-# 
-#         mie.mu = complex(1.5,0.6)
-#         #test that multilayered particles with mu fail
-#         self.assertRaises(ValueError, mie.qext)
-
-class low_level(unittest.TestCase):
-
-    def test_01_log_derivatives(self):
-        m = 1.0
-        x = 1.0
-        nstop = 10
-        dn = miepython.D_calc(m,x,nstop)
-        self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
-
-        x = 62
-        m = 1.28 - 1.37j
-        nstop = 50
-        dn = miepython.D_calc(m,x,nstop)
-        self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
-        self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
-
-    def test_02_an_bn(self):
-        m = 4.0/3.0
-        x = 50
-        a, b = miepython.mie_An_Bn(m,x)
-#        print(a)
-    #        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
-    #        self.assertAlmostEqual(a[1].imag,-0.4990314856310943073, delta=0.00000001)
-    #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-    #        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
-
-        m = 1.5-1.1j
-        x = 2
-        a, b = miepython.mie_An_Bn(m,x)
-        self.assertAlmostEqual(a[0].real, 0.555091767665, delta=0.00001)
-        self.assertAlmostEqual(a[0].imag, 0.158587776121, delta=0.00001)
-        self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
-        self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
-        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
-
-        m = 1.1-25j
-        x = 2
-        a, b = miepython.mie_An_Bn(m,x)
-        self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
-        self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
-        self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
-        self.assertAlmostEqual(b[1].imag,-0.236805417045, delta=0.0001)
+#         m = 1.1-25j
+#         x = 2
+#         a, b = miepython.mie_An_Bn(m,x)
+#         self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
+#         self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
+#         self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
+#         self.assertAlmostEqual(b[1].imag,-0.236805417045, delta=0.0001)
 
 
 class non_absorbing(unittest.TestCase):
