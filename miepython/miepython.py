@@ -1,8 +1,18 @@
 from __future__ import division
+
 import numpy as np
 
-
-def Lentz_Dn(z, N):
+__all__ = [  'generate_mie_costheta',
+             'i_par',
+             'i_per',
+             'i_unpolarized',
+             'mie',
+             'mie_S1_S2',
+             'mie_cdf',
+             'mie_mu_with_uniform_cdf'
+             ]
+      
+def _Lentz_Dn(z, N):
     """ Compute the logarithmic derivative of the Ricatti-Bessel function
 
         This returns the Ricatti-Bessel function of order N with argument z
@@ -28,21 +38,21 @@ def Lentz_Dn(z, N):
     return -N/z+runratio
 
 
-def D_downwards(z, N):
+def _D_downwards(z, N):
     """ Compute the logarithmic derivative of all Ricatti-Bessel functions
 
         This returns the Ricatti-Bessel function of orders 0 to N for an
         argument z using the downwards recurrence relations.
     """
     D = np.zeros(N, dtype=complex)
-    last_D = Lentz_Dn(z, N)
+    last_D = _Lentz_Dn(z, N)
     for n in range(N, 0, -1):
         last_D =  n/z - 1.0/(last_D+n/z)
         D[n-1] = last_D
     return D
 
 
-def D_upwards(z, N):
+def _D_upwards(z, N):
     """ Compute the logarithmic derivative of all Ricatti-Bessel functions
 
         This returns the Ricatti-Bessel function of orders 0 to N for an
@@ -56,18 +66,18 @@ def D_upwards(z, N):
     return D
 
 
-def D_calc(m, x, N):
+def _D_calc(m, x, N):
     """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
         orders (from 0 to N) with argument z
     """
     z = m * x
     if abs(z.imag) > 13.78*m.real**2 - 10.8*m.real + 3.9:
-        return D_upwards(z, N)
+        return _D_upwards(z, N)
     else:
-        return D_downwards(z, N)
+        return _D_downwards(z, N)
 
 
-def mie_An_Bn(m, x):
+def _mie_An_Bn(m, x):
     """ Compute the Mie coefficients A and B at all orders (from 0 to N)
 
         A list of Mie coefficents An and Bn are returned for orders 0 to N for
@@ -79,7 +89,7 @@ def mie_An_Bn(m, x):
     nstop = int(x + 4.05 * x**0.33333 + 2.0)+1
 
     if m.real > 0.0:
-        D = D_calc(m, x, nstop+1)
+        D = _D_calc(m, x, nstop+1)
 
     a = np.zeros(nstop-1, dtype=complex)
     b = np.zeros(nstop-1, dtype=complex)
@@ -108,7 +118,7 @@ def mie_An_Bn(m, x):
     return [a, b]
 
 
-def small_conducting_mie(m, x):
+def _small_conducting_mie(m, x):
     """ Compute the efficiencies for small, perfectly conducting spheres.
 
         The total extinction, scattering, and backscattering efficiencies
@@ -133,7 +143,7 @@ def small_conducting_mie(m, x):
     return [qext, qsca, qback, g]
 
 
-def small_mie(m, x):
+def _small_mie(m, x):
     """ Compute the efficiencies for a small sphere with index m.
 
         The total extinction, scattering, and backscattering as well as
@@ -164,7 +174,7 @@ def small_mie(m, x):
     return [qext, qsca, qback, g]
 
 
-def mie_scalar(m, x):
+def _mie_scalar(m, x):
     """ Calculates [qext, qsca, qback, g] for a sphere with index m and size x.
 
         Calculate the extinction, scattering, and backscattering efficiencies
@@ -176,12 +186,12 @@ def mie_scalar(m, x):
         scattering phase function is g.
     """
     if m.real == 0 and x < 0.1:
-        return small_conducting_mie(m, x)
+        return _small_conducting_mie(m, x)
 
     if m.real > 0.0 and abs(m) * x < 0.1:
-        return small_mie(m, x)
+        return _small_mie(m, x)
 
-    a, b = mie_An_Bn(m, x)
+    a, b = _mie_An_Bn(m, x)
 
     nmax = len(a)
     n    = np.arange(1, nmax+1)
@@ -230,7 +240,7 @@ def mie(m, x):
         xx = x
 
     if xlen == 0 and mlen == 0:
-        return mie_scalar(mm, xx)
+        return _mie_scalar(mm, xx)
 
     if xlen and mlen and xlen != mlen:
         raise RuntimeError('m and x arrays to mie must be same length')
@@ -248,12 +258,12 @@ def mie(m, x):
         if xlen > 0:
             xx = x[i]
 
-        qext[i], qsca[i], qback[i], g[i] = mie_scalar(mm, xx)
+        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
 
     return qext, qsca, qback, g
 
 
-def small_mie_conducting_S1_S2(m, x, mu):
+def _small_mie_conducting_S1_S2(m, x, mu):
     """Calculate the scattering amplitude S1 and S2 for small conducting spheres
 
        The spheres are perfectly conducting (reflecting) sphere (x<0.1) at each
@@ -281,7 +291,7 @@ def small_mie_conducting_S1_S2(m, x, mu):
     return [S1, S2]
 
 
-def small_mie_S1_S2(m, x, mu):
+def _small_mie_S1_S2(m, x, mu):
     """Calculate the scattering amplitude functions S1 and S2 for a complex
        index of refraction m, a size parameter x<0.1, at each cos(theta) angle
        specified in the array mu.  The amplitude functions have been normalized
@@ -317,13 +327,13 @@ def mie_S1_S2(m, x, mu):
     """Calculate the scattering amplitude functions S1 and S2 for a complex
        index of refraction m, a size parameter x, at each cos(theta) angle
        specified in the array mu.  The amplitude functions have been normalized
-       so that when integrated over all 4*pi solid angles, the integral will
-       be 1.  The units are weird, sr**(-0.5)
+       so that when integrated over all 4pi solid angles, the integral will
+       equal the single scattering albedo.  The units are weird, sr**(-0.5)
 
        Returns S1 and S2 at each angle in the array mu.
     """
 
-    a, b = mie_An_Bn(m, x)
+    a, b = _mie_An_Bn(m, x)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=complex)
@@ -436,3 +446,52 @@ def generate_mie_costheta(mu_cdf):
 
     x = mu_cdf[index]+(mu_cdf[index+1]-mu_cdf[index])*np.random.random_sample()
     return x
+
+def i_per(m, x, mu):
+    """Calculate the scattered intensity for a field perpendicular to the plane 
+       of scattering.  The intensity is normalized such that the integral of
+       the unpolarized intensity over 4pi steradians is equal to the single 
+       scattering albedo.
+       
+       m is the complex index of refraction, 
+       x is the size parameter
+       mu is the cos(theta) of each direction desired
+       
+       returns the intensity at each angle in the array mu.  Units [1/sr]
+    """
+    s1, s2 = mie_S1_S2(m,x,mu)
+    intensity = abs(s1)**2
+    return intensity.astype('float')
+
+
+def i_par(m, x, mu):
+    """Calculate the scattered intensity for a field parallel to the plane 
+       of scattering.  The intensity is normalized such that the integral of
+       the unpolarized intensity over 4pi steradians is equal to the single 
+       scattering albedo.
+       
+       m is the complex index of refraction, 
+       x is the size parameter
+       mu is the cos(theta) of each direction desired
+       
+       returns the intensity at each angle in the array mu.  Units [1/sr]
+    """
+    s1, s2 = mie_S1_S2(m,x,mu)
+    intensity = abs(s2)**2
+    return intensity.astype('float')
+
+
+def i_unpolarized(m, x, mu):
+    """Calculate the scattered intensity for unpolarized incident light.  
+       The intensity is normalized such that the integral over
+       4pi steradians is equal to the single scattering albedo.
+       
+       m is the complex index of refraction, 
+       x is the size parameter
+       mu is the cos(theta) of each direction desired
+       
+       returns the intensity at each angle in the array mu.  Units [1/sr]
+    """
+    s1, s2 = mie_S1_S2(m,x,mu)
+    intensity = (abs(s1)**2 + abs(s2)**2)/2
+    return intensity.astype('float')
