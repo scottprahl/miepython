@@ -1,22 +1,27 @@
 Releasing a new version
 
 # versioning
-update the version in setup.py
-> git commit -m 'update version' setup.py
-> git push
+update the version in setup.py and __init__.py
+  git commit setup.py __init__.py -m 'update version' 
+  git push
 
 update CHANGELOG.txt  `git shortlog`
-> git commit -m 'update recent changes' CHANGELOG.txt
-> git push
+  git commit -m 'update recent changes' CHANGELOG.txt
+  git push
 
 # create release tag on github
-> git tag v1.0.1
-> git push origin v1.0.1
+  git tag v1.0.1
+  git push origin v1.0.1
 
 # upload source to pypi
-> rm -rf dist/*
-> python setup.py sdist
-> twine upload dist/*
+  rm -rf dist/*
+  python setup.py sdist
+  twine upload dist/*
 
-# install the new version locally
-> pip install --upgrade miepython
+# test the install by removing local developer version
+# installing, then uninstalling, then restoring developer version
+  conda develop -u .
+  pip install pypolar
+  pip uninstall pypolar
+  pip develop .
+  
