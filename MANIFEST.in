@@ -1,2 +1,4 @@
 include *.txt
 include miepython/examples/*.py
+include doc/0*.ipynb
+include miepython/test/*.py
