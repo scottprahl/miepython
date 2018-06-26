@@ -22,7 +22,7 @@ Releasing a new version
 # test the install by removing local developer version
 # installing, then uninstalling, then restoring developer version
   conda develop -u .
-  pip install pypolar
-  pip uninstall pypolar
-  pip develop .
+  pip install miepython
+  pip uninstall miepython
+  conda develop .
   
