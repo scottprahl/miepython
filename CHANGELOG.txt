@@ -1,5 +1,18 @@
 Change Log
 ==========
+1.1.1. (06/25/18)
+------------------
+      fix github rendering of fractions in equations
+      add developer instructions
+      fix fractions for github
+      add missing doc files found my check-manifest
+      setup.py fixes suggested by pyroma
+      pep8 compliance and delinting using pylint
+      add missing doc files found my check-manifest
+      setup.py fixes suggested by pyroma
+      pep8 compliance and delinting using pylint
+      update version
+
 1.1.0 (03/02/2018)
 ------------------
     update version

@@ -1,11 +1,12 @@
 Releasing a new version
 
 # versioning
-update the version in setup.py and __init__.py
-  git commit setup.py __init__.py -m 'update version' 
+# update the version in setup.py and __init__.py
+  git commit setup.py miepython/__init__.py -m 'update version' 
   git push
 
-update CHANGELOG.txt  `git shortlog`
+# update CHANGELOG.txt  `git shortlog`
+  git shortlog git shortlog v1.1.0..HEAD
   git commit -m 'update recent changes' CHANGELOG.txt
   git push
 

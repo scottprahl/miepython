@@ -20,7 +20,7 @@ setup(
 	author_email='scott.prahl@oit.edu',
 	license='MIT',
 	classifiers=[
-		'Development Status :: 4 - Beta',
+		'Development Status :: 5 - Production/Stable',
 		'License :: OSI Approved :: MIT License',
 		'Intended Audience :: Science/Research',
 		'Programming Language :: Python',
