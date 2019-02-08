@@ -70,11 +70,13 @@ def _D_calc(m, x, N):
     """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
         orders (from 0 to N) with argument z
     """
-    z = m * x
-    if abs(z.imag) > 13.78 * m.real**2 - 10.8 * m.real + 3.9:
-        return _D_upwards(z, N)
-    else:
-        return _D_downwards(z, N)
+    n = m.real
+    kappa = abs(m.imag)
+    
+    if n < 1 or n>10 or kappa > 10 or x*kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
+        return _D_downwards(m*x, N)
+        
+    return _D_upwards(m*x, N)
 
 
 def _mie_An_Bn(m, x):
@@ -177,6 +179,42 @@ def _small_mie(m, x):
     qback = 3 * np.pi * x4 * abs(ahat1 - bhat1 - 5 * ahat2 / 3)**2
     return [qext, qsca, qback, g]
 
+
+def _large_mie(m, x):
+    """ Compute the efficiencies for a large spheres with index m.
+
+        The total extinction, scattering, and backscattering as well as
+        the scattering asymmetry for large spheres (x>100)
+    """
+
+    kappa = -np.imag(m)
+    n = np.real(m)
+    rho = 2*x*np.abs(m-1)
+    beta = np.arctan2(kappa,n-1)
+    epsilon = 0.25 + 0.61*(1-np.exp(-8*np.pi/3*kappa))**2
+
+    Qext_adt = 2
+    Qext_adt += -4*ex*np.cos(beta)/rho*np.sin(rho-beta)
+    Qext_adt += -4*ex*np.cos(beta)**2/rho**2*np.cos(rho-2*beta)
+    Qext_adt += 4*np.cos(beta)**2/rho**2*np.cos(2*beta)
+
+    Qabs_adt = 1
+    Qabs_adt += 2*np.exp(-4*kappa*x)/(4*kappa*x)
+    Qabs_adt += 2*(np.exp(-4*kappa*x)-1)/(4*kappa*x)**2
+
+    c1 = 0.25*(1+np.exp(-1167*kappa))*(1-Qabs_adt)
+    c2 = np.sqrt(2*epsilon*x/np.pi)*np.exp(0.5-epsilon*x/np.pi)*(0.7393*n-0.6069)
+    Qabs_madt = (1+c1+c2)*Qabs_adt
+
+    Qedge = (1-np.exp(-0.06*x))*x**(-2/3)
+    Qext_madt = (1+0.5*c2)*Qext_adt+Qedge
+    
+    qback = ((n-1)**2 + kappa**2)/((n+1)**2+kappa**2)
+    
+    qext = Qext_madt
+    qsca = Qext_madt - Qabs_madt
+    return [qext, qsca, qback, g]
+    
 
 def _mie_scalar(m, x):
     """ Calculates [qext, qsca, qback, g] for a sphere with index m and size x.
