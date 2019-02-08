@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 """
-Copyright 2017-18 Scott Prahl
+Copyright 2017-19 Scott Prahl
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -66,9 +66,9 @@ class non_absorbing(unittest.TestCase):
 
     def test_03_bh_dielectric(self):
         m = 1.55
-        lambdaa = 0.6328
+        lambda0 = 0.6328
         radius = 0.525
-        x = 2*np.pi*radius/lambdaa
+        x = 2*np.pi*radius/lambda0
         qext, qsca, qback, g = miepython.mie(m,x)
 
         self.assertAlmostEqual(qext, 3.10543, delta=0.00001)
@@ -78,25 +78,87 @@ class non_absorbing(unittest.TestCase):
 
     def test_05_wiscombe_non_absorbing(self):
 
+		# MIEV0 Test Case 5
+        m=complex(0.75, 0.0)
+        x=0.099
+        s1 = 1.81756e-8 - 1.64810e-4 * 1j
+        G=abs(2*s1/x)**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 0.000007, delta=1e-6)
+        self.assertAlmostEqual(g,    0.001448, delta=1e-6)
+        self.assertAlmostEqual(qback, G, delta=1e-6)
+
+		# MIEV0 Test Case 6
+        m=complex(0.75, 0.0)
+        x=0.101
+        s1 = 2.04875E-08  -1.74965E-04 * 1j
+        G=abs(2*s1/x)**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 0.000008, delta=1e-6)
+        self.assertAlmostEqual(g,    0.001507, delta=1e-6)
+        self.assertAlmostEqual(qback, G, delta=1e-6)
+
 		# MIEV0 Test Case 7
         m=complex(0.75, 0.0)
         x=10.0
+        s1 = -1.07857E+00  -3.60881E-02 * 1j
+        G=abs(2*s1/x)**2
         qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 2.232265, delta=1e-6)
         self.assertAlmostEqual(g,    0.896473, delta=1e-6)
+        self.assertAlmostEqual(qback, G, delta=1e-6)
 
 		# MIEV0 Test Case 8
         m=complex(0.75, 0.0)
         x=1000.0
+        s1= 1.70578E+01 + 4.84251E+02  *1j
+        G=abs(2*s1/x)**2
         qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qsca, 1.997908, delta=1e-6)
         self.assertAlmostEqual(g,    0.844944, delta=1e-6)
+        self.assertAlmostEqual(qback, G, delta=1e-6)
+
+    def test_05_old_wiscombe_non_absorbing(self):
+
+		# OLD MIEV0 Test Case 1
+        m=complex(1.5, 0.0)
+        x=10
+        s1 = 4.322E+00 + 4.868E+00 * 1j
+        G=abs(2*s1/x)**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 2.8820, delta=1e-4)
+        self.assertAlmostEqual(qback, G, delta=1e-4)
+
+		# OLD MIEV0 Test Case 2
+        m=complex(1.5, 0.0)
+        x=100
+        s1 = 4.077E+01 + 5.175E+01  * 1j
+        G=abs(2*s1/x)**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 2.0944, delta=1e-4)
+        self.assertAlmostEqual(qback, G, delta=1e-4)
+
+		# OLD MIEV0 Test Case 3
+        m=complex(1.5, 0.0)
+        x=1000
+        G= 4 * 2.576E+06 / x**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 2.0139, delta=1e-4)
+        self.assertAlmostEqual(qback, G, delta=1e-3)
+
+		# OLD MIEV0 Test Case 4
+        m=complex(1.5, 0.0)
+        x=5000.0
+        G= 4 * 2.378E+08 / x**2
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 2.0086, delta=1e-4)
+        self.assertAlmostEqual(qback, G, delta=3e-3)
 
     def test_04_non_dielectric(self):
         m = 1.55-0.1j
-        lambdaa = 0.6328
+        lambda0 = 0.6328
         radius = 0.525
-        x = 2*np.pi*radius/lambdaa
+        x = 2*np.pi*radius/lambda0
         qext, qsca, qback, g = miepython.mie(m,x)
 
         self.assertAlmostEqual(qext, 2.86165188243, delta=1e-7)
@@ -160,13 +222,13 @@ class absorbing(unittest.TestCase):
         self.assertAlmostEqual(qext, 2.097502, delta=1e-2)
         self.assertAlmostEqual(g,    0.850252, delta=1e-3)
 
-#         #MIEV0 Test Case 16
-#         m = 1.5-1j
-#         x = 10000
-#         qext, qsca, qback, g = miepython.mie(m,x)
-#         self.assertAlmostEqual(qsca, 1.236575, delta=1e-6)
-#         self.assertAlmostEqual(qext, 2.004368, delta=1e-6)
-#         self.assertAlmostEqual(g,    0.846309, delta=1e-6)
+        #MIEV0 Test Case 16
+        m = 1.5-1j
+        x = 10000
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 1.236575, delta=1e-6)
+        self.assertAlmostEqual(qext, 2.004368, delta=1e-6)
+        self.assertAlmostEqual(g,    0.846309, delta=1e-6)
 
     def test_08_wiscombe_more_absorbing(self):
 
@@ -184,12 +246,12 @@ class absorbing(unittest.TestCase):
         self.assertAlmostEqual(qsca, 1.836785, delta=1e-6)
         self.assertAlmostEqual(g,    0.556215, delta=1e-6)
 
-#         #MIEV0 Test Case 19
-#         m = 10.0 - 10.0j
-#         x = 10000.0
-#         qext, qsca, qback, g = miepython.mie(m,x)
-#         self.assertAlmostEqual(qsca, 1.795393, delta=1e-6)
-#         self.assertAlmostEqual(g,    0.548194, delta=1e-6)
+        #MIEV0 Test Case 19
+        m = 10.0 - 10.0j
+        x = 10000.0
+        qext, qsca, qback, g = miepython.mie(m,x)
+        self.assertAlmostEqual(qsca, 1.795393, delta=1e-6)
+        self.assertAlmostEqual(g,    0.548194, delta=1e-6)
 
     def test_09_single_nonmagnetic(self):
         m = 1.5-0.5j
