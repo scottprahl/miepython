@@ -1,36 +1,49 @@
-miepython
-==============
-miepython is a Python module to calculate light scattering of solid spheres. Mie theory is used, following the procedure in given by Wiscombe <http://opensky.ucar.edu/islandora/object/technotes:232>
+# miepython
 
-Usage
---------------
-For examples and use cases, see test and doc folders
+`miepython` is a Python module to calculate light scattering of solid spheres. Mie theory 
+is used, following the [procedure in given by Wiscombe](http://opensky.ucar.edu/islandora/object/technotes:232)
 
-Installation via pip
---------------
-   pip install miepython
+## Usage
 
-Installation via github
---------------
-Clone repository
-   git clone https://github.com/scottprahl/miepython.git
+### Simple Example
 
-Test by changing the miepython directory and doing
-	nosetests miepython/test/test.py
+```python
+import miepython
 
-Finally, add the miepython directory to PYTHONPATH 
+m = 1.5  # index of refraction of sphere
+x = 1.0  # dimensionless Mie size Parameter
 
-To uninstall:
---------------
-   pip uninstall miepython
+qext, qsca, qback, g = miepython.mie(m,x)
+print("The scattering efficiency  is %.3f" % qsca)
+print("The backscatter efficiency is %.3f" % qback)
+print("The scattering anisotropy  is %.3f" % g)
+```
 
-Dependencies
---------------
-For installation: setuptools
+### General Overview of `miepython`
+* [Mie Size Parameter, Complex Index of Refraction](https://github.com/scottprahl/miepython/blob/master/doc/01_basics.ipynb) 
+* [Cross Sections and Efficiencies](https://github.com/scottprahl/miepython/blob/master/doc/02_efficiencies.ipynb) 
+* [Scattering Phase Function](https://github.com/scottprahl/miepython/blob/master/doc/03_angular_scattering.ipynb) 
+* [Rayleigh Scattering](https://github.com/scottprahl/miepython/blob/master/doc/04_rayleigh.ipynb) 
+* [Simple Fog](https://github.com/scottprahl/miepython/blob/master/doc/05_fog.ipynb) 
 
-Required Python modules: numpy, matplotlib
+### Small Scripts Using `miepython`
+* [Extinction Efficiency of Absorbing and Non-Absorbing Spheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py) 
+* [Four Micron Glass Spheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py) 
+* [One Micron Water Droplets](https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py) 
+* [Gold Nanospheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py) 
 
+### Gory Algorithm Details
+* [Generating Random Deviates](https://github.com/scottprahl/miepython/blob/master/doc/06_random_deviates.ipynb)
+* [The Algorithm](https://github.com/scottprahl/miepython/blob/master/doc/07_algorithm.ipynb)
 
-License
---------------
-miepython is licensed under the terms of the MIT license.
+## Installation
+
+    pip install miepython
+
+## To uninstall:
+
+    pip uninstall miepython
+
+## License
+
+`miepython` is licensed under the terms of the MIT license.
