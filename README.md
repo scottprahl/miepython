@@ -25,6 +25,7 @@ print("The scattering anisotropy  is %.3f" % g)
 * [Scattering Phase Function](https://github.com/scottprahl/miepython/blob/master/doc/03_angular_scattering.ipynb) 
 * [Rayleigh Scattering](https://github.com/scottprahl/miepython/blob/master/doc/04_rayleigh.ipynb) 
 * [Simple Fog](https://github.com/scottprahl/miepython/blob/master/doc/05_fog.ipynb) 
+* [Large Spheres](https://github.com/scottprahl/miepython/blob/master/doc/08-large_spheres.ipynb)
 
 ### Small Scripts Using `miepython`
 * [Extinction Efficiency of Absorbing and Non-Absorbing Spheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py) 
