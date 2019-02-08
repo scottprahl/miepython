@@ -1,5 +1,15 @@
 Change Log
 ==========
+1.2.0. (02/08/19)
+------------------
+      fix bug so that large sphere calculations work correctly
+      add tests for large spheres
+      add tests for backscattering efficiency
+      add documentation notebook for large spheres 
+      add direct links to documentation
+      finish fixing fractions in notebooks
+      improve README.md
+      
 1.1.1. (06/25/18)
 ------------------
       fix github rendering of fractions in equations
