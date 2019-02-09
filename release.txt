@@ -5,9 +5,9 @@ Releasing a new version
   git commit setup.py miepython/__init__.py -m 'update version' 
   git push
 
-# update CHANGELOG.txt  `git shortlog`
-  shortlog v1.2.0..HEAD
-  git commit -m 'update recent changes' CHANGELOG.txt
+# update CHANGELOG.txt
+  git shortlog v1.3.0..HEAD
+  git commit CHANGELOG.txt -m 'update recent changes'
   git push
 
 # create release tag on github
