@@ -13,7 +13,7 @@ from setuptools import setup
 setup(
 	name='miepython',
 	packages=['miepython'],
-	version='1.2.0',
+	version='1.3.0',
 	description='Mie scattering of a plane wave by a sphere',
 	url='https://github.com/scottprahl/miepython.git',  
 	author='Scott Prahl',
@@ -34,7 +34,7 @@ setup(
         "Programming Language :: Python :: 3.6",
 	],
     zip_safe= False,
-	keywords=['mie', 'scattering', 'rainbow', 'droplet'],
+	keywords=['mie', 'scattering', 'rainbow', 'droplet','backscatter','sphere'],
 	install_requires=['numpy'],
 	test_suite='miepython.test.test',
 	long_description=
@@ -47,7 +47,8 @@ setup(
 	Wiscombe identified the challenges and implemented these in Fortran code.
 	
 	This code is pure python and uses many of the ideas that Wiscombe developed
-	and published in papers and in Fortran code.
+	and published in papers and in Fortran code.  This code has been validated
+	against that of Wiscombe.
 	
 	This code provides python functions for calculating the extinction efficiency,
 	scattering efficiency, backscattering, and scattering asymmetry.  Moreover, a
