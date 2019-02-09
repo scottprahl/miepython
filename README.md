@@ -35,7 +35,8 @@ print("The scattering anisotropy  is %.3f" % g)
 * [Scattering Phase Function](https://github.com/scottprahl/miepython/blob/master/doc/03_angular_scattering.ipynb) 
 * [Rayleigh Scattering](https://github.com/scottprahl/miepython/blob/master/doc/04_rayleigh.ipynb) 
 * [Simple Fog](https://github.com/scottprahl/miepython/blob/master/doc/05_fog.ipynb) 
-* [Large Spheres](https://github.com/scottprahl/miepython/blob/master/doc/08_large_spheres.ipynb)
+* [Large Sphere Validation](https://github.com/scottprahl/miepython/blob/master/doc/08_large_spheres.ipynb)
+* [Backscattering Validation](https://github.com/scottprahl/miepython/blob/master/doc/09_backscattering.ipynb)
 
 ### Short Scripts
 
