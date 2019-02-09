@@ -1,9 +1,9 @@
 # miepython
 
 `miepython` is a pure Python module to calculate light scattering by non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory 
-is used, following the [procedure in given by Wiscombe](http://opensky.ucar.edu/islandora/object/technotes:232)
+is used, following the [procedure in given by Wiscombe](http://opensky.ucar.edu/islandora/object/technotes:232) and validated against Wiscombe's robust results.
 
-This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given and to calculate the scattering for a sphere.
+This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere.
 
 ## Usage
 
@@ -29,6 +29,7 @@ print("The scattering anisotropy  is %.3f" % g)
 
 
 ### Detailed Documentation
+
 * [Mie Size Parameter, Complex Index of Refraction](https://github.com/scottprahl/miepython/blob/master/doc/01_basics.ipynb) 
 * [Cross Sections and Efficiencies](https://github.com/scottprahl/miepython/blob/master/doc/02_efficiencies.ipynb) 
 * [Scattering Phase Function](https://github.com/scottprahl/miepython/blob/master/doc/03_angular_scattering.ipynb) 
@@ -36,13 +37,15 @@ print("The scattering anisotropy  is %.3f" % g)
 * [Simple Fog](https://github.com/scottprahl/miepython/blob/master/doc/05_fog.ipynb) 
 * [Large Spheres](https://github.com/scottprahl/miepython/blob/master/doc/08-large_spheres.ipynb)
 
-### Small Scripts Using `miepython`
+### Short Scripts
+
 * [Extinction Efficiency of Absorbing and Non-Absorbing Spheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py) 
 * [Four Micron Glass Spheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py) 
 * [One Micron Water Droplets](https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py) 
 * [Gold Nanospheres](https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py) 
 
 ### Gory Details
+
 * [Generating Random Deviates for Monte Carlo](https://github.com/scottprahl/miepython/blob/master/doc/06_random_deviates.ipynb)
 * [The Algorithm](https://github.com/scottprahl/miepython/blob/master/doc/07_algorithm.ipynb)
 
