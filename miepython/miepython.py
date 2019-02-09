@@ -1,3 +1,17 @@
+# pylint: disable=invalid-name
+"""
+Mie scattering in pure python
+
+`miepython` is a pure Python module to calculate light scattering by non-absorbing,
+partially-absorbing, or perfectly conducting spheres. Mie theory
+is used, following the procedure in given by Wiscombe in
+http://opensky.ucar.edu/islandora/object/technotes:232 and validated against his results.
+
+This code provides functions for calculating the extinction efficiency,
+scattering efficiency, backscattering, and scattering asymmetry. Moreover,
+a set of angles can be given to calculate the scattering for a sphere.
+"""
+
 from __future__ import division
 
 import numpy as np
@@ -72,10 +86,10 @@ def _D_calc(m, x, N):
     """
     n = m.real
     kappa = abs(m.imag)
-    
-    if n < 1 or n>10 or kappa > 10 or x*kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
+
+    if n < 1 or n > 10 or kappa > 10 or x*kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
         return _D_downwards(m*x, N)
-        
+
     return _D_upwards(m*x, N)
 
 
@@ -154,14 +168,11 @@ def _small_mie(m, x):
         the scattering asymmetry for small spheres (x<0.1)
     """
     m2 = m * m
-    m4 = m2 * m2
     x2 = x * x
-    x3 = x2 * x
-    x4 = x2 * x2
 
-    D = m2 + 2 + (1 - 0.7 * m2) * x2 - (8 * m4 - 385 * m2 + 350) * x4 / 1400.0 + \
-        2j * (m2 - 1) * x3 * (1 - 0.1 * x2) / 3
-    ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x4 / 1400) / D
+    D = m2 + 2 + (1 - 0.7 * m2) * x2 - (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0 + \
+        2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
+    ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x**4 / 1400) / D
     bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) /
                                        70 * x2) / (1 - (2 * m2 - 5) / 30 * x2)
     ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14) / \
@@ -171,14 +182,14 @@ def _small_mie(m, x):
     temp = ahat2 + bhat1
     g = (ahat1 * temp.conjugate()).real / T
 
-    qsca = 6 * x4 * T
-    
+    qsca = 6 * x**4 * T
+
     if m.imag == 0:
         qext = qsca
     else:
         qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
- 
-    sback = 1.5 * x3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
+
+    sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
     qback = 4*abs(sback)**2/x2
 
     return [qext, qsca, qback, g]
@@ -206,15 +217,14 @@ def _mie_scalar(m, x):
     nmax = len(a)
     n = np.arange(1, nmax + 1)
     cn = 2.0 * n + 1.0
-    x2 = x * x
 
-    qext = 2 * np.sum(cn * (a.real + b.real)) / x2
+    qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
     qsca = qext
 
     if m.imag != 0:
-        qsca = 2 * np.sum(cn * (abs(a)**2 + abs(b)**2)) / x2
+        qsca = 2 * np.sum(cn * (abs(a)**2 + abs(b)**2)) / x**2
 
-    qback = abs(np.sum((-1)**n * cn * (a - b)))**2 / x2
+    qback = abs(np.sum((-1)**n * cn * (a - b)))**2 / x**2
 
     c1n = n * (n + 2) / (n + 1)
     c2n = cn / n / (n + 1)
@@ -223,7 +233,7 @@ def _mie_scalar(m, x):
         asy1 = c1n[i] * (a[i] * a[i + 1].conjugate() +
                          b[i] * b[i + 1].conjugate()).real
         asy2 = c2n[i] * (a[i] * b[i].conjugate()).real
-        g += 4 * (asy1 + asy2) / qsca / x2
+        g += 4 * (asy1 + asy2) / qsca / x**2
 
     return [qext, qsca, qback, g]
 
