@@ -6,13 +6,13 @@ Releasing a new version
   git push
 
 # update CHANGELOG.txt  `git shortlog`
-  git shortlog git shortlog v1.1.0..HEAD
+  shortlog v1.2.0..HEAD
   git commit -m 'update recent changes' CHANGELOG.txt
   git push
 
 # create release tag on github
-  git tag v1.0.1
-  git push origin v1.0.1
+  git tag v1.3.0
+  git push origin v1.3.0
 
 # upload source to pypi
   rm -rf dist/*
