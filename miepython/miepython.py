@@ -142,7 +142,7 @@ def _small_conducting_mie(m, x):
     g += ahat1.real * bhat1.real
     g *= 6 * x**4 / qsca
 
-    qback = 3 * np.pi * x**4 * abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
+    qback = 9 * x**4 * abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
 
     return [qext, qsca, qback, g]
 
@@ -167,54 +167,22 @@ def _small_mie(m, x):
     ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14) / \
         (2 * m2 + 3 - (2 * m2 - 7) / 14 * x2)
 
-    qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
     T = abs(ahat1)**2 + abs(bhat1)**2 + 5 / 3 * abs(ahat2)**2
     temp = ahat2 + bhat1
     g = (ahat1 * temp.conjugate()).real / T
 
-    qsca = qext
-    if m.imag < 0:
-        qsca = 6 * x4 * T
+    qsca = 6 * x4 * T
+    
+    if m.imag == 0:
+        qext = qsca
+    else:
+        qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
+ 
+    sback = 1.5 * x3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
+    qback = 4*abs(sback)**2/x2
 
-    qback = 3 * np.pi * x4 * abs(ahat1 - bhat1 - 5 * ahat2 / 3)**2
     return [qext, qsca, qback, g]
 
-
-def _large_mie(m, x):
-    """ Compute the efficiencies for a large spheres with index m.
-
-        The total extinction, scattering, and backscattering as well as
-        the scattering asymmetry for large spheres (x>100)
-    """
-
-    kappa = -np.imag(m)
-    n = np.real(m)
-    rho = 2*x*np.abs(m-1)
-    beta = np.arctan2(kappa,n-1)
-    epsilon = 0.25 + 0.61*(1-np.exp(-8*np.pi/3*kappa))**2
-
-    Qext_adt = 2
-    Qext_adt += -4*ex*np.cos(beta)/rho*np.sin(rho-beta)
-    Qext_adt += -4*ex*np.cos(beta)**2/rho**2*np.cos(rho-2*beta)
-    Qext_adt += 4*np.cos(beta)**2/rho**2*np.cos(2*beta)
-
-    Qabs_adt = 1
-    Qabs_adt += 2*np.exp(-4*kappa*x)/(4*kappa*x)
-    Qabs_adt += 2*(np.exp(-4*kappa*x)-1)/(4*kappa*x)**2
-
-    c1 = 0.25*(1+np.exp(-1167*kappa))*(1-Qabs_adt)
-    c2 = np.sqrt(2*epsilon*x/np.pi)*np.exp(0.5-epsilon*x/np.pi)*(0.7393*n-0.6069)
-    Qabs_madt = (1+c1+c2)*Qabs_adt
-
-    Qedge = (1-np.exp(-0.06*x))*x**(-2/3)
-    Qext_madt = (1+0.5*c2)*Qext_adt+Qedge
-    
-    qback = ((n-1)**2 + kappa**2)/((n+1)**2+kappa**2)
-    
-    qext = Qext_madt
-    qsca = Qext_madt - Qabs_madt
-    return [qext, qsca, qback, g]
-    
 
 def _mie_scalar(m, x):
     """ Calculates [qext, qsca, qback, g] for a sphere with index m and size x.
