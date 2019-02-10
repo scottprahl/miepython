@@ -25,4 +25,5 @@ Releasing a new version
   pip install miepython
   pip uninstall miepython
   conda develop .
-  
+
+# Create a new release on github to hide previous releases
