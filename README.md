@@ -5,28 +5,32 @@ is used, following the [procedure in given by Wiscombe](http://opensky.ucar.edu/
 
 This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere.
 
+When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  `miepython` makes the following assumptions
+1. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
+2. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.
+
 ## Usage
 
 ### Simple Example
 
 ```python
-import miepython
-
-m = 1.5  # index of refraction of sphere
-x = 1.0  # dimensionless Mie size parameter
-
+m = 1.5-1j
+x = 1
 qext, qsca, qback, g = miepython.mie(m,x)
+
+print("The extinction efficiency  is %.3f" % qext)
 print("The scattering efficiency  is %.3f" % qsca)
 print("The backscatter efficiency is %.3f" % qback)
 print("The scattering anisotropy  is %.3f" % g)
+
 ```
 
-> The scattering efficiency  is 0.215
-
-> The backscatter efficiency is 0.187
-
-> The scattering anisotropy  is 0.199
-
+```
+> The extinction efficiency  is 2.336
+> The scattering efficiency  is 0.663
+> The backscatter efficiency is 0.573
+> The scattering anisotropy  is 0.192
+```
 
 ### Detailed Documentation
 
