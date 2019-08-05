@@ -1,5 +1,7 @@
 Releasing a new version
 
+# make sure all Jupyter notebooks in the doc folder still work
+
 # versioning
 # update the version in setup.py and __init__.py
   git commit setup.py miepython/__init__.py -m 'update version' 
@@ -26,4 +28,4 @@ Releasing a new version
   pip uninstall miepython
   conda develop .
 
-# Create a new release on github to hide previous releases
+# Go to github and create a new release to hide previous releases
