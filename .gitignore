@@ -7,4 +7,5 @@ docs/.ipynb_checkpoints/*
 docs/omlc.org
 docs/refractiveindex.info
 docs/_build
+docs/api
 miepython.egg-info/*
