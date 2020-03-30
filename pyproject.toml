@@ -1,0 +1,23 @@
+[build-system]
+requires = [
+    "setuptools >= 35.0.2",
+    "setuptools_scm >= 2.0.0, <3"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.tox]
+legacy_tox_ini = """
+
+[tox]
+envlist = py37
+
+[testenv]
+
+commands =
+    wfmconvert E info {toxinidir}/wfm/DS1052E.wfm
+    wfmconvert Z info {toxinidir}/wfm/DS1054Z-A.wfm
+    wfmconvert 2 info {toxinidir}/wfm/DS2000-A.wfm
+    wfmconvert 4 info {toxinidir}/wfm/DS4024-A.wfm
+    wfmconvert E  csv {toxinidir}/wfm/DS1102E-A.wfm
+    wfmconvert E  wav {toxinidir}/wfm/DS1102E-A.wfm
+"""
