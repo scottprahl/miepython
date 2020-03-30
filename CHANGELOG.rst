@@ -3,6 +3,7 @@ Changelog
 
 1.3.1
 -----
+*   improve docstrings
 *   use Sphinx documentation
 *   host docs on readthedocs.io
 

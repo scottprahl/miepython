@@ -22,11 +22,3 @@ API
 ===
 
 .. automodapi:: miepython.miepython
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-
