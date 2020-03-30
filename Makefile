@@ -15,6 +15,9 @@ check:
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
+test:
+	tox
+
 clean:
 	rm -rf dist
 	rm -rf miepython.egg-info
@@ -23,4 +26,4 @@ clean:
 	rm -rf docs/api/*
 	rm -rf .tox
 	
-.PHONY: clean realclean check html
+.PHONY: clean check html test
