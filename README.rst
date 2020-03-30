@@ -36,36 +36,19 @@ The following code::
 
 should produce::
 
-    > The extinction efficiency  is 2.336
-    > The scattering efficiency  is 0.663
-    > The backscatter efficiency is 0.573
-    > The scattering anisotropy  is 0.192
+    The extinction efficiency  is 2.336
+    The scattering efficiency  is 0.663
+    The backscatter efficiency is 0.573
+    The scattering anisotropy  is 0.192
 
-Detailed Documentation
-^^^^^^^^^^^^^^^^^^^^^^
+Detailed documentation is available at <https://miepython.readthedocs.io>
 
-* `Mie Size Parameter, Complex Index of Refraction <https://github.com/scottprahl/miepython/blob/master/doc/01_basics.ipynb>`_ 
-* `Cross Sections and Efficiencies <https://github.com/scottprahl/miepython/blob/master/doc/02_efficiencies.ipynb>`_ 
-* `Scattering Phase Function <https://github.com/scottprahl/miepython/blob/master/doc/03_angular_scattering.ipynb>`_ 
-* `Rayleigh Scattering <https://github.com/scottprahl/miepython/blob/master/doc/04_rayleigh.ipynb>`_ 
-* `Simple Fog <https://github.com/scottprahl/miepython/blob/master/doc/05_fog.ipynb>`_ 
-* `Large Sphere Validation <https://github.com/scottprahl/miepython/blob/master/doc/08_large_spheres.ipynb>`_
-* `Backscattering Validation <https://github.com/scottprahl/miepython/blob/master/doc/09_backscattering.ipynb>`_
-
-Short Scripts
-^^^^^^^^^^^^^
+There are a few short scripts in the github repository::
 
 * `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_ 
 * `Four Micron Glass Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py>`_ 
 * `One Micron Water Droplets <https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py>`_ 
 * `Gold Nanospheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py>`_ 
-
-Gory Details
-^^^^^^^^^^^^
-
-* `Generating Random Deviates for Monte Carlo <https://github.com/scottprahl/miepython/blob/master/doc/06_random_deviates.ipynb>`_
-* `The Algorithm <https://github.com/scottprahl/miepython/blob/master/doc/07_algorithm.ipynb>`_
-
 
 License
 -------
