@@ -1,7 +1,7 @@
 from setuptools import setup
 
-use README as the long description
-make sure to use the syntax that works in both ReST and markdown
+# use README.rst as the long description
+
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.rst'), encoding='utf-8') as f:
