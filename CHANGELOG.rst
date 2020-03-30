@@ -6,6 +6,7 @@ Changelog
 *   improve docstrings
 *   use Sphinx documentation
 *   host docs on readthedocs.io
+*   use tox
 
 1.3.0
 ------------------

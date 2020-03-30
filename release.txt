@@ -1,5 +1,8 @@
 Releasing a new version
 
+# run sanity checks
+  tox
+
 # make sure all Jupyter notebooks in the doc folder still work
 
 # versioning
