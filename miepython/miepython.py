@@ -1,4 +1,7 @@
 # pylint: disable=invalid-name
+# pylint: disable=unused-argument
+# pylint: disable=too-many-locals
+
 """
 Mie scattering in pure python
 
@@ -464,6 +467,8 @@ def generate_mie_costheta(mu_cdf):
     returns the cosine of the scattering angle
     """
 
+    # the following should be equivalent to these four lines
+    # index = np.random.randint(0, high=len(mu_cdf))
     num = len(mu_cdf) - 1
     index = int(np.random.random() * num)
     if index >= num:
@@ -487,7 +492,7 @@ def i_per(m, x, mu):
 
        returns the intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, s2 = mie_S1_S2(m, x, mu)
+    s1, _ = mie_S1_S2(m, x, mu)
     intensity = abs(s1)**2
     return intensity.astype('float')
 
@@ -504,7 +509,7 @@ def i_par(m, x, mu):
 
        returns the intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, s2 = mie_S1_S2(m, x, mu)
+    _, s2 = mie_S1_S2(m, x, mu)
     intensity = abs(s2)**2
     return intensity.astype('float')
 
