@@ -3,12 +3,13 @@
 # pylint: disable=too-many-locals
 
 """
-Mie scattering in pure python
+Mie scattering in pure python.
 
-`miepython` is a pure Python module to calculate light scattering by non-absorbing,
-partially-absorbing, or perfectly conducting spheres. Mie theory
+`miepython` is a pure Python module to calculate light scattering by
+non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory
 is used, following the procedure in given by Wiscombe in
-http://opensky.ucar.edu/islandora/object/technotes:232 and validated against his results.
+http://opensky.ucar.edu/islandora/object/technotes:232 and validated
+against his results.
 
 This code provides functions for calculating the extinction efficiency,
 scattering efficiency, backscattering, and scattering asymmetry. Moreover,
@@ -19,19 +20,25 @@ from __future__ import division
 
 import numpy as np
 
-__all__ = ['generate_mie_costheta',
+__all__ = ('generate_mie_costheta',
            'i_par',
            'i_per',
            'i_unpolarized',
            'mie',
            'mie_S1_S2',
            'mie_cdf',
-           'mie_mu_with_uniform_cdf']
+           'mie_mu_with_uniform_cdf')
 
 
 def _Lentz_Dn(z, N):
-    """ Compute the logarithmic derivative of the Ricatti-Bessel function
+    """
+    Compute the logarithmic derivative of the Ricatti-Bessel function.
 
+    Args:
+        z: function argument
+        N: order of Ricatti-Bessel function
+
+    Returns:
         This returns the Ricatti-Bessel function of order N with argument z
         using the continued fraction technique of Lentz, Appl. Opt., 15,
         668-671, (1976).
@@ -56,9 +63,15 @@ def _Lentz_Dn(z, N):
 
 
 def _D_downwards(z, N):
-    """ Compute the logarithmic derivative of all Ricatti-Bessel functions
+    """
+    Compute the logarithmic derivative by downwards recurrence.
 
-        This returns the Ricatti-Bessel function of orders 0 to N for an
+    Args:
+        z: function argument
+        N: order of Ricatti-Bessel function
+
+    Returns:
+        All the Ricatti-Bessel function values for orders from 0 to N for an
         argument z using the downwards recurrence relations.
     """
     D = np.zeros(N, dtype=complex)
@@ -70,9 +83,15 @@ def _D_downwards(z, N):
 
 
 def _D_upwards(z, N):
-    """ Compute the logarithmic derivative of all Ricatti-Bessel functions
+    """
+    Compute the logarithmic derivative by upwards recurrence.
 
-        This returns the Ricatti-Bessel function of orders 0 to N for an
+    Args:
+        z: function argument
+        N: order of Ricatti-Bessel function
+
+    Returns:
+        All the Ricatti-Bessel function values for orders from 0 to N for an
         argument z using the upwards recurrence relations.
     """
     D = np.zeros(N, dtype=complex)
@@ -84,8 +103,16 @@ def _D_upwards(z, N):
 
 
 def _D_calc(m, x, N):
-    """ Compute the logarithmic derivative of the Ricatti-Bessel function at all
-        orders (from 0 to N) with argument z
+    """
+    Compute the logarithmic derivative using best method.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        N: order of Ricatti-Bessel function
+
+    Returns:
+        The values of the Ricatti-Bessel function for orders from 0 to N.
     """
     n = m.real
     kappa = abs(m.imag)
@@ -97,14 +124,20 @@ def _D_calc(m, x, N):
 
 
 def _mie_An_Bn(m, x):
-    """ Compute the Mie coefficients A and B at all orders (from 0 to N)
-
-        A list of Mie coefficents An and Bn are returned for orders 0 to N for
-        a sphere with complex index m and non-dimensional size x.  The length
-        of the returned arrays is chosen so that the error when the series are
-        summed is around 1e-6.
     """
+    Compute arrays of Mie coefficients A and B for a sphere.
 
+    This estimates the size of the arrays based on Wiscombe's formula. The length
+    of the arrays is chosen so that the error when the series are summed is
+    around 1e-6.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+
+    Returns:
+        An, Bn: arrays of Mie coefficents
+    """
     nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
 
     if m.real > 0.0:
@@ -138,11 +171,21 @@ def _mie_An_Bn(m, x):
 
 
 def _small_conducting_mie(m, x):
-    """ Compute the efficiencies for small, perfectly conducting spheres.
+    """
+    Calculate the efficiencies for a small conducting spheres.
 
-        The total extinction, scattering, and backscattering efficiencies
-        as well as scattering asymmetry are calculated for small spheres
-        (x<0.1) that are perfectly conducting (m.re == 0)
+    Typically used for small conducting spheres where x < 0.1 and
+    m.real == 0
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
     """
     ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2)) / \
         complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
@@ -165,10 +208,20 @@ def _small_conducting_mie(m, x):
 
 
 def _small_mie(m, x):
-    """ Compute the efficiencies for a small sphere with index m.
+    """
+    Calculate the efficiencies for a small sphere.
 
-        The total extinction, scattering, and backscattering as well as
-        the scattering asymmetry for small spheres (x<0.1)
+    Typically used for small spheres where x<0.1
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
     """
     m2 = m * m
     x2 = x * x
@@ -199,15 +252,18 @@ def _small_mie(m, x):
 
 
 def _mie_scalar(m, x):
-    """ Calculates [qext, qsca, qback, g] for a sphere with index m and size x.
+    """
+    Calculate the efficiencies for a sphere when both m and x are scalars.
 
-        Calculate the extinction, scattering, and backscattering efficiencies
-        (as well as the average cosine of the scattering function) for a sphere
-        with complex index of refraction m and size parameter x.  Both m and x
-        must be scalars.
-        The extinction efficiency is qext, the scattering efficiency is qsca,
-        the backscatter efficiency is qback, and the average cosine of the
-        scattering phase function is g.
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
     """
     if m.real == 0 and x < 0.1:
         return _small_conducting_mie(m, x)
@@ -242,13 +298,18 @@ def _mie_scalar(m, x):
 
 
 def mie(m, x):
-    """ Calculates [qext, qsca, qback, g] for a sphere with index m and size x.
+    """
+    Calculate the efficiencies for a sphere where m or x may be arrays.
 
-        The index or size or both may be arrays.
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
 
-        The extinction efficiency is qext, the scattering efficiency is qsca,
-        the backscatter efficiency is qback, and the average cosine of the
-        scattering phase function is g.
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
     """
     try:
         mlen = len(m)
@@ -287,16 +348,23 @@ def mie(m, x):
 
 
 def _small_mie_conducting_S1_S2(m, x, mu):
-    """Calculate the scattering amplitude S1 and S2 for small conducting spheres
-
-       The spheres are perfectly conducting (reflecting) sphere (x<0.1) at each
-       cos(theta) angle specified in the array mu. The amplitude functions have
-       been normalized so that when integrated over all 4*pi solid angles, the
-       integral will be qext*pi*x**2.  The units are weird, sr**(-0.5)
-
-       Returns S1 and S2 at each angle in the array mu.
     """
+    Calculate the scattering amplitudes for small conducting spheres.
 
+    The spheres are small perfectly conducting (reflecting) spheres (x<0.1).
+    The amplitude functions have been normalized so that when integrated
+    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+
+    The units are weird, sr**(-0.5)
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: the angles, cos(theta), to calculate scattering amplitudes
+
+    Returns:
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+    """
     ahat1 = 2j / 3 * (1 - 0.2 * x**2) / (1 - 0.5 * x**2 + 2j / 3 * x**3)
     bhat1 = 1j / 3 * (0.1 * x**2 - 1) / (1 + 0.5 * x**2 - 1j / 3 * x**3)
     ahat2 = 1j / 30 * x**2
@@ -317,13 +385,21 @@ def _small_mie_conducting_S1_S2(m, x, mu):
 
 
 def _small_mie_S1_S2(m, x, mu):
-    """Calculate the scattering amplitude functions S1 and S2 for a complex
-       index of refraction m, a size parameter x<0.1, at each cos(theta) angle
-       specified in the array mu.  The amplitude functions have been normalized
-       so that when integrated over all 4*pi solid angles, the integral will
-       be qext*pi*x**2.  The units are weird, sr**(-0.5)
+    """
+    Calculate the scattering amplitude functions for small spheres (x<0.1).
 
-       Returns S1 and S2 at each angle in the array mu.
+    The amplitude functions have been normalized so that when integrated
+    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+
+    The units are weird, sr**(-0.5)
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: the angles, cos(theta), to calculate scattering amplitudes
+
+    Returns:
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
     m2 = m * m
     m4 = m2 * m2
@@ -351,15 +427,22 @@ def _small_mie_S1_S2(m, x, mu):
 
 
 def mie_S1_S2(m, x, mu):
-    """Calculate the scattering amplitude functions S1 and S2 for a complex
-       index of refraction m, a size parameter x, at each cos(theta) angle
-       specified in the array mu.  The amplitude functions have been normalized
-       so that when integrated over all 4pi solid angles, the integral will
-       equal the single scattering albedo.  The units are weird, sr**(-0.5)
-
-       Returns S1 and S2 at each angle in the array mu.
     """
+    Calculate the scattering amplitude functions for spheres.
 
+    The amplitude functions have been normalized so that when integrated
+    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+
+    The units are weird, sr**(-0.5)
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: the angles, cos(theta), to calculate scattering amplitudes
+
+    Returns:
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+    """
     a, b = _mie_An_Bn(m, x)
 
     nangles = len(mu)
@@ -392,12 +475,26 @@ def mie_S1_S2(m, x, mu):
 
 
 def mie_cdf(m, x, num):
-    """Calculate the cumulative distribution function for unpolarized scattering
-       for exit angles ranging from 180 to 0 degrees. The cosines are uniformly
-       distributed over -1 to 1.  Since this is a cumulative distribution
-       function, the maximum value should be 1.
+    """
+    Create a CDF for unpolarized scattering uniformly spaced in cos(theta).
 
-       Returns the mu and cdf
+    The CDF covers scattered (exit) angles ranging from 180 to 0 degrees.
+    (The cosines are uniformly distributed over -1 to 1.) Because the angles
+    are uniformly distributed in cos(theta), the scattering function is not
+    sampled uniformly and therefore huge array sizes are needed to adequately
+    sample highly anisotropic phase functions.
+
+    Since this is a cumulative distribution function, the maximum value
+    should be 1.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        num: length of desired CDF array
+
+    Returns:
+        mu: array of cosines of angles
+        cdf: array of cumulative distribution function values
     """
     mu = np.linspace(-1, 1, num)
     s1, s2 = mie_S1_S2(m, x, mu)
@@ -415,17 +512,30 @@ def mie_cdf(m, x, num):
 
 
 def mie_mu_with_uniform_cdf(m, x, num):
-    """Find the cosine angles mu that correspond to uniform spacing of the
-       cumulative distribution function for unpolarized Mie scattering.
-
-       This is a brute force implementation that solves the problem by
-       calculating the CDF at many points and then scanning to find the
-       specific angles that correspond to uniform interval of the CDF.
-
-       Returns mu and cdf with points uniformly spaced across the cdf, e.g.,
-       cdf[i] = i/(num-1)  and mu[i] corresponds to this cdf value
     """
+    Create a CDF for unpolarized scattering for uniform CDF.
 
+    The CDF covers scattered (exit) angles ranging from 180 to 0 degrees.
+    (The cosines are uniformly distributed over -1 to 1.) These angles mu
+    correspond to uniform spacing of the cumulative distribution function
+    for unpolarized Mie scattering where cdf[i] = i/(num-1).
+
+    This is a brute force implementation that solves the problem by
+    calculating the CDF at many points and then scanning to find the
+    specific angles that correspond to uniform interval of the CDF.
+
+    Since this is a cumulative distribution function, the maximum value
+    should be 1.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        num: length of desired CDF array
+
+    Returns:
+        mu: array of cosines of angles (irregularly spaced)
+        cdf: array of cumulative distribution function values
+    """
     big_num = 2000                  # large to work with x up to 10
     big_mu, big_cdf = mie_cdf(m, x, big_num)
     mu = np.empty(num)
@@ -459,14 +569,19 @@ def mie_mu_with_uniform_cdf(m, x, num):
 
 def generate_mie_costheta(mu_cdf):
     """
-    Generate a new scattering angle from a uniformly spaced cumulative
-    distribution function (CDF). This is done by selecting a random interval
-    mu[i] to mu[i+1] and then return an angle uniformly distributed over
+    Generate a new scattering angle using a cdf.
+
+    A uniformly spaced cumulative distribution function (CDF) is needed.
+    New random angles are generated by selecting a random interval
+    mu[i] to mu[i+1] and choosing an angle uniformly distributed over
     the interval.
 
-    returns the cosine of the scattering angle
-    """
+    Args:
+       mu_cdf: a cumulative distribution function
 
+    Returns
+       The cosine of the scattering angle
+    """
     # the following should be equivalent to these four lines
     # index = np.random.randint(0, high=len(mu_cdf))
     num = len(mu_cdf) - 1
@@ -481,16 +596,21 @@ def generate_mie_costheta(mu_cdf):
 
 
 def i_per(m, x, mu):
-    """Calculate the scattered intensity for a field perpendicular to the plane
-       of scattering.  The intensity is normalized such that the integral of
-       the unpolarized intensity over 4pi steradians is equal to the single
-       scattering albedo.
+    """
+    Return the scattered intensity in a plane normal to the incident light.
 
-       m is the complex index of refraction,
-       x is the size parameter
-       mu is the cos(theta) of each direction desired
+    This is the scattered intensity in a plane that is perpendicular to the
+    field of the incident plane wave. The intensity is normalized such
+    that the integral of the unpolarized intensity over 4pi steradians
+    is equal to the single scattering albedo.
 
-       returns the intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+       m: the complex index of refraction of the sphere
+       x: the size parameter of the sphere
+       mu: the angles, cos(theta), to calculate intensities
+
+    Returns
+       The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, _ = mie_S1_S2(m, x, mu)
     intensity = abs(s1)**2
@@ -498,16 +618,21 @@ def i_per(m, x, mu):
 
 
 def i_par(m, x, mu):
-    """Calculate the scattered intensity for a field parallel to the plane
-       of scattering.  The intensity is normalized such that the integral of
-       the unpolarized intensity over 4pi steradians is equal to the single
-       scattering albedo.
+    """
+    Return the scattered intensity in a plane parallel to the incident light.
 
-       m is the complex index of refraction,
-       x is the size parameter
-       mu is the cos(theta) of each direction desired
+    This is the scattered intensity in a plane that is parallel to the
+    field of the incident plane wave. The intensity is normalized such
+    that the integral of the unpolarized intensity over 4pi steradians
+    is equal to the single scattering albedo.
 
-       returns the intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+       m: the complex index of refraction of the sphere
+       x: the size parameter
+       mu: the cos(theta) of each direction desired
+
+    Returns
+       The intensity at each angle in the array mu.  Units [1/sr]
     """
     _, s2 = mie_S1_S2(m, x, mu)
     intensity = abs(s2)**2
@@ -515,15 +640,21 @@ def i_par(m, x, mu):
 
 
 def i_unpolarized(m, x, mu):
-    """Calculate the scattered intensity for unpolarized incident light.
-       The intensity is normalized such that the integral over
-       4pi steradians is equal to the single scattering albedo.
+    """
+    Return the unpolarized scattered intensity at specified angles.
 
-       m is the complex index of refraction,
-       x is the size parameter
-       mu is the cos(theta) of each direction desired
+    This is the average value for randomly polarized incident light.
+    The intensity is normalized such
+    that the integral of the unpolarized intensity over 4pi steradians
+    is equal to the single scattering albedo.
 
-       returns the intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+       m: the complex index of refraction of the sphere
+       x: the size parameter
+       mu: the cos(theta) of each direction desired
+
+    Returns
+       The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, s2 = mie_S1_S2(m, x, mu)
     intensity = (abs(s1)**2 + abs(s2)**2) / 2
