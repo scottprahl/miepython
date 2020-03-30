@@ -3,6 +3,9 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = docs
 BUILDDIR      = docs/_build
 
+default:
+	@echo Type: make check, make html, or make clean
+
 check:
 	-pyroma -d .
 	-check-manifest
@@ -20,4 +23,4 @@ clean:
 	rm -rf docs/api/*
 	rm -rf .tox
 	
-.PHONY: clean realclean check
+.PHONY: clean realclean check html
