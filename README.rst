@@ -43,7 +43,7 @@ should produce::
 
 Detailed documentation is available at <https://miepython.readthedocs.io>
 
-There are a few short scripts in the github repository::
+There are a few short scripts in the github repository.
 
 * `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_ 
 * `Four Micron Glass Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py>`_ 
