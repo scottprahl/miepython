@@ -14,8 +14,9 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 Installation
 ------------
 
-   pip install miepython
+Just use `pip`::
 
+   pip install miepython
 
 Usage
 -----
