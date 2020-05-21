@@ -21,7 +21,7 @@ Releasing a new version
 
 # upload source to pypi
   rm -rf dist/*
-  python setup.py sdist
+  python3 setup.py sdist
   twine upload dist/*
 
 # test the install by removing local developer version

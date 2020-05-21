@@ -21,4 +21,4 @@ Detailed Documentation
 API
 ===
 
-.. automodapi:: miepython.miepython
+.. automodapi:: miepython
