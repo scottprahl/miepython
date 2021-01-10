@@ -3,7 +3,9 @@
 # pylint: disable=too-many-locals
 
 """
-Mie scattering in pure python.
+Mie scattering calculations in pure python.
+
+Extensive documentation is at <https://miepython.readthedocs.io>
 
 `miepython` is a pure Python module to calculate light scattering by
 non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory
@@ -15,8 +17,6 @@ This code provides functions for calculating the extinction efficiency,
 scattering efficiency, backscattering, and scattering asymmetry. Moreover,
 a set of angles can be given to calculate the scattering for a sphere.
 """
-
-from __future__ import division
 
 import numpy as np
 
