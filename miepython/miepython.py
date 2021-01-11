@@ -3,31 +3,52 @@
 # pylint: disable=too-many-locals
 
 """
-Mie scattering calculations in pure python.
+Mie scattering calculations for perfect spheres.
 
 Extensive documentation is at <https://miepython.readthedocs.io>
 
-`miepython` is a pure Python module to calculate light scattering by
-non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory
-is used, following the procedure in given by Wiscombe in
-http://opensky.ucar.edu/islandora/object/technotes:232 and validated
-against his results.
+`miepython` is a pure Python module to calculate light scattering of
+a plane wave by non-absorbing, partially-absorbing, or perfectly conducting
+spheres.
 
-This code provides functions for calculating the extinction efficiency,
-scattering efficiency, backscattering, and scattering asymmetry. Moreover,
-a set of angles can be given to calculate the scattering for a sphere.
+The extinction efficiency, scattering efficiency, backscattering, and
+scattering asymmetry for a sphere with complex index of refraction m,
+diameter d, and wavelength lambda can be found by::
+
+    qext, qsca, qback, g = miepython.ez_mie(m, d, lambda0)
+
+The normalized scattering values for angles mu=cos(theta) are::
+
+    Ipar, Iper = miepython.ez_intensities(m, d, lambda0, mu)
+
+If the size parameter is known, then use::
+
+    miepython.mie(m, x)
+
+Mie scattering amplitudes S1 and S2 (complex numbers):
+
+    miepython.mie_S1_S2(m, x, mu)
+
+Normalized Mie scattering intensities for angles mu=cos(theta)::
+
+    miepython.i_per(m, x, mu)
+    miepython.i_par(m, x, mu)
+    miepython.i_unpolarized(m, x, mu)
 """
 
 import numpy as np
 
-__all__ = ('generate_mie_costheta',
+__all__ = ('ez_mie',
+           'ez_intensities',
+           'generate_mie_costheta',
            'i_par',
            'i_per',
            'i_unpolarized',
            'mie',
            'mie_S1_S2',
            'mie_cdf',
-           'mie_mu_with_uniform_cdf')
+           'mie_mu_with_uniform_cdf',
+           )
 
 
 def _Lentz_Dn(z, N):
@@ -353,7 +374,7 @@ def _small_mie_conducting_S1_S2(m, x, mu):
 
     The spheres are small perfectly conducting (reflecting) spheres (x<0.1).
     The amplitude functions have been normalized so that when integrated
-    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+    over all 4𝜋 solid angles, the integral will be qext(𝜋x²).
 
     The units are weird, sr**(-0.5)
 
@@ -504,7 +525,7 @@ def mie_cdf(m, x, num):
     cdf = np.zeros(num)
     total = 0
     for i in range(num):
-        # need the extra 2pi because scattering normalized over 4pi steradians
+        # need the extra 2pi because scattering normalized over 4π steradians
         total += s[i] * 2 * np.pi * (2 / num)
         cdf[i] = total
 
@@ -601,7 +622,7 @@ def i_per(m, x, mu):
 
     This is the scattered intensity in a plane that is perpendicular to the
     field of the incident plane wave. The intensity is normalized such
-    that the integral of the unpolarized intensity over 4pi steradians
+    that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
     Args:
@@ -623,7 +644,7 @@ def i_par(m, x, mu):
 
     This is the scattered intensity in a plane that is parallel to the
     field of the incident plane wave. The intensity is normalized such
-    that the integral of the unpolarized intensity over 4pi steradians
+    that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
     Args:
@@ -645,7 +666,7 @@ def i_unpolarized(m, x, mu):
 
     This is the average value for randomly polarized incident light.
     The intensity is normalized such
-    that the integral of the unpolarized intensity over 4pi steradians
+    that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
     Args:
@@ -659,3 +680,58 @@ def i_unpolarized(m, x, mu):
     s1, s2 = mie_S1_S2(m, x, mu)
     intensity = (abs(s1)**2 + abs(s2)**2) / 2
     return intensity.astype('float')
+
+
+def ez_mie(m, d, lambda0, n_env=1.0):
+    """
+    Calculate the efficiencies of a sphere.
+
+    Args:
+        m: the complex index of refraction of the sphere [-]
+        d: the diameter of the sphere                    [same units as lambda0]
+        lambda0: wavelength in a vacuum                  [same units as d]
+        n_env: real index of medium around sphere        [-]
+
+    Returns:
+        qext: the total extinction efficiency                  [-]
+        qsca: the scattering efficiency                        [-]
+        qback: the backscatter efficiency                      [-]
+        g: the average cosine of the scattering phase function [-]
+    """
+    m_env = m / n_env
+    x_env = np.pi*d/(lambda0/n_env)
+    return mie(m_env, x_env)
+
+
+def ez_intensities(m, d, lambda0, mu, n_env=1.0):
+    """
+    Return the scattered intensities from a sphere.
+
+    These are the scattered intensities in a plane that is parallel (ipar) and
+    perpendicular (iper) to the field of the incident plane wave.
+
+    The scattered intensity is normalized such that the integral of the
+    unpolarized intensity over 4𝜋 steradians is equal to the single scattering
+    albedo.  The scattered intensity has units of inverse steradians [1/sr].
+
+    The unpolarized scattering is the average of the two scattered intensities.
+
+    Args:
+        m: the complex index of refraction of the sphere [-]
+        d: the diameter of the sphere                    [same units as lambda0]
+        lambda0: wavelength in a vacuum                  [same units as d]
+        mu: the cos(theta) of each direction desired     [-]
+        n_env: real index of medium around sphere        [-]
+
+    Returns:
+        ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
+    """
+    m_env = m / n_env
+    lambda_env = lambda0 / n_env
+    x = np.pi*d/lambda_env
+    s1, s2 = mie_S1_S2(m, x, mu)
+    ipar = abs(s2)**2
+    iper = abs(s1)**2
+    Ipar = ipar.astype('float')
+    Iper = iper.astype('float')
+    return Ipar, Iper
