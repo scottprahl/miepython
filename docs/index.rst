@@ -16,9 +16,7 @@ Detailed Documentation
    08_large_spheres.ipynb
    09_backscattering.ipynb
    10_basic_tests.ipynb
-   changelog
 
-API
-===
+.. include:: miepython.rst
 
-.. automodapi:: miepython
+.. include:: CHANGELOG.rst
