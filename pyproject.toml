@@ -1,0 +1,24 @@
+[build-system]
+requires = [
+    "setuptools >= 35.0.2",
+    "setuptools_scm >= 2.0.0, <3"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.tox]
+legacy_tox_ini = """
+
+[tox]
+envlist = py37
+
+[testenv]
+deps = pytest
+       matplotlib
+
+commands =
+    python3 -m pytest miepython/test/test.py
+    python3 miepython/examples/01_dielectric.py
+    python3 miepython/examples/02_glass.py
+    python3 miepython/examples/03_droplets.py
+    python3 miepython/examples/04_gold.py
+"""

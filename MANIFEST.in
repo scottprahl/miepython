@@ -1,4 +1,9 @@
-include *.txt
+include LICENSE.txt
+include CHANGELOG.rst
 include miepython/examples/*.py
-include doc/0*.ipynb
 include miepython/test/*.py
+exclude docs/*
+exclude docs
+exclude release.txt
+exclude .gitignore
+exclude Makefile
