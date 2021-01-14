@@ -1,8 +1,17 @@
 Changelog
 =================================================
 
+1.3.2 (01/13/21)
+----------------
+*   add ez_mie(m, d, lambda0)
+*   add ez_intensities(m, d, lambda0, mu)
+*   fix formatting
+*   fix api autodoc
+*   specify newer pythons
+*   better install instructions
+
 1.3.1 (03/30/20)
------
+----------------
 *   improve docstrings
 *   use Sphinx documentation
 *   host docs on readthedocs.io
