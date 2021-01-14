@@ -6,11 +6,13 @@ BUILDDIR      = docs/_build
 default:
 	@echo Type: make check, make html, or make clean
 
-check:
+rcheck:
 	-pyroma -d .
 	-check-manifest
 	-pylint miepython/miepython.py
 	-pep257 miepython/miepython.py
+	-pylint miepython/__init__.py
+	-pep257 miepython/__init__.py
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
@@ -26,4 +28,4 @@ clean:
 	rm -rf docs/api/*
 	rm -rf .tox
 	
-.PHONY: clean check html test
+.PHONY: clean rcheck html test
