@@ -26,6 +26,10 @@ clean:
 	rm -rf miepython/__pycache__
 	rm -rf docs/_build/*
 	rm -rf docs/api/*
+	rm -rf docs/.doctrees/*
 	rm -rf .tox
 	
-.PHONY: clean rcheck html test
+realclean:
+	make clean
+
+.PHONY: clean rcheck html test realclean
