@@ -1,6 +1,8 @@
 # pylint: disable=invalid-name
 # pylint: disable=unused-argument
 # pylint: disable=too-many-locals
+# pylint: disable=no-member
+# pylint: disable=bare-except
 
 """
 Mie scattering calculations for perfect spheres.
@@ -728,8 +730,8 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     """
     m_env = m / n_env
     lambda_env = lambda0 / n_env
-    x = np.pi*d/lambda_env
-    s1, s2 = mie_S1_S2(m, x, mu)
+    x_env = np.pi*d/lambda_env
+    s1, s2 = mie_S1_S2(m_env, x_env, mu)
     ipar = abs(s2)**2
     iper = abs(s1)**2
     Ipar = ipar.astype('float')
