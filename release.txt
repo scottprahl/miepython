@@ -24,6 +24,13 @@ Releasing a new version
   python3 setup.py sdist
   python3 -m twine upload dist/*
 
+# manually update release at
+  https://github.com/scottprahl/miepython
+  
+# check releases at pypi and readthedocs
+  https://pypi.org/project/miepython/
+  https://miepython.readthedocs.io
+
 # test the install by removing local developer version
 # installing, then uninstalling, then restoring developer version
   conda develop -u .
@@ -31,4 +38,3 @@ Releasing a new version
   pip uninstall miepython
   conda develop .
 
-# Go to github and create a new release to hide previous releases

@@ -1,5 +1,5 @@
 Changelog
-=================================================
+=========
 
 1.3.2 (01/13/21)
 ----------------
@@ -18,18 +18,18 @@ Changelog
 *   use tox
 
 1.3.0 (02/19/19)
-------------------
+----------------
 *   fix calculations for small spheres (x<0.05)
 *   added notebook doc/09_backscattering.ipynb
 *   general tweaks to documentation throughout
-*   improved README.md 
+*   improved README.md
 
 1.2.0. (02/08/19)
-------------------
+-----------------
 *   fix bug so that large sphere calculations work correctly
 *   add tests for large spheres
 *   add tests for backscattering efficiency
-*   add documentation notebook for large spheres 
+*   add documentation notebook for large spheres
 *   add direct links to documentation
 *   finish fixing fractions in notebooks
 *   improve README.md
@@ -90,39 +90,38 @@ Changelog
 0.3.2 (07/07/2017)
 ------------------
 *   update README, bump to 0.3.2
-*   Fix examples so they work. 
+*   Fix examples so they work.
 
 0.3.2 (07/07/2017)
 ------------------
-*   Fix examples so they work. 
+*   Fix examples so they work.
 
 0.3.1 (07/07/2017)
 ------------------
-*   Bump version. 
-*   Add functions to __init__.py. 
+*   Bump version.
+*   Add functions to __init__.py.
 
 0.3.0 (07/07/2017)
 ------------------
-*   Update README again. 
-*   Update README. 
-*   More packaging issues. 
-*   Only include normalized scattering functions. 
-*   Tweak setup.py and add .gitignore. 
-*   Rename README. 
-*   Add small sphere calc for S1 and S2. 
-*   Label tests with MIEV0 cases. 
-*   Rename example. 
-*   Add gold sphere example. 
-*   Add a few example programs. 
-*   Remove unused tests. 
-*   Remove extraneous ; simplify test.py, add tests. 
-*   Simplify test suite management. 
-*   Rename awkward test_miepython to just test. 
-*   Reorganize tests, add S1 & S2 test. 
-*   Added capabilities. Barely working test suite. 
-*   Add more tests that fail. 
-*   Move files around. 
-*   Add boilerplate files and start adding unit tests. 
-*   Rename to miepython. 
-*   Initial check in. 
-
+*   Update README again.
+*   Update README.
+*   More packaging issues.
+*   Only include normalized scattering functions.
+*   Tweak setup.py and add .gitignore.
+*   Rename README.
+*   Add small sphere calc for S1 and S2.
+*   Label tests with MIEV0 cases.
+*   Rename example.
+*   Add gold sphere example.
+*   Add a few example programs.
+*   Remove unused tests.
+*   Remove extraneous ; simplify test.py, add tests.
+*   Simplify test suite management.
+*   Rename awkward test_miepython to just test.
+*   Reorganize tests, add S1 & S2 test.
+*   Added capabilities. Barely working test suite.
+*   Add more tests that fail.
+*   Move files around.
+*   Add boilerplate files and start adding unit tests.
+*   Rename to miepython.
+*   Initial check in.

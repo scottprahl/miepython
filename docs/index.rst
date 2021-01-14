@@ -17,6 +17,6 @@ Detailed Documentation
    09_backscattering.ipynb
    10_basic_tests.ipynb
 
-.. include:: miepython.rst
-
-.. include:: CHANGELOG.rst
+   miepython
+   
+   changelog
