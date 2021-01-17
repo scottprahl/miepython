@@ -34,7 +34,7 @@ Changelog
 *   finish fixing fractions in notebooks
 *   improve README.md
 
- 1.1.1. (06/25/18)
+1.1.1. (06/25/18)
 ------------------
 *   fix github rendering of fractions in equations
 *   add developer instructions

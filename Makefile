@@ -10,9 +10,9 @@ rcheck:
 	-pyroma -d .
 	-check-manifest
 	-pylint miepython/miepython.py
-	-pep257 miepython/miepython.py
+	-pydocstyle miepython/miepython.py
 	-pylint miepython/__init__.py
-	-pep257 miepython/__init__.py
+	-pydocstyle miepython/__init__.py
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
