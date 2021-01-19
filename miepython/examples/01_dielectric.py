@@ -9,21 +9,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import miepython
 
-num = 100
+x = np.linspace(0.1,100,300)
 
-x = np.linspace(0.1,100,num)
-qqext1 = np.zeros(num)
-qqext2 = np.zeros(num)
+# mie() will automatically try to do the right thing
 
-for i in range(num) :
-    qext, qsca, qback, g = miepython.mie(1.5,x[i])
-    qqext1[i]=qext
-    qext, qsca, qback, g = miepython.mie(1.5-0.1j,x[i])
-    qqext2[i]=qext
-    
-plt.plot(x,qqext1)
-plt.plot(x,qqext2)
+qext, qsca, qback, g = miepython.mie(1.5,x)
+plt.plot(x,qext,color='red',label="1.5")
 
+qext, qsca, qback, g = miepython.mie(1.5-0.1j,x)
+plt.plot(x,qext,color='blue',label="1.5-0.1j")
+
+plt.title("Comparison of extinction for absorbing and non-absorbing spheres")
 plt.xlabel("Size Parameter (-)")
 plt.ylabel("Qext")
+plt.legend()
 plt.show()
+
