@@ -1,6 +1,20 @@
 miepython
 =========
 
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/scottprahl/miepython/master?filepath=docs
+
+.. image:: https://colab.research.google.com/assets/colab-badge.svg
+   :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
+
+.. image:: https://img.shields.io/badge/nbviewer-docs-yellow.svg
+   :target: https://nbviewer.jupyter.org/github/scottprahl/miepython/tree/master/docs
+
+.. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
+   :target: https://miepython.readthedocs.io
+
+__________
+
 `miepython` is a pure Python module to calculate light scattering by non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory is used, following the procedure described by Wiscombe <http://opensky.ucar.edu/islandora/object/technotes:232>. This code has been validated against his results.
 
 Extensive documentation is at <https://miepython.readthedocs.io>

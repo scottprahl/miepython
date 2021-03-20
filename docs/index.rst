@@ -1,11 +1,25 @@
 miepython
 =========
 
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/scottprahl/miepython/master?filepath=docs
+
+.. image:: https://colab.research.google.com/assets/colab-badge.svg
+   :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
+
+.. image:: https://img.shields.io/badge/nbviewer-docs-yellow.svg
+   :target: https://nbviewer.jupyter.org/github/scottprahl/miepython/tree/master/docs
+
+.. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
+   :target: https://miepython.readthedocs.io
+
+----
+
 `miepython` is a pure Python module to calculate light scattering by
 non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie
 theory is used, following the procedure described by Wiscombe
 <http://opensky.ucar.edu/islandora/object/technotes:232>. This code has
-been validated against his results. The code is at 
+been validated against his results. The code is at
 <https://github.com/scottprahl/miepython>
 
 This code provides functions for calculating the extinction efficiency,
@@ -19,7 +33,7 @@ When comparing different Mie scattering codes, make sure that you're
 aware of the conventions used by each code.  `miepython` makes the
 following assumptions
 
-* the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
+* the imaginary part of the complex index of refraction for absorbing spheres is *negative*.
 
 * the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.
 
@@ -53,7 +67,7 @@ Small Gold Spheres
 
 .. toctree::
    :maxdepth: 2
-   
+
 .. toctree::
    :caption: Example Usage
    :hidden:
@@ -84,7 +98,7 @@ Small Gold Spheres
    :hidden:
 
    miepython
-   
+
 .. toctree::
    :caption: Versions
    :hidden:
