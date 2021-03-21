@@ -36,6 +36,15 @@ following assumptions
 
 * the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.
 
+Using miepython
+---------------
+
+1. Run in the cloud using `Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ and select a Jupyter notebook to run.
+
+2. Install locally using pip::
+    
+    pip install --user miepython
+
 Script Examples for those that don't do Jupyter
 -----------------------------------------------
 
