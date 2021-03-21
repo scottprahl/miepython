@@ -2,3 +2,4 @@ numpy
 matplotlib
 nbsphinx
 sphinx-automodapi
+sphinx-book-theme
