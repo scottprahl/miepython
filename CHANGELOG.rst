@@ -3,10 +3,11 @@ Changelog
 
 1.3.3 (03/21/21)
 ----------------
-*   add binder and colab badges
+*   colab badge and link
 *   change theme for sphinx documentation
-*   add another requirements.txt to avoid installing sphinx
-*   fix restrutured text errors
+*   add requirements.txt to avoid installing sphinx
+*   fix restructured text errors
+*   advise everywhere to `pip install --user miepython` to avoid permission problems
 
 1.3.2 (01/13/21)
 ----------------
