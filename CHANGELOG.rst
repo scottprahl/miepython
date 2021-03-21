@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.3.3 (03/21/21)
+----------------
+*   add binder and colab badges
+*   change theme for sphinx documentation
+*   add another requirements.txt to avoid installing sphinx
+*   fix restrutured text errors
+
 1.3.2 (01/13/21)
 ----------------
 *   add ez_mie(m, d, lambda0)
@@ -90,10 +97,6 @@ Changelog
 0.3.2 (07/07/2017)
 ------------------
 *   update README, bump to 0.3.2
-*   Fix examples so they work.
-
-0.3.2 (07/07/2017)
-------------------
 *   Fix examples so they work.
 
 0.3.1 (07/07/2017)
