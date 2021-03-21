@@ -13,15 +13,26 @@ miepython
 .. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
    :target: https://miepython.readthedocs.io
 
+.. image:: https://img.shields.io/badge/github-code-green.svg
+   :target: https://github.com/scottprahl/miepython
+
+.. image:: https://img.shields.io/badge/MIT-license-green.svg
+   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
+
 __________
 
-`miepython` is a pure Python module to calculate light scattering by non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie theory is used, following the procedure described by Wiscombe <http://opensky.ucar.edu/islandora/object/technotes:232>. This code has been validated against his results.
-
-Extensive documentation is at <https://miepython.readthedocs.io>
+miepython is a pure Python module to calculate light scattering by
+non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie
+theory is used, following `the procedure described by Wiscombe
+<http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
+been validated against his results. 
 
 This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere.
 
-When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  `miepython` makes the following assumptions
+Pay Attention!
+--------------
+
+When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  miepython makes the following assumptions
 
 #. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
 
@@ -30,7 +41,7 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 Installation
 ------------
 
-Just use `pip`::
+Just use ``pip``::
 
    pip install --user miepython
 
@@ -69,4 +80,4 @@ There are a few short scripts in the github repository.
 License
 -------
 
-`miepython` is licensed under the terms of the MIT license.
+``miepython`` is licensed under the terms of the MIT license.
