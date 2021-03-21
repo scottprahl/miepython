@@ -37,6 +37,7 @@ clean:
 	rm -rf docs/_build/.buildinfo
 	rm -rf docs/_build/.doctrees
 	rm -rf .tox
+	rm -rf 04_plot.png
 	
 realclean:
 	make clean
