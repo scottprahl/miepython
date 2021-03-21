@@ -15,7 +15,7 @@ miepython
 
 __________
 
-miepython is a pure Python module to calculate light scattering by
+``miepython`` is a pure Python module to calculate light scattering by
 non-absorbing, partially-absorbing, or perfectly conducting spheres. Mie
 theory is used, following `the procedure described by Wiscombe
 <http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
@@ -26,7 +26,7 @@ This code provides functions for calculating the extinction efficiency, scatteri
 Pay Attention!
 --------------
 
-When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  miepython makes the following assumptions
+When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  ``miepython`` makes the following assumptions
 
 #. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
 
