@@ -7,3 +7,4 @@ exclude docs
 exclude release.txt
 exclude .gitignore
 exclude Makefile
+exclude requirements.txt
