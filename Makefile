@@ -7,12 +7,20 @@ default:
 	@echo Type: make check, make html, or make clean
 
 rcheck:
+	make rstcheck
 	-pyroma -d .
 	-check-manifest
 	-pylint miepython/miepython.py
 	-pydocstyle miepython/miepython.py
 	-pylint miepython/__init__.py
 	-pydocstyle miepython/__init__.py
+
+rstcheck:
+	-rstcheck README.rst
+	-rstcheck CHANGELOG.rst
+	-rstcheck docs/index.rst
+	-rstcheck docs/changelog.rst
+	-rstcheck --ignore-directives automodule docs/miepython.rst
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
