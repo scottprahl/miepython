@@ -41,7 +41,6 @@ Using miepython
 
 2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
-
 An example
 ----------
 
