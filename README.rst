@@ -1,14 +1,8 @@
 miepython
 =========
 
-.. image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/scottprahl/miepython/master?filepath=docs
-
 .. image:: https://colab.research.google.com/assets/colab-badge.svg
    :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
-
-.. image:: https://img.shields.io/badge/nbviewer-docs-yellow.svg
-   :target: https://nbviewer.jupyter.org/github/scottprahl/miepython/tree/master/docs
 
 .. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
    :target: https://miepython.readthedocs.io
@@ -16,7 +10,7 @@ miepython
 .. image:: https://img.shields.io/badge/github-code-green.svg
    :target: https://github.com/scottprahl/miepython
 
-.. image:: https://img.shields.io/badge/MIT-license-green.svg
+.. image:: https://img.shields.io/badge/MIT-license-yellow.svg
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
 
 __________
