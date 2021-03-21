@@ -39,11 +39,11 @@ following assumptions
 Using miepython
 ---------------
 
-1. Run in the cloud using `Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ and select a Jupyter notebook to run.
-
-2. Install locally using pip::
+1. You can install locally using pip::
     
     pip install --user miepython
+
+2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
 Script Examples for those that don't do Jupyter
 -----------------------------------------------
