@@ -7,6 +7,8 @@ default:
 	@echo Type: make check, make html, or make clean
 
 rcheck:
+	make clean
+	make notecheck
 	make rstcheck
 	-pyroma -d .
 	-check-manifest
@@ -14,6 +16,9 @@ rcheck:
 	-pydocstyle miepython/miepython.py
 	-pylint miepython/__init__.py
 	-pydocstyle miepython/__init__.py
+
+notecheck:
+	pytest --verbose test_all_notebooks.py
 
 rstcheck:
 	-rstcheck README.rst
@@ -32,12 +37,12 @@ clean:
 	rm -rf dist
 	rm -rf miepython.egg-info
 	rm -rf miepython/__pycache__
-	rm -rf docs/api/*
-	rm -rf docs/_build/*
-	rm -rf docs/_build/.buildinfo
-	rm -rf docs/_build/.doctrees
+	rm -rf docs/api
+	rm -rf docs/_build
+	rm -rf __pycache__
 	rm -rf .tox
 	rm -rf 04_plot.png
+
 	
 realclean:
 	make clean
