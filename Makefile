@@ -18,7 +18,7 @@ rcheck:
 	-pydocstyle miepython/__init__.py
 
 notecheck:
-	pytest --verbose test_all_notebooks.py
+	pytest --verbose -n 4 test_all_notebooks.py
 
 rstcheck:
 	-rstcheck README.rst
