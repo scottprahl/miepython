@@ -9,3 +9,4 @@ docs/refractiveindex.info
 docs/_build
 docs/api
 miepython.egg-info
+.vscode/*
