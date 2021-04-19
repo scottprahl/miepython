@@ -396,5 +396,79 @@ class angle_scattering(unittest.TestCase):
         self.assertAlmostEqual(S2[6].real,-0.348844, delta=1e-6)
         self.assertAlmostEqual(S2[6].imag,-0.146829, delta=1e-6)
 
+class notebook_tests(unittest.TestCase):
+    def test_nb1_x(self):
+        N=500
+        m=1.5
+        x = np.linspace(0.1,20,N)  # also in microns
+        qext, qsca, qback, g = miepython.mie(m,x)
+
+        self.assertAlmostEqual(qsca[0], 2.3084093592198083e-05, delta=1e-6)
+        self.assertAlmostEqual(qsca[100], 4.105960809066763, delta=1e-6)
+        self.assertAlmostEqual(qsca[200], 1.9947867190110644, delta=1e-6)
+        self.assertAlmostEqual(qsca[300], 2.4652591512196405, delta=1e-6)
+        self.assertAlmostEqual(qsca[400], 2.472171798724846, delta=1e-6)
+        self.assertAlmostEqual(qsca[499], 2.03583698038088, delta=1e-6)
+
+    def test_nb1_rho(self):
+        N = 500
+        m = 1.5
+        rho = np.linspace(0.1, 20, N)
+
+        m = 1.5
+        x15 = rho/2/(m-1)
+        qext, scal5, qback, g = miepython.mie(m,x15)
+
+        m = 1.1
+        x11 = rho/2/(m-1)
+        qext, scal1, qback, g = miepython.mie(m,x11)
+
+        self.assertAlmostEqual(scal1[0], 0.0006616369953521216, delta=1e-6)
+        self.assertAlmostEqual(scal1[99], 3.449616595439377, delta=1e-6)
+        self.assertAlmostEqual(scal1[199], 1.6837703285684387, delta=1e-6)
+        self.assertAlmostEqual(scal1[299], 2.3167184401740495, delta=1e-6)
+        self.assertAlmostEqual(scal1[399], 2.218210809017406, delta=1e-6)
+        self.assertAlmostEqual(scal1[499], 1.876467571615533, delta=1e-6)
+
+        self.assertAlmostEqual(scal5[0], 2.3084093592198083e-05, delta=1e-6)
+        self.assertAlmostEqual(scal5[99], 4.07295075914037, delta=1e-6)
+        self.assertAlmostEqual(scal5[199], 1.8857586341949146, delta=1e-6)
+        self.assertAlmostEqual(scal5[299], 2.464763930426085, delta=1e-6)
+        self.assertAlmostEqual(scal5[399], 2.430569030744473, delta=1e-6)
+        self.assertAlmostEqual(scal5[499], 2.03583698038088, delta=1e-6)
+
+    def test_nb1_spheres(self):
+        N=500
+        m=1.0
+        r=500                            # nm
+        lambdaa = np.linspace(300,800,N)  # also in nm
+
+        mwater = 4/3   # rough approximation
+        mm = m/mwater
+        xx = 2*np.pi*r*mwater/lambdaa
+
+        qext, qsca, qback, g = miepython.mie(mm,xx) 
+
+        self.assertAlmostEqual(qsca[0], 1.5525047718022498, delta=1e-6)
+        self.assertAlmostEqual(qsca[99], 2.1459528526672678, delta=1e-6)
+        self.assertAlmostEqual(qsca[199], 2.365171370327149, delta=1e-6)
+        self.assertAlmostEqual(qsca[299], 2.2039860928542128, delta=1e-6)
+        self.assertAlmostEqual(qsca[399], 1.9261758931397088, delta=1e-6)
+        self.assertAlmostEqual(qsca[499], 1.640006561518987, delta=1e-6)
+
+    def test_nb1_ezmie(self):
+        m_sphere = 1.0
+        n_water = 4/3
+        d = 1000
+        lambda0 = np.linspace(300, 800)
+        qext, qsca, qback, g = miepython.ez_mie(m_sphere, d, lambda0, n_water)
+
+        self.assertAlmostEqual(qsca[0], 1.5525047718022498, delta=1e-6)
+        self.assertAlmostEqual(qsca[9], 2.107970892634116, delta=1e-6)
+        self.assertAlmostEqual(qsca[19], 2.3654333205160074, delta=1e-6)
+        self.assertAlmostEqual(qsca[29], 2.213262310704816, delta=1e-6)
+        self.assertAlmostEqual(qsca[39], 1.9314911518355427, delta=1e-6)
+        self.assertAlmostEqual(qsca[49], 1.640006561518987, delta=1e-6)
+
 if __name__ == '__main__':
     unittest.main()
