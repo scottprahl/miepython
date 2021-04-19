@@ -2,6 +2,8 @@ include LICENSE.txt
 include CHANGELOG.rst
 include miepython/examples/*.py
 include miepython/test/*.py
+include test.py
+include test_all_notebooks.py
 exclude docs/*
 exclude docs
 exclude release.txt
