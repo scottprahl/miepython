@@ -39,7 +39,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from numba import jit, njit
+from numba import jit, njit, int32, float64, complex128
 
 __all__ = ('ez_mie',
            'ez_intensities',
@@ -53,7 +53,7 @@ __all__ = ('ez_mie',
            'mie_mu_with_uniform_cdf',
            )
 
-@jit(cache=True)
+@jit('(complex128, int32)', cache=True) 
 def _Lentz_Dn(z, N):
     """
     Compute the logarithmic derivative of the Ricatti-Bessel function.
@@ -85,7 +85,7 @@ def _Lentz_Dn(z, N):
 
     return -N / z + runratio
 
-@jit('(complex128, int64)', cache=True) #'complex128(complex128, int64)', 
+@jit('(complex128, int32)', cache=True) 
 def _D_downwards(z, N):
     """
     Compute the logarithmic derivative by downwards recurrence.
@@ -105,7 +105,7 @@ def _D_downwards(z, N):
         D[n - 1] = last_D
     return D
 
-@jit(cache=True)
+@jit('(complex128, int32)', cache=True) 
 def _D_upwards(z, N):
     """
     Compute the logarithmic derivative by upwards recurrence.
@@ -125,7 +125,7 @@ def _D_upwards(z, N):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
     return D
 
-@jit(cache=True)
+@jit('(complex128, float64, int32)', cache=True) 
 def _D_calc(m, x, N):
     """
     Compute the logarithmic derivative using best method.
@@ -147,8 +147,8 @@ def _D_calc(m, x, N):
         r = _D_upwards(m*x, N)
     return r
 
-@jit(cache=True)
-def _mie_An_Bn(m, x):
+@jit((complex128, float64, complex128[:], complex128[:]), cache=True)
+def _mie_An_Bn(m, x, a, b):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -163,35 +163,36 @@ def _mie_An_Bn(m, x):
     Returns:
         An, Bn: arrays of Mie coefficents
     """
-    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
-
-    if m.real > 0.0:
-        D = _D_calc(m, x, nstop + 1)
-
-    a = np.zeros(nstop - 1, dtype=complex)
-    b = np.zeros(nstop - 1, dtype=complex)
-
     psi_nm1 = np.sin(x)                   # nm1 = n-1 = 0
     psi_n = psi_nm1 / x - np.cos(x)       # n = 1
     xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
-    for n in range(1, nstop):
-        if m.real == 0.0:
-            a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
-            b[n - 1] = psi_n / xi_n
-        else:
+    nstop = len(a)
+    if m.real > 0.0:
+        D = _D_calc(m, x, nstop + 1)
+
+        for n in range(1, nstop):
             temp = D[n] / m + n / x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
             temp = D[n] * m + n / x
             b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
+            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi_nm1 = xi_n
+            xi_n = xi
+            psi_nm1 = psi_n
+            psi_n = xi_n.real
 
-        xi = (2 * n + 1) * xi_n / x - xi_nm1
-        xi_nm1 = xi_n
-        xi_n = xi
-        psi_nm1 = psi_n
-        psi_n = xi_n.real
-
+    else:
+        for n in range(1, nstop):
+            a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
+            b[n - 1] = psi_n / xi_n
+            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi_nm1 = xi_n
+            xi_n = xi
+            psi_nm1 = psi_n
+            psi_n = xi_n.real
+    
     return [a, b]
 
 @jit(cache=True)
@@ -291,15 +292,16 @@ def _mie_scalar(m, x):
         g: the average cosine of the scattering phase function
     """
     if m.real == 0 and x < 0.1: 
-        #return
-        qext, qsca, qback, g =_small_conducting_mie(m, x) # 
+        qext, qsca, qback, g =_small_conducting_mie(m, x)
 
-    elif m.real > 0.0 and abs(m) * x < 0.1: #elif
-        #return
+    elif m.real > 0.0 and abs(m) * x < 0.1:
         qext, qsca, qback, g =_small_mie(m, x)
 
     else:
-        a, b = _mie_An_Bn(m, x)
+        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+        a = np.zeros(nstop - 1, dtype=np.complex128)
+        b = np.zeros(nstop - 1, dtype=np.complex128)
+        _mie_An_Bn(m, x, a, b)
 
         nmax = len(a)
         n = np.arange(1, nmax + 1)
@@ -339,50 +341,38 @@ def mie(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    try:
-        mlen = len(m)
-    except:
+    if np.isscalar(m):
         mlen = 0
-        mm = m
+    else:
+        mlen = len(m)
 
-    try:
-        xlen = len(x)
-    except:
+    if np.isscalar(x):
         xlen = 0
-        xx = x
+    else:
+        xlen = len(x)
 
-    if xlen == 0 and mlen == 0:
-        return _mie_scalar(mm, xx)
+    if np.isscalar(m) and np.isscalar(x):
+        qext, qsca, qback, g = _mie_scalar(m, x)
 
-    if xlen and mlen and xlen != mlen:
-        raise RuntimeError('m and x arrays to mie must be same length')
+    else:
+        if xlen > 0 and mlen > 0 and xlen != mlen:
+            raise RuntimeError('m and x arrays to mie must be same length')
 
-    #thelen = max(xlen, mlen)
-    #qext = np.empty(thelen)
-    #qsca = np.empty(thelen)
-    #qback = np.empty(thelen)
-    #g = np.empty(thelen)
-
-    #for i in range(thelen):
-    #    if mlen > 0:
-    #        mm = m[i]
-
-    #    if xlen > 0:
-    #        xx = x[i]
-
-    #   qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
-
-    qext, qsca, qback, g = mieloop(m, x, mlen, xlen)
+        qext, qsca, qback, g = mieloop(m, x, mlen, xlen)
 
     return qext, qsca, qback, g
 
-@jit(cache=True)
 def mieloop(m, x, mlen, xlen):
     thelen = max(xlen, mlen)
-    qext = np.empty(thelen)
-    qsca = np.empty(thelen)
-    qback = np.empty(thelen)
-    g = np.empty(thelen)
+    qext = np.empty(thelen, dtype=np.float64)
+    qsca = np.empty(thelen, dtype=np.float64)
+    qback = np.empty(thelen, dtype=np.float64)
+    g = np.empty(thelen, dtype=np.float64)
+
+    if mlen==0:
+        mm = m
+    if xlen == 0:
+        xx = x
 
     for i in range(thelen):
         if mlen > 0:
@@ -492,11 +482,14 @@ def mie_S1_S2(m, x, mu):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = _mie_An_Bn(m, x)
+    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    a = np.zeros(nstop - 1, dtype=np.complex128)
+    b = np.zeros(nstop - 1, dtype=np.complex128)
+    _mie_An_Bn(m, x, a, b)
 
     nangles = len(mu)
-    S1 = np.zeros(nangles, dtype=complex)
-    S2 = np.zeros(nangles, dtype=complex)
+    S1 = np.zeros(nangles, dtype=np.complex128)
+    S2 = np.zeros(nangles, dtype=np.complex128)
 
     nstop = len(a)
     for k in range(nangles):
@@ -522,7 +515,6 @@ def mie_S1_S2(m, x, mu):
 
     return [S1, S2]
 
-@jit(cache=True)
 def mie_cdf(m, x, num):
     """
     Create a CDF for unpolarized scattering uniformly spaced in cos(theta).
@@ -559,7 +551,6 @@ def mie_cdf(m, x, num):
 
     return mu, cdf
 
-@jit(cache=True)
 def mie_mu_with_uniform_cdf(m, x, num):
     """
     Create a CDF for unpolarized scattering for uniform CDF.
@@ -615,7 +606,6 @@ def mie_mu_with_uniform_cdf(m, x, num):
 
     return [mu, cdf]
 
-@jit(cache=True)
 def generate_mie_costheta(mu_cdf):
     """
     Generate a new scattering angle using a cdf.
@@ -643,7 +633,6 @@ def generate_mie_costheta(mu_cdf):
 
     return x
 
-@jit(cache=True)
 def i_per(m, x, mu):
     """
     Return the scattered intensity in a plane normal to the incident light.
@@ -665,7 +654,6 @@ def i_per(m, x, mu):
     intensity = abs(s1)**2
     return intensity.astype('float')
 
-@jit(cache=True)
 def i_par(m, x, mu):
     """
     Return the scattered intensity in a plane parallel to the incident light.
@@ -687,7 +675,6 @@ def i_par(m, x, mu):
     intensity = abs(s2)**2
     return intensity.astype('float')
 
-@jit(cache=True)
 def i_unpolarized(m, x, mu):
     """
     Return the unpolarized scattered intensity at specified angles.
@@ -709,7 +696,6 @@ def i_unpolarized(m, x, mu):
     intensity = (abs(s1)**2 + abs(s2)**2) / 2
     return intensity.astype('float')
 
-@jit(cache=True)
 def ez_mie(m, d, lambda0, n_env=1.0):
     """
     Calculate the efficiencies of a sphere.
@@ -730,7 +716,6 @@ def ez_mie(m, d, lambda0, n_env=1.0):
     x_env = np.pi*d/(lambda0/n_env)
     return mie(m_env, x_env)
 
-@jit(cache=True)
 def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     """
     Return the scattered intensities from a sphere.
