@@ -39,7 +39,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from numba import jit, njit, int32, float64, complex128
+from numba import jit, float64, complex128
 
 __all__ = ('ez_mie',
            'ez_intensities',
@@ -53,7 +53,7 @@ __all__ = ('ez_mie',
            'mie_mu_with_uniform_cdf',
            )
 
-@jit('(complex128, int32)', cache=True) 
+@jit('(complex128, int32)', cache=True)
 def _Lentz_Dn(z, N):
     """
     Compute the logarithmic derivative of the Ricatti-Bessel function.
@@ -85,7 +85,7 @@ def _Lentz_Dn(z, N):
 
     return -N / z + runratio
 
-@jit('(complex128, int32)', cache=True) 
+@jit('(complex128, int32)', cache=True)
 def _D_downwards(z, N):
     """
     Compute the logarithmic derivative by downwards recurrence.
@@ -105,7 +105,7 @@ def _D_downwards(z, N):
         D[n - 1] = last_D
     return D
 
-@jit('(complex128, int32)', cache=True) 
+@jit('(complex128, int32)', cache=True)
 def _D_upwards(z, N):
     """
     Compute the logarithmic derivative by upwards recurrence.
@@ -125,7 +125,7 @@ def _D_upwards(z, N):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
     return D
 
-@jit('(complex128, float64, int32)', cache=True) 
+@jit('(complex128, float64, int32)', cache=True)
 def _D_calc(m, x, N):
     """
     Compute the logarithmic derivative using best method.
@@ -192,7 +192,7 @@ def _mie_An_Bn(m, x, a, b):
             xi_n = xi
             psi_nm1 = psi_n
             psi_n = xi_n.real
-    
+
     return [a, b]
 
 @jit(cache=True)
@@ -291,7 +291,7 @@ def _mie_scalar(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    if m.real == 0 and x < 0.1: 
+    if m.real == 0 and x < 0.1:
         qext, qsca, qback, g =_small_conducting_mie(m, x)
 
     elif m.real > 0.0 and abs(m) * x < 0.1:
@@ -306,10 +306,10 @@ def _mie_scalar(m, x):
         nmax = len(a)
         n = np.arange(1, nmax + 1)
         cn = 2.0 * n + 1.0
-        
+
         qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
         qsca = qext
-        
+
         if m.imag != 0:
             qsca = 2 * np.sum(cn * (abs(a)**2 + abs(b)**2)) / x**2
 
@@ -341,6 +341,8 @@ def mie(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
+    mm = m
+    xx = x
     if np.isscalar(m):
         mlen = 0
     else:
@@ -352,36 +354,26 @@ def mie(m, x):
         xlen = len(x)
 
     if np.isscalar(m) and np.isscalar(x):
-        qext, qsca, qback, g = _mie_scalar(m, x)
+        qext, qsca, qback, g = _mie_scalar(mm, xx)
 
     else:
         if xlen > 0 and mlen > 0 and xlen != mlen:
             raise RuntimeError('m and x arrays to mie must be same length')
 
-        qext, qsca, qback, g = mieloop(m, x, mlen, xlen)
+        thelen = max(xlen, mlen)
+        qext = np.empty(thelen, dtype=np.float64)
+        qsca = np.empty(thelen, dtype=np.float64)
+        qback = np.empty(thelen, dtype=np.float64)
+        g = np.empty(thelen, dtype=np.float64)
 
-    return qext, qsca, qback, g
+        for i in range(thelen):
+            if mlen > 0:
+                mm = m[i]
 
-def mieloop(m, x, mlen, xlen):
-    thelen = max(xlen, mlen)
-    qext = np.empty(thelen, dtype=np.float64)
-    qsca = np.empty(thelen, dtype=np.float64)
-    qback = np.empty(thelen, dtype=np.float64)
-    g = np.empty(thelen, dtype=np.float64)
+            if xlen > 0:
+                xx = x[i]
 
-    if mlen==0:
-        mm = m
-    if xlen == 0:
-        xx = x
-
-    for i in range(thelen):
-        if mlen > 0:
-            mm = m[i]
-
-        if xlen > 0:
-            xx = x[i]
-
-        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
+            qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
 
     return qext, qsca, qback, g
 
