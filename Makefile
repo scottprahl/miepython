@@ -6,19 +6,13 @@ BUILDDIR      = docs/_build
 default:
 	@echo Type: make check, make html, or make clean
 
-rcheck:
-	make clean
-	make notecheck
-	make rstcheck
-	-pyroma -d .
-	-check-manifest
-	-pylint miepython/miepython.py
-	-pydocstyle miepython/miepython.py
-	-pylint miepython/__init__.py
-	-pydocstyle miepython/__init__.py
+html:
+	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 notecheck:
+	make clean
 	pytest --verbose test_all_notebooks.py
+	rm -rf __pycache__
 
 rstcheck:
 	-rstcheck README.rst
@@ -27,8 +21,21 @@ rstcheck:
 	-rstcheck docs/changelog.rst
 	-rstcheck --ignore-directives automodule docs/miepython.rst
 
-html:
-	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+lintcheck:
+	-pylint miepython/miepython.py
+	-pylint miepython/__init__.py
+
+doccheck:
+	-pydocstyle miepython/miepython.py
+	-pydocstyle miepython/__init__.py
+
+rcheck:
+	make notecheck
+	make rstcheck
+	make lintcheck
+	make doccheck
+	-pyroma -d .
+	-check-manifest
 
 test:
 	tox
@@ -43,8 +50,8 @@ clean:
 	rm -rf .tox
 	rm -rf 04_plot.png
 
-	
 realclean:
 	make clean
 
-.PHONY: clean rcheck html test realclean
+.PHONY: clean html test realclean \
+        rcheck doccheck lintcheck rstcheck notecheck

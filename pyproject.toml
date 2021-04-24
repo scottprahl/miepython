@@ -17,7 +17,7 @@ deps = pytest
        numba
 
 commands =
-    python3 -m pytest {posargs} miepython/test/test.py
+    python3 -m pytest test.py
     python3 miepython/examples/01_dielectric.py
     python3 miepython/examples/02_glass.py
     python3 miepython/examples/03_droplets.py
