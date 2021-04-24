@@ -1,5 +1,6 @@
 numpy
 matplotlib
+numba
 nbsphinx
 sphinx-automodapi
 sphinx-book-theme
