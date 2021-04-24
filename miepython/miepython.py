@@ -10,7 +10,7 @@ Mie scattering calculations for perfect spheres.
 Extensive documentation is at <https://miepython.readthedocs.io>
 
 `miepython` is a pure Python module to calculate light scattering of
-a plane wave by non-absorbing, partially-absorbing, or perfectly conducting
+a plane wave by non-np.absorbing, partially-np.absorbing, or perfectly conducting
 spheres.
 
 The extinction efficiency, scattering efficiency, backscattering, and
@@ -39,7 +39,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from numba import jit, float64, complex128
+from numba import jit, int32, float64, complex128
 
 __all__ = ('ez_mie',
            'ez_intensities',
@@ -53,7 +53,7 @@ __all__ = ('ez_mie',
            'mie_mu_with_uniform_cdf',
            )
 
-@jit('(complex128, int32)', cache=True)
+@jit((complex128, int32), cache=True)
 def _Lentz_Dn(z, N):
     """
     Compute the logarithmic derivative of the Ricatti-Bessel function.
@@ -75,7 +75,7 @@ def _Lentz_Dn(z, N):
     ratio = alpha_j1 / alpha_j2
     runratio = alpha * ratio
 
-    while abs(abs(ratio) - 1.0) > 1e-12:
+    while np.abs(np.abs(ratio) - 1.0) > 1e-12:
         aj = zinv - aj
         alpha_j1 = 1.0 / alpha_j1 + aj
         alpha_j2 = 1.0 / alpha_j2 + aj
@@ -85,47 +85,39 @@ def _Lentz_Dn(z, N):
 
     return -N / z + runratio
 
-@jit('(complex128, int32)', cache=True)
-def _D_downwards(z, N):
+@jit((complex128, int32, complex128[:]), cache=True)
+def _D_downwards(z, N, D):
     """
     Compute the logarithmic derivative by downwards recurrence.
 
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-
-    Returns:
-        All the Ricatti-Bessel function values for orders from 0 to N for an
-        argument z using the downwards recurrence relations.
+        D: gets filled with the Ricatti-Bessel function values for orders 
+           from 0 to N for an argument z using the downwards recurrence relations.
     """
-    D = np.zeros(N, dtype=np.complex128)
     last_D = _Lentz_Dn(z, N)
     for n in range(N, 0, -1):
         last_D = n / z - 1.0 / (last_D + n / z)
         D[n - 1] = last_D
-    return D
 
-@jit('(complex128, int32)', cache=True)
-def _D_upwards(z, N):
+@jit((complex128, int32, complex128[:]), cache=True)
+def _D_upwards(z, N, D):
     """
     Compute the logarithmic derivative by upwards recurrence.
 
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-
-    Returns:
-        All the Ricatti-Bessel function values for orders from 0 to N for an
-        argument z using the upwards recurrence relations.
+        D: gets filled with the Ricatti-Bessel function values for orders 
+           from 0 to N for an argument z using the upwards recurrence relations.
     """
-    D = np.zeros(N, dtype=np.complex128)
     exp = np.exp(-2j * z)
     D[1] = -1 / z + (1 - exp) / ((1 - exp) / z - 1j * (1 + exp))
     for n in range(2, N):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
-    return D
 
-@jit('(complex128, float64, int32)', cache=True)
+@jit((complex128, float64, int32), cache=True)
 def _D_calc(m, x, N):
     """
     Compute the logarithmic derivative using best method.
@@ -139,13 +131,14 @@ def _D_calc(m, x, N):
         The values of the Ricatti-Bessel function for orders from 0 to N.
     """
     n = m.real
-    kappa = abs(m.imag)
+    kappa = np.abs(m.imag)
+    D = np.zeros(N, dtype=np.complex128)
 
     if n < 1 or n > 10 or kappa > 10 or x*kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        r = _D_downwards(m*x, N)
+        _D_downwards(m*x, N, D)
     else:
-        r = _D_upwards(m*x, N)
-    return r
+        _D_upwards(m*x, N, D)
+    return D
 
 @jit((complex128, float64, complex128[:], complex128[:]), cache=True)
 def _mie_An_Bn(m, x, a, b):
@@ -195,7 +188,7 @@ def _mie_An_Bn(m, x, a, b):
 
     return [a, b]
 
-@jit(cache=True)
+@jit((complex128, float64), cache=True)
 def _small_conducting_mie(m, x):
     """
     Calculate the efficiencies for a small conducting spheres.
@@ -220,19 +213,19 @@ def _small_conducting_mie(m, x):
     ahat2 = complex(0.0, x**2 / 30.)
     bhat2 = complex(0.0, -x**2 / 45.)
 
-    qsca = x**4 * (6 * abs(ahat1)**2 + 6 * abs(bhat1)**2 + 10 * abs(ahat2)**2 +
-                   10 * abs(bhat2)**2)
+    qsca = x**4 * (6 * np.abs(ahat1)**2 + 6 * np.abs(bhat1)**2 + 10 * np.abs(ahat2)**2 +
+                   10 * np.abs(bhat2)**2)
     qext = qsca
     g = ahat1.imag * (ahat2.imag + bhat1.imag)
     g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)
     g += ahat1.real * bhat1.real
     g *= 6 * x**4 / qsca
 
-    qback = 9 * x**4 * abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
+    qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
 
     return [qext, qsca, qback, g]
 
-@jit(cache=True)
+@jit((complex128, float64), cache=True)
 def _small_mie(m, x):
     """
     Calculate the efficiencies for a small sphere.
@@ -260,7 +253,7 @@ def _small_mie(m, x):
     ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14) / \
         (2 * m2 + 3 - (2 * m2 - 7) / 14 * x2)
 
-    T = abs(ahat1)**2 + abs(bhat1)**2 + 5 / 3 * abs(ahat2)**2
+    T = np.abs(ahat1)**2 + np.abs(bhat1)**2 + 5 / 3 * np.abs(ahat2)**2
     temp = ahat2 + bhat1
     g = (ahat1 * temp.conjugate()).real / T
 
@@ -272,11 +265,11 @@ def _small_mie(m, x):
         qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
 
     sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
-    qback = 4*abs(sback)**2/x2
+    qback = 4*np.abs(sback)**2/x2
 
     return [qext, qsca, qback, g]
 
-@jit(cache=True)
+@jit((complex128, float64), cache=True)
 def _mie_scalar(m, x):
     """
     Calculate the efficiencies for a sphere when both m and x are scalars.
@@ -294,7 +287,7 @@ def _mie_scalar(m, x):
     if m.real == 0 and x < 0.1:
         qext, qsca, qback, g =_small_conducting_mie(m, x)
 
-    elif m.real > 0.0 and abs(m) * x < 0.1:
+    elif m.real > 0.0 and np.abs(m) * x < 0.1:
         qext, qsca, qback, g =_small_mie(m, x)
 
     else:
@@ -311,9 +304,9 @@ def _mie_scalar(m, x):
         qsca = qext
 
         if m.imag != 0:
-            qsca = 2 * np.sum(cn * (abs(a)**2 + abs(b)**2)) / x**2
+            qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
 
-        qback = abs(np.sum((-1)**n * cn * (a - b)))**2 / x**2
+        qback = np.abs(np.sum((-1)**n * cn * (a - b)))**2 / x**2
 
         c1n = n * (n + 2) / (n + 1)
         c2n = cn / n / (n + 1)
@@ -343,6 +336,10 @@ def mie(m, x):
     """
     mm = m
     xx = x
+
+    if np.isscalar(m) and np.isscalar(x):
+        return _mie_scalar(mm, xx)
+
     if np.isscalar(m):
         mlen = 0
     else:
@@ -353,27 +350,23 @@ def mie(m, x):
     else:
         xlen = len(x)
 
-    if np.isscalar(m) and np.isscalar(x):
-        qext, qsca, qback, g = _mie_scalar(mm, xx)
+    if xlen > 0 and mlen > 0 and xlen != mlen:
+        raise RuntimeError('m and x arrays to mie must be same length')
 
-    else:
-        if xlen > 0 and mlen > 0 and xlen != mlen:
-            raise RuntimeError('m and x arrays to mie must be same length')
+    thelen = max(xlen, mlen)
+    qext = np.empty(thelen, dtype=np.float64)
+    qsca = np.empty(thelen, dtype=np.float64)
+    qback = np.empty(thelen, dtype=np.float64)
+    g = np.empty(thelen, dtype=np.float64)
 
-        thelen = max(xlen, mlen)
-        qext = np.empty(thelen, dtype=np.float64)
-        qsca = np.empty(thelen, dtype=np.float64)
-        qback = np.empty(thelen, dtype=np.float64)
-        g = np.empty(thelen, dtype=np.float64)
+    for i in range(thelen):
+        if mlen > 0:
+            mm = m[i]
 
-        for i in range(thelen):
-            if mlen > 0:
-                mm = m[i]
+        if xlen > 0:
+            xx = x[i]
 
-            if xlen > 0:
-                xx = x[i]
-
-            qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
+        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
 
     return qext, qsca, qback, g
 
@@ -406,8 +399,8 @@ def _small_mie_conducting_S1_S2(m, x, mu):
     S2 = 1.5 * x**3 * (bhat1 + ahat1 * mu + 5 / 3 * bhat2 *
                        mu + 5 / 3 * ahat2 * (2 * mu**2 - 1))
 
-    qext = x**4 * (6 * abs(ahat1)**2 + 6 * abs(bhat1)**2 + 10 * abs(ahat2)**2 +
-                   10 * abs(bhat2)**2)
+    qext = x**4 * (6 * np.abs(ahat1)**2 + 6 * np.abs(bhat1)**2 + 10 * np.abs(ahat2)**2 +
+                   10 * np.abs(bhat2)**2)
     norm = np.sqrt(qext * np.pi * x**2)
     S1 /= norm
     S2 /= norm
@@ -532,7 +525,7 @@ def mie_cdf(m, x, num):
     mu = np.linspace(-1, 1, num)
     s1, s2 = mie_S1_S2(m, x, mu)
 
-    s = (abs(s1)**2 + abs(s2)**2) / 2
+    s = (np.abs(s1)**2 + np.abs(s2)**2) / 2
 
     cdf = np.zeros(num)
     total = 0
@@ -643,7 +636,7 @@ def i_per(m, x, mu):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, _ = mie_S1_S2(m, x, mu)
-    intensity = abs(s1)**2
+    intensity = np.abs(s1)**2
     return intensity.astype('float')
 
 def i_par(m, x, mu):
@@ -664,7 +657,7 @@ def i_par(m, x, mu):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     _, s2 = mie_S1_S2(m, x, mu)
-    intensity = abs(s2)**2
+    intensity = np.abs(s2)**2
     return intensity.astype('float')
 
 def i_unpolarized(m, x, mu):
@@ -685,7 +678,7 @@ def i_unpolarized(m, x, mu):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, s2 = mie_S1_S2(m, x, mu)
-    intensity = (abs(s1)**2 + abs(s2)**2) / 2
+    intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
     return intensity.astype('float')
 
 def ez_mie(m, d, lambda0, n_env=1.0):
@@ -735,8 +728,8 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     lambda_env = lambda0 / n_env
     x_env = np.pi*d/lambda_env
     s1, s2 = mie_S1_S2(m_env, x_env, mu)
-    ipar = abs(s2)**2
-    iper = abs(s1)**2
+    ipar = np.abs(s2)**2
+    iper = np.abs(s1)**2
     Ipar = ipar.astype('float')
     Iper = iper.astype('float')
     return Ipar, Iper
