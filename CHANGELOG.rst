@@ -1,6 +1,14 @@
 Changelog
 =========
 
+2.0.0 (04/25/21)
+----------------
+*   use numba for 10-700X speed improvement
+*   thanks to @jbecca and @pscicluna for their help
+*   add performance notebook
+*   add automated notebook checking
+*   test more code
+
 1.3.3 (03/21/21)
 ----------------
 *   colab badge and link
