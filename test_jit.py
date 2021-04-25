@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-import miepython.miepython as miepython
+import miepython.miepython_jit as miepython
 
 # the low level tests use functions that should not be exported.  These work
 # but now that the higher level tests pass, these are skipped
@@ -436,7 +436,6 @@ class notebook_tests(unittest.TestCase):
         mwater = 4/3   # rough approximation
         mm = m/mwater
         xx = 2*np.pi*r*mwater/lambda0
-
         qext, qsca, qback, g = miepython.mie(mm,xx) 
 
         self.assertAlmostEqual(qsca[0], 1.5525047718022498, delta=1e-6)

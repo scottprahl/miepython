@@ -37,6 +37,10 @@ rcheck:
 	-pyroma -d .
 	-check-manifest
 
+jittest:
+	python3 -m pytest test.py
+	python3 -m pytest test_jit.py
+
 test:
 	tox
 
