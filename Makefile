@@ -8,6 +8,7 @@ default:
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	open docs/_build/index.html
 
 notecheck:
 	make clean
@@ -23,12 +24,12 @@ rstcheck:
 
 lintcheck:
 	-pylint miepython/miepython.py
-	-pylint miepython/miepython_jit.py
+	-pylint miepython/miepython_nojit.py
 	-pylint miepython/__init__.py
 
 doccheck:
 	-pydocstyle miepython/miepython.py
-	-pydocstyle miepython/miepython_jit.py
+	-pydocstyle miepython/miepython_nojit.py
 	-pydocstyle miepython/__init__.py
 
 rcheck:
@@ -40,7 +41,7 @@ rcheck:
 	-check-manifest
 
 jittest:
-	python3 -m pytest test.py
+	python3 -m pytest test_nojit.py
 	python3 -m pytest test_jit.py
 
 test:

@@ -102,7 +102,7 @@ Small Gold Spheres
    06_random_deviates.ipynb
 
 .. toctree::
-   :caption: Numba (jit) Performance
+   :caption: Numba Performance
    :hidden:
 
    11_performance.ipynb
