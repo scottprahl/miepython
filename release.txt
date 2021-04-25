@@ -24,12 +24,10 @@ Releasing a new version
   python3 setup.py sdist
   python3 -m twine upload dist/*
 
-# manually update release at
-  https://github.com/scottprahl/miepython
-  
-# check releases at pypi and readthedocs
-  https://pypi.org/project/miepython/
-  https://miepython.readthedocs.io
+# manually check releases
+  open https://github.com/scottprahl/miepython
+  open https://pypi.org/project/miepython/
+  open https://miepython.readthedocs.io
 
 # test the install by removing local developer version
 # installing, then uninstalling, then restoring developer version
