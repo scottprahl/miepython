@@ -102,10 +102,17 @@ Small Gold Spheres
    06_random_deviates.ipynb
 
 .. toctree::
+   :caption: Numba (jit) Performance
+   :hidden:
+
+   11_performance.ipynb
+
+.. toctree::
    :caption: API
    :hidden:
 
    miepython
+   miepython_nojit
 
 .. toctree::
    :caption: Versions
