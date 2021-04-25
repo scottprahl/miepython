@@ -39,7 +39,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from numba import jit, njit, int32, float64, complex128
+from numba import njit, int32, float64, complex128
 
 __all__ = ('ez_mie',
            'ez_intensities',
@@ -53,7 +53,7 @@ __all__ = ('ez_mie',
            'mie_mu_with_uniform_cdf',
            )
 
-@njit
+@njit((complex128, int32), cache=True)
 def _Lentz_Dn(z, N):
     """
     Compute the logarithmic derivative of the Ricatti-Bessel function.
@@ -85,7 +85,7 @@ def _Lentz_Dn(z, N):
 
     return -N / z + runratio
 
-@njit
+@njit((complex128, int32, complex128[:]), cache=True)
 def _D_downwards(z, N, D):
     """
     Compute the logarithmic derivative by downwards recurrence.
@@ -93,7 +93,7 @@ def _D_downwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders 
+        D: gets filled with the Ricatti-Bessel function values for orders
            from 0 to N for an argument z using the downwards recurrence relations.
     """
     last_D = _Lentz_Dn(z, N)
@@ -101,7 +101,7 @@ def _D_downwards(z, N, D):
         last_D = n / z - 1.0 / (last_D + n / z)
         D[n - 1] = last_D
 
-@njit
+@njit((complex128, int32, complex128[:]), cache=True)
 def _D_upwards(z, N, D):
     """
     Compute the logarithmic derivative by upwards recurrence.
@@ -109,7 +109,7 @@ def _D_upwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders 
+        D: gets filled with the Ricatti-Bessel function values for orders
            from 0 to N for an argument z using the upwards recurrence relations.
     """
     exp = np.exp(-2j * z)
@@ -117,7 +117,7 @@ def _D_upwards(z, N, D):
     for n in range(2, N):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
 
-@njit
+@njit((complex128, float64, int32), cache=True)
 def _D_calc(m, x, N):
     """
     Compute the logarithmic derivative using best method.
@@ -140,7 +140,7 @@ def _D_calc(m, x, N):
         _D_upwards(m*x, N, D)
     return D
 
-@njit
+@njit((complex128, float64, complex128[:], complex128[:]), cache=True)
 def _mie_An_Bn(m, x, a, b):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
@@ -186,7 +186,7 @@ def _mie_An_Bn(m, x, a, b):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
-@njit
+@njit((complex128, float64), cache=True)
 def _small_conducting_mie(m, x):
     """
     Calculate the efficiencies for a small conducting spheres.
@@ -223,8 +223,7 @@ def _small_conducting_mie(m, x):
 
     return [qext, qsca, qback, g]
 
-#@njit((complex128, float64), cache=True)
-@njit
+@njit((complex128, float64), cache=True)
 def _small_mie(m, x):
     """
     Calculate the efficiencies for a small sphere.
@@ -268,8 +267,7 @@ def _small_mie(m, x):
 
     return [qext, qsca, qback, g]
 
-#@njit((complex128, float64), cache=True)
-@njit
+@njit((complex128, float64), cache=True)
 def _mie_scalar(m, x):
     """
     Calculate the efficiencies for a sphere when both m and x are scalars.

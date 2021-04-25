@@ -90,7 +90,7 @@ def _D_downwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders 
+        D: gets filled with the Ricatti-Bessel function values for orders
            from 0 to N for an argument z using the downwards recurrence relations.
     """
     last_D = _Lentz_Dn(z, N)
@@ -105,7 +105,7 @@ def _D_upwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders 
+        D: gets filled with the Ricatti-Bessel function values for orders
            from 0 to N for an argument z using the upwards recurrence relations.
     """
     exp = np.exp(-2j * z)
