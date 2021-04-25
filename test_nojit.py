@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-import miepython.miepython as miepython
+import miepython.miepython_nojit as miepython
 
 # the low level tests use functions that should not be exported.  These work
 # but now that the higher level tests pass, these are skipped
