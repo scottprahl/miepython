@@ -23,10 +23,12 @@ rstcheck:
 
 lintcheck:
 	-pylint miepython/miepython.py
+	-pylint miepython/miepython_jit.py
 	-pylint miepython/__init__.py
 
 doccheck:
 	-pydocstyle miepython/miepython.py
+	-pydocstyle miepython/miepython_jit.py
 	-pydocstyle miepython/__init__.py
 
 rcheck:
