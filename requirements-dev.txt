@@ -1,0 +1,18 @@
+-e .
+#
+# Test
+pytest
+#
+# Testing notebooks
+matplotlib
+scipy
+nbconvert
+nbformat
+#
+# Lint
+rstcheck
+pylint
+pydocstyle
+#
+# Docs
+notebook
