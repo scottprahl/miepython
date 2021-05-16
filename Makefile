@@ -12,7 +12,7 @@ html:
 
 notecheck:
 	make clean
-	pytest --verbose test_all_notebooks.py
+	pytest --verbose tests/test_all_notebooks.py
 	rm -rf __pycache__
 
 rstcheck:
@@ -41,8 +41,8 @@ rcheck:
 	-check-manifest
 
 jittest:
-	python3 -m pytest test_nojit.py
-	python3 -m pytest test_jit.py
+	python3 -m pytest tests/test_nojit.py
+	python3 -m pytest tests/test_jit.py
 
 test:
 	tox
