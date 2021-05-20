@@ -447,7 +447,7 @@ def _small_mie_S1_S2(m, x, mu):
     return [S1, S2]
 
 @njit((complex128, float64, float64[:]), cache=True)
-def mie_S1_S2(m, x, mu):
+def _mie_S1_S2(m, x, mu):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -459,7 +459,7 @@ def mie_S1_S2(m, x, mu):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate scattering amplitudes
+        mu: array of angles, cos(theta), to calculate scattering amplitudes
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
@@ -496,6 +496,30 @@ def mie_S1_S2(m, x, mu):
     S2 /= norm
 
     return [S1, S2]
+
+def mie_S1_S2(m, x, mu):
+    """
+    Calculate the scattering amplitude functions for spheres.
+
+    The amplitude functions have been normalized so that when integrated
+    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+
+    The units are weird, sr**(-0.5)
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: cos(theta) or array of angles [cos(theta_i)]
+
+    Returns:
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+    """
+    if np.isscalar(mu):
+        mu_array = np.array([mu], dtype=float)
+        s1, s2 = _mie_S1_S2(m, x, mu_array)
+        return s1[0], s2[0]
+
+    return _mie_S1_S2(m, x, mu)
 
 def mie_cdf(m, x, num):
     """
