@@ -12,3 +12,4 @@ miepython.egg-info
 .vscode/*
 venv/
 04_plot.png
+tests/.ipynb_checkpoints
