@@ -56,6 +56,7 @@ clean:
 	rm -rf __pycache__
 	rm -rf .tox
 	rm -rf 04_plot.png
+	rm -rf .pytest_cache
 
 realclean:
 	make clean
