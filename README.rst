@@ -16,6 +16,9 @@ miepython
 .. image:: https://img.shields.io/badge/MIT-license-yellow.svg
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
 
+.. image:: https://github.com/zmoon/miepython/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/zmoon/miepython/actions/workflows/test.yml
+
 __________
 
 ``miepython`` is a pure Python module to calculate light scattering by

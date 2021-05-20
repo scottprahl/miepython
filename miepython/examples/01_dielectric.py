@@ -23,5 +23,4 @@ plt.title("Comparison of extinction for absorbing and non-absorbing spheres")
 plt.xlabel("Size Parameter (-)")
 plt.ylabel("Qext")
 plt.legend()
-plt.show()
-
+# plt.show()

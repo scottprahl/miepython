@@ -10,3 +10,5 @@ docs/_build
 docs/api
 miepython.egg-info
 .vscode/*
+venv/
+04_plot.png
