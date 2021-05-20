@@ -1,11 +1,11 @@
 miepython
 =========
 
-.. image:: https://colab.research.google.com/assets/colab-badge.svg
-   :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
-
 .. image:: https://img.shields.io/pypi/v/miepython.svg
    :target: https://pypi.org/project/miepython/
+
+.. image:: https://colab.research.google.com/assets/colab-badge.svg
+   :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
 
 .. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
    :target: https://miepython.readthedocs.io
@@ -16,8 +16,8 @@ miepython
 .. image:: https://img.shields.io/badge/MIT-license-yellow.svg
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
 
-.. image:: https://github.com/zmoon/miepython/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/zmoon/miepython/actions/workflows/test.yml
+.. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
 
 __________
 
