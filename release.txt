@@ -2,25 +2,22 @@ Releasing a new version
 
 # run sanity checks
   tox
+  make rcheck
 
-# make sure all Jupyter notebooks in the doc folder still work
-
-# versioning
 # update the version in setup.py and __init__.py
   git commit setup.py miepython/__init__.py -m 'update version' 
   git push
 
 # update CHANGELOG.rst
-  git shortlog v1.3.0..HEAD
+  git shortlog v2.1.0..HEAD
   git commit CHANGELOG.rst -m 'update recent changes'
   git push
 
 # create release tag on github
-  git tag v1.3.0
-  git push origin v1.3.0
+  git tag v2.1.0
+  git push origin v2.1.0
 
 # upload source to pypi
-  rm -rf dist/*
   python3 setup.py sdist
   python3 -m twine upload dist/*
 

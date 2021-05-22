@@ -62,8 +62,14 @@ clean:
 	rm -rf dist
 	rm -rf miepython.egg-info
 	rm -rf miepython/__pycache__
+	rm -rf miepython/examples/__pycache__
+	rm -rf docs/.DS_Store
 	rm -rf docs/api
 	rm -rf docs/_build
+	rm -rf docs/.ipynb_checkpoints
+	rm -rf docs/.pytest_cache
+	rm -rf docs/omlc.org
+	rm -rf docs/refractiveindex.info
 	rm -rf tests/__pycache__
 	rm -rf .tox
 	rm -rf 04_plot.png
