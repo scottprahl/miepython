@@ -1,7 +1,9 @@
+# pylint: disable=invalid-name
+
 """
 This file is intended to be the target of a pytest run.
 
-It will recursively find all .ipynb files in the current directory, ignoring 
+It will recursively find all .ipynb files in the current directory, ignoring
 directories that start with . and any files matching patterins found in the file
 .testignore
 
@@ -25,7 +27,7 @@ import os.path
 import pathlib
 import pytest
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+import nbconvert.preprocessors
 
 # Default search path is the current directory
 # searchpath = pathlib.Path('.')
@@ -46,10 +48,13 @@ notebooks = [notebook for notebook in searchpath.glob('**/*.ipynb')
 notebooks.sort()
 ids = [n.as_posix() for n in notebooks]
 
+for n in notebooks:
+    print(n)
+
 @pytest.mark.notebooks
 @pytest.mark.parametrize("notebook", notebooks, ids=ids)
 def test_run_notebook(notebook):
-    """Read and execute notebook
+    """Read and execute notebook.
 
     The method here is directly from the nbconvert docs
 
@@ -59,5 +64,5 @@ def test_run_notebook(notebook):
     """
     with open(notebook) as f:
         nb = nbformat.read(f, as_version=4)
-    ep = ExecutePreprocessor(timeout=600)
+    ep = nbconvert.preprocessors.ExecutePreprocessor(timeout=600)
     ep.preprocess(nb, {'metadata': {'path': notebook.parent}})

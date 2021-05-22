@@ -1,4 +1,9 @@
 #! /usr/bin/env python3
+# pylint: disable=invalid-name
+# pylint: disable=unused-variable
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-module-docstring
 
 import unittest
 import numpy as np
@@ -8,21 +13,21 @@ import miepython
 # but now that the higher level tests pass, these are skipped
 
 # class low_level(unittest.TestCase):
-# 
+#
 #     def test_01_log_derivatives(self):
 #         m = 1.0
 #         x = 1.0
 #         nstop = 10
 #         dn = miepython._D_calc(m,x,nstop)
 #         self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
-# 
+#
 #         x = 62
 #         m = 1.28 - 1.37j
 #         nstop = 50
 #         dn = _D_calc(m,x,nstop)
 #         self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
 #         self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
-# 
+#
 #     def test_02_an_bn(self):
 #         m = 4.0/3.0
 #         x = 50
@@ -32,7 +37,7 @@ import miepython
 #     #        self.assertAlmostEqual(a[1].imag,-0.4990314856310943073, delta=0.00000001)
 #     #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
 #     #        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
-# 
+#
 #         m = 1.5-1.1j
 #         x = 2
 #         a, b = miepython.mie_An_Bn(m,x)
@@ -42,7 +47,7 @@ import miepython
 #         self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
 #         self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
 #         self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
-# 
+#
 #         m = 1.1-25j
 #         x = 2
 #         a, b = miepython.mie_An_Bn(m,x)
@@ -336,7 +341,7 @@ class small(unittest.TestCase):
         x=0.101
         qext, qsca, qback, g = miepython.mie(m,x)
         self.assertAlmostEqual(qext, 0.000348, delta=1e-6)
-        self.assertAlmostEqual(g,   -0.397262, delta=1e-4)  
+        self.assertAlmostEqual(g,   -0.397262, delta=1e-4)
 
 class angle_scattering(unittest.TestCase):
 
@@ -350,7 +355,7 @@ class angle_scattering(unittest.TestCase):
         S1, S2 = miepython.mie_S1_S2(m,x,mu)
         S1 *= np.sqrt(np.pi*x**2*qext)
         S2 *= np.sqrt(np.pi*x**2*qext)
-        
+
         self.assertAlmostEqual(S1[0].real, 0.584080, delta=1e-6)
         self.assertAlmostEqual(S1[0].imag, 0.190515, delta=1e-6)
         self.assertAlmostEqual(S2[0].real, 0.584080, delta=1e-6)
@@ -436,7 +441,7 @@ class notebook_tests(unittest.TestCase):
         mwater = 4/3   # rough approximation
         mm = m/mwater
         xx = 2*np.pi*r*mwater/lambda0
-        qext, qsca, qback, g = miepython.mie(mm,xx) 
+        qext, qsca, qback, g = miepython.mie(mm,xx)
 
         self.assertAlmostEqual(qsca[0], 1.5525047718022498, delta=1e-6)
         self.assertAlmostEqual(qsca[99], 2.1459528526672678, delta=1e-6)
