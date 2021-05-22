@@ -12,7 +12,7 @@ html:
 
 notecheck:
 	make clean
-	pytest --verbose tests/test_all_notebooks.py
+	pytest --verbose --notebooks tests/test_all_notebooks.py
 	rm -rf __pycache__
 
 rstcheck:
@@ -26,11 +26,19 @@ lintcheck:
 	-pylint miepython/miepython.py
 	-pylint miepython/miepython_nojit.py
 	-pylint miepython/__init__.py
+	-pylint tests/test_all_examples.py
+	-pylint tests/test_all_notebooks.py
+	-pylint tests/test_jit.py
+	-pylint tests/test_nojit.py
 
 doccheck:
 	-pydocstyle miepython/miepython.py
 	-pydocstyle miepython/miepython_nojit.py
 	-pydocstyle miepython/__init__.py
+	-pydocstyle tests/test_all_examples.py
+	-pydocstyle tests/test_all_notebooks.py
+	-pydocstyle --ignore D100,D101,D102 tests/test_jit.py
+	-pydocstyle --ignore D100,D101,D102 tests/test_nojit.py
 
 rcheck:
 	make notecheck
@@ -53,7 +61,7 @@ clean:
 	rm -rf miepython/__pycache__
 	rm -rf docs/api
 	rm -rf docs/_build
-	rm -rf __pycache__
+	rm -rf tests/__pycache__
 	rm -rf .tox
 	rm -rf 04_plot.png
 	rm -rf .pytest_cache
