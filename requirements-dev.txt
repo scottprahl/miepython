@@ -2,12 +2,15 @@
 #
 # Test
 pytest
+tox
 #
 # Testing notebooks
+numpy
 matplotlib
 scipy
 nbconvert
 nbformat
+numba
 #
 # Lint
 rstcheck
@@ -16,3 +19,7 @@ pydocstyle
 #
 # Docs
 notebook
+#
+# Release
+check-manifest
+pyroma

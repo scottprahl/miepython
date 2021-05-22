@@ -47,6 +47,9 @@ rcheck:
 	make doccheck
 	-pyroma -d .
 	-check-manifest
+	make jittest
+	make html
+
 
 jittest:
 	python3 -m pytest tests/test_nojit.py

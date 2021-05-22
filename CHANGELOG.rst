@@ -1,6 +1,23 @@
 Changelog
 =========
 
+2.1.0 (05/22/21)
+----------------
+*   fix case when scalar angle used with mie_S1_S2()
+*   add pypi badge
+*   fix notebook testing
+*   thanks to @zmoon for the following changes:
+*   add requirements-dev.txt
+*   add example script testing
+*   add workflow testing
+*   fix Au/Ag error
+*   fix examples that use refractiveindex.info
+*   add testing badge
+
+2.0.1 (04/25/21)
+----------------
+*   fix packaging mistake
+
 2.0.0 (04/25/21)
 ----------------
 *   use numba for 10-700X speed improvement

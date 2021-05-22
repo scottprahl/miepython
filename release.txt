@@ -28,11 +28,3 @@ Releasing a new version
   open https://github.com/scottprahl/miepython
   open https://pypi.org/project/miepython/
   open https://miepython.readthedocs.io
-
-# test the install by removing local developer version
-# installing, then uninstalling, then restoring developer version
-  conda develop -u .
-  pip install miepython
-  pip uninstall miepython
-  conda develop .
-

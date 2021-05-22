@@ -12,7 +12,7 @@ markers = ["notebooks"]
 legacy_tox_ini = """
 
 [tox]
-envlist = py39
+envlist = py36 py39
 
 [testenv]
 deps = pytest
