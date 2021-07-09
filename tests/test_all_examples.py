@@ -10,6 +10,7 @@ import pytest
 examples = list(pathlib.Path("miepython/examples").glob("*.py"))
 ids = [p.as_posix() for p in examples]
 
+
 @pytest.mark.parametrize("path", examples, ids=ids)
 def test_example_runs(path):
     """Test each example script."""

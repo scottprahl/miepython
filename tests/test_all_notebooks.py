@@ -51,6 +51,7 @@ ids = [n.as_posix() for n in notebooks]
 for n in notebooks:
     print(n)
 
+
 @pytest.mark.notebooks
 @pytest.mark.parametrize("notebook", notebooks, ids=ids)
 def test_run_notebook(notebook):

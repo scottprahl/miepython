@@ -45,6 +45,7 @@ rcheck:
 	make rstcheck
 	make lintcheck
 	make doccheck
+	flake8 .
 	-pyroma -d .
 	-check-manifest
 	make jittest

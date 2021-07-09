@@ -53,6 +53,7 @@ __all__ = ('ez_mie',
            'mie_mu_with_uniform_cdf',
            )
 
+
 @njit((complex128, int32), cache=True)
 def _Lentz_Dn(z, N):
     """
@@ -85,6 +86,7 @@ def _Lentz_Dn(z, N):
 
     return -N / z + runratio
 
+
 @njit((complex128, int32, complex128[:]), cache=True)
 def _D_downwards(z, N, D):
     """
@@ -101,6 +103,7 @@ def _D_downwards(z, N, D):
         last_D = n / z - 1.0 / (last_D + n / z)
         D[n - 1] = last_D
 
+
 @njit((complex128, int32, complex128[:]), cache=True)
 def _D_upwards(z, N, D):
     """
@@ -116,6 +119,7 @@ def _D_upwards(z, N, D):
     D[1] = -1 / z + (1 - exp) / ((1 - exp) / z - 1j * (1 + exp))
     for n in range(2, N):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
+
 
 @njit((complex128, float64, int32), cache=True)
 def _D_calc(m, x, N):
@@ -134,11 +138,12 @@ def _D_calc(m, x, N):
     kappa = np.abs(m.imag)
     D = np.zeros(N, dtype=np.complex128)
 
-    if n < 1 or n > 10 or kappa > 10 or x*kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        _D_downwards(m*x, N, D)
+    if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
+        _D_downwards(m * x, N, D)
     else:
-        _D_upwards(m*x, N, D)
+        _D_upwards(m * x, N, D)
     return D
+
 
 @njit((complex128, float64, complex128[:], complex128[:]), cache=True)
 def _mie_An_Bn(m, x, a, b):
@@ -186,6 +191,7 @@ def _mie_An_Bn(m, x, a, b):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
+
 @njit((complex128, float64), cache=True)
 def _small_conducting_mie(m, x):
     """
@@ -204,15 +210,18 @@ def _small_conducting_mie(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2)) / \
-        complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
-    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0) / \
-        complex(1 + 0.5 * x**2, -x**3 / 3.0)
-    ahat2 = complex(0.0, x**2 / 30.)
-    bhat2 = complex(0.0, -x**2 / 45.)
+    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2))
+    ahat1 /= complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
 
-    qsca = x**4 * (6 * np.abs(ahat1)**2 + 6 * np.abs(bhat1)**2 + 10 * np.abs(ahat2)**2 +
-                   10 * np.abs(bhat2)**2)
+    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0)
+    bhat1 /= complex(1 + 0.5 * x**2, -x**3 / 3.0)
+    ahat2 = complex(0.0, x**2 / 30.0)
+    bhat2 = complex(0.0, -x**2 / 45.0)
+
+    qsca = x**4 * (6 * np.abs(ahat1)**2
+                   + 6 * np.abs(bhat1)**2
+                   + 10 * np.abs(ahat2)**2
+                   + 10 * np.abs(bhat2)**2)
     qext = qsca
     g = ahat1.imag * (ahat2.imag + bhat1.imag)
     g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)
@@ -222,6 +231,7 @@ def _small_conducting_mie(m, x):
     qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
 
     return [qext, qsca, qback, g]
+
 
 @njit((complex128, float64), cache=True)
 def _small_mie(m, x):
@@ -243,13 +253,16 @@ def _small_mie(m, x):
     m2 = m * m
     x2 = x * x
 
-    D = m2 + 2 + (1 - 0.7 * m2) * x2 - (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0 + \
-        2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
+    D = m2 + 2 + (1 - 0.7 * m2) * x2
+    D -= (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0
+    D += 2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
     ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x**4 / 1400) / D
-    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) /
-                                       70 * x2) / (1 - (2 * m2 - 5) / 30 * x2)
-    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14) / \
-        (2 * m2 + 3 - (2 * m2 - 7) / 14 * x2)
+
+    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
+    bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
+
+    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
+    ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
 
     T = np.abs(ahat1)**2 + np.abs(bhat1)**2 + 5 / 3 * np.abs(ahat2)**2
     temp = ahat2 + bhat1
@@ -263,9 +276,10 @@ def _small_mie(m, x):
         qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
 
     sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
-    qback = 4*np.abs(sback)**2/x2
+    qback = 4 * np.abs(sback)**2 / x2
 
     return [qext, qsca, qback, g]
+
 
 @njit((complex128, float64), cache=True)
 def _mie_scalar(m, x):
@@ -283,10 +297,10 @@ def _mie_scalar(m, x):
         g: the average cosine of the scattering phase function
     """
     if m.real == 0 and x < 0.1:
-        qext, qsca, qback, g =_small_conducting_mie(m, x)
+        qext, qsca, qback, g = _small_conducting_mie(m, x)
 
     elif m.real > 0.0 and np.abs(m) * x < 0.1:
-        qext, qsca, qback, g =_small_mie(m, x)
+        qext, qsca, qback, g = _small_mie(m, x)
 
     else:
         nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
@@ -310,12 +324,13 @@ def _mie_scalar(m, x):
         c2n = cn / n / (n + 1)
         g = 0
         for i in range(nmax - 1):
-            asy1 = c1n[i] * (a[i] * a[i + 1].conjugate() +
-                             b[i] * b[i + 1].conjugate()).real
+            asy1 = c1n[i] * (a[i] * a[i + 1].conjugate()
+                             + b[i] * b[i + 1].conjugate()).real
             asy2 = c2n[i] * (a[i] * b[i].conjugate()).real
             g += 4 * (asy1 + asy2) / qsca / x**2
 
     return [qext, qsca, qback, g]
+
 
 def mie(m, x):
     """
@@ -367,6 +382,7 @@ def mie(m, x):
 
     return qext, qsca, qback, g
 
+
 @njit((complex128, float64, float64[:]), cache=True)
 def _small_mie_conducting_S1_S2(m, x, mu):
     """
@@ -391,18 +407,25 @@ def _small_mie_conducting_S1_S2(m, x, mu):
     ahat2 = 1j / 30 * x**2
     bhat2 = -1j * x**2 / 45
 
-    S1 = 1.5 * x**3 * (ahat1 + bhat1 * mu + 5 / 3 * ahat2 *
-                       mu + 5 / 3 * bhat2 * (2 * mu**2 - 1))
-    S2 = 1.5 * x**3 * (bhat1 + ahat1 * mu + 5 / 3 * bhat2 *
-                       mu + 5 / 3 * ahat2 * (2 * mu**2 - 1))
+    S1 = 1.5 * x**3 * (ahat1 + bhat1 * mu
+                       + 5 / 3 * ahat2 * mu
+                       + 5 / 3 * bhat2 * (2 * mu**2 - 1))
 
-    qext = x**4 * (6 * np.abs(ahat1)**2 + 6 * np.abs(bhat1)**2 + 10 * np.abs(ahat2)**2 +
-                   10 * np.abs(bhat2)**2)
+    S2 = 1.5 * x**3 * (bhat1 + ahat1 * mu
+                       + 5 / 3 * bhat2 * mu
+                       + 5 / 3 * ahat2 * (2 * mu**2 - 1))
+
+    qext = x**4 * (6 * np.abs(ahat1)**2
+                   + 6 * np.abs(bhat1)**2
+                   + 10 * np.abs(ahat2)**2
+                   + 10 * np.abs(bhat2)**2)
+
     norm = np.sqrt(qext * np.pi * x**2)
     S1 /= norm
     S2 /= norm
 
     return [S1, S2]
+
 
 @njit((complex128, float64, float64[:]), cache=True)
 def _small_mie_S1_S2(m, x, mu):
@@ -428,13 +451,14 @@ def _small_mie_S1_S2(m, x, mu):
     x3 = x2 * x
     x4 = x2 * x2
 
-    D = m2 + 2 + (1 - 0.7 * m2) * x2 - (8 * m4 - 385 * m2 + 350) * x4 / 1400.0 + \
-        2j * (m2 - 1) * x3 * (1 - 0.1 * x2) / 3
+    D = m2 + 2 + (1 - 0.7 * m2) * x2
+    D -= (8 * m4 - 385 * m2 + 350) * x4 / 1400.0
+    D += 2j * (m2 - 1) * x3 * (1 - 0.1 * x2) / 3
     ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x4 / 1400) / D
-    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) /
-                                       70 * x2) / (1 - (2 * m2 - 5) / 30 * x2)
-    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14) / \
-        (2 * m2 + 3 - (2 * m2 - 7) / 14 * x2)
+    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
+    bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
+    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
+    ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
 
     S1 = 1.5 * x3 * (ahat1 + bhat1 * mu + 5 / 3 * ahat2 * mu)
     S2 = 1.5 * x3 * (bhat1 + ahat1 * mu + 5 / 3 * ahat2 * (2 * mu**2 - 1))
@@ -445,6 +469,7 @@ def _small_mie_S1_S2(m, x, mu):
     S2 /= norm
 
     return [S1, S2]
+
 
 @njit((complex128, float64, float64[:]), cache=True)
 def _mie_S1_S2(m, x, mu):
@@ -479,10 +504,12 @@ def _mie_S1_S2(m, x, mu):
         pi_nm1 = 1
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1] +
-                                    tau_nm1 * b[n - 1]) / (n + 1) / n
-            S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1] +
-                                    pi_nm1 * b[n - 1]) / (n + 1) / n
+
+            S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1]
+                                    + tau_nm1 * b[n - 1]) / (n + 1) / n
+
+            S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1]
+                                    + pi_nm1 * b[n - 1]) / (n + 1) / n
 
             temp = pi_nm1
             pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
@@ -496,6 +523,7 @@ def _mie_S1_S2(m, x, mu):
     S2 /= norm
 
     return [S1, S2]
+
 
 def mie_S1_S2(m, x, mu):
     """
@@ -520,6 +548,7 @@ def mie_S1_S2(m, x, mu):
         return s1[0], s2[0]
 
     return _mie_S1_S2(m, x, mu)
+
 
 def mie_cdf(m, x, num):
     """
@@ -556,6 +585,7 @@ def mie_cdf(m, x, num):
         cdf[i] = total
 
     return mu, cdf
+
 
 def mie_mu_with_uniform_cdf(m, x, num):
     """
@@ -612,6 +642,7 @@ def mie_mu_with_uniform_cdf(m, x, num):
 
     return [mu, cdf]
 
+
 def generate_mie_costheta(mu_cdf):
     """
     Generate a new scattering angle using a cdf.
@@ -639,6 +670,7 @@ def generate_mie_costheta(mu_cdf):
 
     return x
 
+
 def i_per(m, x, mu):
     """
     Return the scattered intensity in a plane normal to the incident light.
@@ -659,6 +691,7 @@ def i_per(m, x, mu):
     s1, _ = mie_S1_S2(m, x, mu)
     intensity = np.abs(s1)**2
     return intensity.astype('float')
+
 
 def i_par(m, x, mu):
     """
@@ -681,6 +714,7 @@ def i_par(m, x, mu):
     intensity = np.abs(s2)**2
     return intensity.astype('float')
 
+
 def i_unpolarized(m, x, mu):
     """
     Return the unpolarized scattered intensity at specified angles.
@@ -702,6 +736,7 @@ def i_unpolarized(m, x, mu):
     intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
     return intensity.astype('float')
 
+
 def ez_mie(m, d, lambda0, n_env=1.0):
     """
     Calculate the efficiencies of a sphere.
@@ -719,8 +754,9 @@ def ez_mie(m, d, lambda0, n_env=1.0):
         g: the average cosine of the scattering phase function [-]
     """
     m_env = m / n_env
-    x_env = np.pi*d/(lambda0/n_env)
+    x_env = np.pi * d / (lambda0 / n_env)
     return mie(m_env, x_env)
+
 
 def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     """
@@ -747,7 +783,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     """
     m_env = m / n_env
     lambda_env = lambda0 / n_env
-    x_env = np.pi*d/lambda_env
+    x_env = np.pi * d / lambda_env
     s1, s2 = mie_S1_S2(m_env, x_env, mu)
     ipar = np.abs(s2)**2
     iper = np.abs(s1)**2
