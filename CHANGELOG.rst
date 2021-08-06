@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v2.2.0 (9/5/2021)
+-----------------
+*   create pure python packages
+*   include wheel file
+*   package as python3 only
+
 2.1.0 (05/22/21)
 ----------------
 *   fix case when scalar angle used with mie_S1_S2()

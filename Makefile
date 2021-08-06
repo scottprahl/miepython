@@ -75,6 +75,7 @@ clean:
 	rm -rf .tox
 	rm -rf 04_plot.png
 	rm -rf .pytest_cache
+	rm -rf build
 
 realclean:
 	make clean
