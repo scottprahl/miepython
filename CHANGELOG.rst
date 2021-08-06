@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v2.2.0 (9/5/2021)
+v2.2.1 (9/5/2021)
 -----------------
 *   create pure python packages
 *   include wheel file
