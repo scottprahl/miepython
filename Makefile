@@ -4,7 +4,7 @@ SOURCEDIR     = docs
 BUILDDIR      = docs/_build
 
 default:
-	@echo Type: make check, make html, or make clean
+	@echo Type: make rcheck, make html, or make clean
 
 html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
@@ -46,11 +46,10 @@ rcheck:
 	make lintcheck
 	make doccheck
 	flake8 .
-	-pyroma -d .
-	-check-manifest
-	make jittest
+	pyroma -d .
+	check-manifest
 	make html
-
+	make jittest
 
 jittest:
 	python3 -m pytest tests/test_nojit.py
@@ -75,7 +74,6 @@ clean:
 	rm -rf .tox
 	rm -rf 04_plot.png
 	rm -rf .pytest_cache
-	rm -rf build
 
 realclean:
 	make clean
