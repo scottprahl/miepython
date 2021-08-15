@@ -30,6 +30,8 @@ been validated against his results.
 This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere at each of those
 angles.
 
+Full documentation at <https://miepython.readthedocs.io>
+
 Pay Attention!
 --------------
 
