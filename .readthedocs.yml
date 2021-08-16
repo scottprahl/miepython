@@ -9,3 +9,9 @@ version: 2
 sphinx:
    builder: html
    configuration: docs/conf.py
+
+# Set the version of Python and requirements required
+python:
+  version: 3.7
+  install:
+    - requirements: docs/requirements.txt
