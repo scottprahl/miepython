@@ -1,6 +1,4 @@
-numpy
-matplotlib
-numba
-nbsphinx
-sphinx-automodapi
+Jinja2==2.11.2
+nbsphinx==0.8.0
+sphinx_automodapi
 sphinx-rtd-theme
