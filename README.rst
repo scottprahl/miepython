@@ -1,6 +1,8 @@
 miepython
 =========
 
+by Scott Prahl
+
 .. image:: https://img.shields.io/pypi/v/miepython.svg
    :target: https://pypi.org/project/miepython/
 
