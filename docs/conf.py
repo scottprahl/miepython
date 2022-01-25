@@ -12,11 +12,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'miepython'
-copyright = '2017-21, Scott Prahl'
+copyright = '2017-22, Scott Prahl'
 author = 'Scott Prahl'
 
 # The full version, including alpha/beta/rc tags
-release = '2.2.1'
+release = '2.2.2'
 
 master_doc = 'index'
 

@@ -45,7 +45,7 @@ rcheck:
 	make rstcheck
 	make lintcheck
 	make doccheck
-	flake8 .
+	- flake8 .
 	pyroma -d .
 	check-manifest
 	make html

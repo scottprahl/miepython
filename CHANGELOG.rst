@@ -2,7 +2,7 @@ Changelog
 =========
 
 v2.2.2 (1/25/2022)
------------------
+------------------
 *   modify _mie_An_Bn to allocate and return An and Bn
 *   fix minor packaging issue
 *   explicitly define encoding when opening files
