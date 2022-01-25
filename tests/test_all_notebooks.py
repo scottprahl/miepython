@@ -36,7 +36,8 @@ searchpath = pathlib.Path('./docs/')  # all notebooks are in here
 # Read patterns from .testignore file
 ignores = ''
 if os.path.exists('.testignore'):
-    ignores = [line.strip() for line in open('.testignore') if line.strip()]
+    with open('.testignore', encoding='utf-8') as ff:
+        ignores = [line.strip() for line in ff if line.strip()]
 
 # Ignore hidden folders (startswith('.')) and files matching ignore patterns
 notebooks = [notebook for notebook in searchpath.glob('**/*.ipynb')
@@ -63,7 +64,7 @@ def test_run_notebook(notebook):
     caught by pytest
 
     """
-    with open(notebook) as f:
+    with open(notebook, encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
     ep = nbconvert.preprocessors.ExecutePreprocessor(timeout=600)
     ep.preprocess(nb, {'metadata': {'path': notebook.parent}})
