@@ -1,6 +1,16 @@
 Changelog
 =========
 
+v2.2.2 (1/25/2022)
+-----------------
+*   modify _mie_An_Bn to allocate and return An and Bn
+*   fix minor packaging issue
+*   explicitly define encoding when opening files
+*   explicitly use .readthedocs.yaml to build docs
+*   use rtd theme for docs
+*   add docs/requirements
+*   restrict Jinja2 to 2.11.3 in docs/requirements
+
 v2.2.1 (9/5/2021)
 -----------------
 *   create pure python packages
