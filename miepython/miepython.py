@@ -196,6 +196,7 @@ def _mie_An_Bn(m, x):
 
     return a, b
 
+
 @njit((complex128, float64), cache=True)
 def _small_conducting_mie(m, x):
     """
