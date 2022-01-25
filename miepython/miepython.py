@@ -145,8 +145,8 @@ def _D_calc(m, x, N):
     return D
 
 
-@njit((complex128, float64, complex128[:], complex128[:]), cache=True)
-def _mie_An_Bn(m, x, a, b):
+@njit((complex128, float64), cache=True)
+def _mie_An_Bn(m, x):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -159,14 +159,17 @@ def _mie_An_Bn(m, x, a, b):
         x: the size parameter of the sphere
 
     Returns:
-        An, Bn: arrays of Mie coefficents
+        a, b: arrays of Mie coefficents An and Bn
     """
+    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    a = np.zeros(nstop - 1, dtype=np.complex128)
+    b = np.zeros(nstop - 1, dtype=np.complex128)
+
     psi_nm1 = np.sin(x)                   # nm1 = n-1 = 0
     psi_n = psi_nm1 / x - np.cos(x)       # n = 1
     xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
-    nstop = len(a)
     if m.real > 0.0:
         D = _D_calc(m, x, nstop + 1)
 
@@ -191,6 +194,7 @@ def _mie_An_Bn(m, x, a, b):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
+    return a, b
 
 @njit((complex128, float64), cache=True)
 def _small_conducting_mie(m, x):
@@ -303,10 +307,7 @@ def _mie_scalar(m, x):
         qext, qsca, qback, g = _small_mie(m, x)
 
     else:
-        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
-        a = np.zeros(nstop - 1, dtype=np.complex128)
-        b = np.zeros(nstop - 1, dtype=np.complex128)
-        _mie_An_Bn(m, x, a, b)
+        a, b = _mie_An_Bn(m, x)
 
         nmax = len(a)
         n = np.arange(1, nmax + 1)
@@ -489,10 +490,7 @@ def _mie_S1_S2(m, x, mu):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
-    a = np.zeros(nstop - 1, dtype=np.complex128)
-    b = np.zeros(nstop - 1, dtype=np.complex128)
-    _mie_An_Bn(m, x, a, b)
+    a, b = _mie_An_Bn(m, x)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
