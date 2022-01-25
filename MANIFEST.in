@@ -11,3 +11,4 @@ exclude .gitignore
 exclude Makefile
 exclude requirements.txt
 exclude requirements-dev.txt
+exclude .readthedocs.yaml
