@@ -43,7 +43,6 @@ from numba import njit, int32, float64, complex128
 
 __all__ = ('ez_mie',
            'ez_intensities',
-           'generate_mie_costheta',
            'i_par',
            'i_per',
            'i_unpolarized',
@@ -51,6 +50,7 @@ __all__ = ('ez_mie',
            'mie_S1_S2',
            'mie_cdf',
            'mie_mu_with_uniform_cdf',
+           'generate_mie_costheta',
            )
 
 
@@ -744,13 +744,13 @@ def ez_mie(m, d, lambda0, n_env=1.0):
         m: the complex index of refraction of the sphere [-]
         d: the diameter of the sphere                    [same units as lambda0]
         lambda0: wavelength in a vacuum                  [same units as d]
-        n_env: real index of medium around sphere        [-]
+        n_env: real index of medium around sphere, optional.
 
     Returns:
-        qext: the total extinction efficiency                  [-]
-        qsca: the scattering efficiency                        [-]
-        qback: the backscatter efficiency                      [-]
-        g: the average cosine of the scattering phase function [-]
+        qext: the total extinction efficiency                  [-].
+        qsca: the scattering efficiency                        [-].
+        qback: the backscatter efficiency                      [-].
+        g: the average cosine of the scattering phase function [-].
     """
     m_env = m / n_env
     x_env = np.pi * d / (lambda0 / n_env)
@@ -775,7 +775,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
         d: the diameter of the sphere                    [same units as lambda0]
         lambda0: wavelength in a vacuum                  [same units as d]
         mu: the cos(theta) of each direction desired     [-]
-        n_env: real index of medium around sphere        [-]
+        n_env: real index of medium around sphere, optional
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
