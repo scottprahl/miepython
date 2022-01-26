@@ -1,3 +1,4 @@
+numpy
 Jinja2==2.11.3
 nbsphinx==0.8.5
 sphinx_automodapi
