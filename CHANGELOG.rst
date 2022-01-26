@@ -6,6 +6,7 @@ v2.2.3 (1/26/2022)
 *   update _mie_An_Bn in miepython_nojit
 *   store data in module so github testing passes
 *   fix build of API documentation on miepython.readthedocs.io
+*   only test back to python 3.7
 
 v2.2.2 (1/25/2022)
 ------------------
