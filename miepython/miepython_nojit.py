@@ -42,7 +42,6 @@ import numpy as np
 
 __all__ = ('ez_mie',
            'ez_intensities',
-           'generate_mie_costheta',
            'i_par',
            'i_per',
            'i_unpolarized',
@@ -50,6 +49,7 @@ __all__ = ('ez_mie',
            'mie_S1_S2',
            'mie_cdf',
            'mie_mu_with_uniform_cdf',
+           'generate_mie_costheta',
            )
 
 
@@ -140,7 +140,7 @@ def _D_calc(m, x, N):
     return D
 
 
-def _mie_An_Bn(m, x, a, b):
+def _mie_An_Bn(m, x):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -155,12 +155,15 @@ def _mie_An_Bn(m, x, a, b):
     Returns:
         An, Bn: arrays of Mie coefficents
     """
+    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    a = np.zeros(nstop - 1, dtype=np.complex128)
+    b = np.zeros(nstop - 1, dtype=np.complex128)
+
     psi_nm1 = np.sin(x)                   # nm1 = n-1 = 0
     psi_n = psi_nm1 / x - np.cos(x)       # n = 1
     xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
-    nstop = len(a)
     if m.real > 0.0:
         D = _D_calc(m, x, nstop + 1)
 
@@ -185,7 +188,7 @@ def _mie_An_Bn(m, x, a, b):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
-    return [a, b]
+    return a, b
 
 
 def _small_conducting_mie(m, x):
@@ -293,10 +296,7 @@ def _mie_scalar(m, x):
         qext, qsca, qback, g = _small_mie(m, x)
 
     else:
-        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
-        a = np.zeros(nstop - 1, dtype=np.complex128)
-        b = np.zeros(nstop - 1, dtype=np.complex128)
-        _mie_An_Bn(m, x, a, b)
+        a, b = _mie_An_Bn(m, x)
 
         nmax = len(a)
         n = np.arange(1, nmax + 1)
@@ -479,10 +479,7 @@ def mie_S1_S2(m, x, mu):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
-    a = np.zeros(nstop - 1, dtype=np.complex128)
-    b = np.zeros(nstop - 1, dtype=np.complex128)
-    _mie_An_Bn(m, x, a, b)
+    a, b = _mie_An_Bn(m, x)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -619,7 +616,7 @@ def generate_mie_costheta(mu_cdf):
        mu_cdf: a cumulative distribution function
 
     Returns
-       The cosine of the scattering angle
+       an array of random scattering angle cosines based on the CDF supplied.
     """
     # the following should be equivalent to these four lines
     # index = np.random.randint(0, high=len(mu_cdf))
@@ -708,7 +705,7 @@ def ez_mie(m, d, lambda0, n_env=1.0):
         m: the complex index of refraction of the sphere [-]
         d: the diameter of the sphere                    [same units as lambda0]
         lambda0: wavelength in a vacuum                  [same units as d]
-        n_env: real index of medium around sphere        [-]
+        n_env: real index of medium around sphere, optional.
 
     Returns:
         qext: the total extinction efficiency                  [-]
@@ -739,7 +736,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
         d: the diameter of the sphere                    [same units as lambda0]
         lambda0: wavelength in a vacuum                  [same units as d]
         mu: the cos(theta) of each direction desired     [-]
-        n_env: real index of medium around sphere        [-]
+        n_env: real index of medium around sphere, optional.
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
