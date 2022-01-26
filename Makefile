@@ -68,8 +68,6 @@ clean:
 	rm -rf docs/_build
 	rm -rf docs/.ipynb_checkpoints
 	rm -rf docs/.pytest_cache
-	rm -rf docs/omlc.org
-	rm -rf docs/refractiveindex.info
 	rm -rf tests/__pycache__
 	rm -rf .tox
 	rm -rf 04_plot.png

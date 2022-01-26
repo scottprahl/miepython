@@ -51,8 +51,6 @@ exclude_patterns = [
     '.DS_Store', 
     '_build', 
     '**.ipynb_checkpoints',
-    'omlc.org/*', 
-    'refractiveindex.info/*',
     'adaptive_functioning.ipynb'
 ]
 

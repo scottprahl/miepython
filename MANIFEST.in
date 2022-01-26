@@ -1,6 +1,7 @@
 include LICENSE.txt
 include CHANGELOG.rst
 include miepython/examples/*.py
+include miepython/data/*.txt
 exclude tests/*.py
 exclude tests
 exclude .testignore
