@@ -6,7 +6,8 @@ v2.2.3 (1/26/2022)
 *   update _mie_An_Bn in miepython_nojit
 *   store data in module so github testing passes
 *   fix build of API documentation on miepython.readthedocs.io
-*   only test back to python 3.7
+*   only test back to python 3.9 because importlib.resources
+*   3.9 is only needed for a few of the jupyter notebooks
 
 v2.2.2 (1/25/2022)
 ------------------
