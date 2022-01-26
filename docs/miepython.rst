@@ -1,8 +1,8 @@
 API for `miepython` package
 ===========================
 
-.. automodule:: miepython.miepython
+.. automodapi:: miepython.miepython
    :members:
 
-.. automodule:: miepython.miepython_nojit
+.. automodapi:: miepython.miepython_nojit
    :members:

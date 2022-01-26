@@ -118,7 +118,6 @@ Small Gold Spheres
    :hidden:
 
    miepython
-   miepython_nojit
 
 .. toctree::
    :caption: Versions
