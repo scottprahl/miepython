@@ -5,6 +5,7 @@ pytest
 tox
 #
 # Testing notebooks
+importlib_resources
 numpy
 matplotlib
 scipy

@@ -1,3 +1,4 @@
+importlib_resources
 numpy
 numba
 matplotlib
