@@ -2,11 +2,9 @@ include LICENSE.txt
 include CHANGELOG.rst
 include miepython/examples/*.py
 include miepython/data/*.txt
-exclude tests/*.py
-exclude tests
-exclude .testignore
 exclude docs/*
-exclude docs
+exclude tests/*
+exclude .testignore
 exclude release.txt
 exclude .gitignore
 exclude Makefile
