@@ -57,7 +57,7 @@ import miepython.miepython_nojit as miepython
 #         self.assertAlmostEqual(b[1].imag, -0.236805417045, delta=0.0001)
 
 
-class non_absorbing(unittest.TestCase):
+class NonAbsorbing(unittest.TestCase):
 
     def test_03_bh_dielectric(self):
         m = 1.55
@@ -162,7 +162,7 @@ class non_absorbing(unittest.TestCase):
         self.assertAlmostEqual(g, 0.80128972639, delta=1e-7)
 
 
-class absorbing(unittest.TestCase):
+class Absorbing(unittest.TestCase):
     def test_06_wiscombe_water_absorbing(self):
 
         # MIEV0 Test Case 9
@@ -260,7 +260,7 @@ class absorbing(unittest.TestCase):
         self.assertAlmostEqual(g, 0.748905978948507, delta=1e-7)
 
 
-class perfectly_reflecting(unittest.TestCase):
+class PerfectlyReflecting(unittest.TestCase):
 
     def test_11_wiscombe_perfectly_reflecting(self):
 
@@ -299,7 +299,7 @@ class perfectly_reflecting(unittest.TestCase):
         self.assertAlmostEqual(g, 0.500070, delta=1e-6)
 
 
-class small(unittest.TestCase):
+class Small(unittest.TestCase):
 
     def test_10_small_spheres(self):
         # MIEV0 Test Case 5
@@ -347,7 +347,7 @@ class small(unittest.TestCase):
         self.assertAlmostEqual(g, -0.397262, delta=1e-4)
 
 
-class angle_scattering(unittest.TestCase):
+class AngleScattering(unittest.TestCase):
 
     def test_12_scatter_function(self):
         x = 1.0
@@ -396,7 +396,7 @@ class angle_scattering(unittest.TestCase):
         self.assertAlmostEqual(S2[6].imag, -0.146829, delta=1e-6)
 
 
-class notebook_tests(unittest.TestCase):
+class NotebookTests(unittest.TestCase):
     def test_nb1_x(self):
         N = 500
         m = 1.5
