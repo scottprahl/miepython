@@ -20,7 +20,7 @@ rstcheck:
 	-rstcheck CHANGELOG.rst
 	-rstcheck docs/index.rst
 	-rstcheck docs/changelog.rst
-	-rstcheck --ignore-directives automodule docs/miepython.rst
+	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
 lintcheck:
 	-pylint miepython/miepython.py

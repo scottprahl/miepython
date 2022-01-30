@@ -3,6 +3,7 @@
 # pylint: disable=too-many-locals
 # pylint: disable=no-member
 # pylint: disable=bare-except
+# pylint: disable=too-many-arguments
 
 """
 Mie scattering calculations for perfect spheres JITTED!.
@@ -473,8 +474,85 @@ def _small_mie_S1_S2(m, x, mu):
     return [S1, S2]
 
 
-@njit((complex128, float64, float64[:]), cache=True)
-def _mie_S1_S2(m, x, mu):
+@njit((complex128[:], complex128[:], float64, int32), cache=True)
+def normalization_factor(a, b, x, norm_int):
+    """
+    Figure out scattering function normalization.
+
+    Args:
+        a: complex array of An coefficients
+        b: complex array of Bn coefficients
+        x: dimensionless sphere size
+        norm_int: integer that specifies normalization
+
+    Returns:
+        scaling factor needed for scattering function
+    """
+    if norm_int == 5:
+        return 1
+
+    n = np.arange(1, len(a) + 1)
+    cn = 2.0 * n + 1.0
+    qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+
+    # albedo
+    if norm_int == 0:
+        return np.sqrt(np.pi * x**2 * qext)
+
+    qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
+
+    # 1
+    if norm_int == 1:
+        return np.sqrt(qsca * np.pi * x**2)
+
+    # 4pi
+    if norm_int == 2:
+        return np.sqrt(qsca * x**2 / 4)
+
+    # qsca
+    if norm_int == 3:
+        return np.sqrt(np.pi * x**2)
+
+    # qext
+    return np.sqrt(qsca * np.pi * x**2 / qext)
+
+
+def norm_string_to_integer(norm):
+    """
+    Encode normalization choice as an integer.
+
+    This is needed because these string operations cannot be
+    done in a jitted function under numba.
+
+    Args:
+        norm: type of normalization for scattering function.
+
+    Returns:
+        integer used in _mie_S1_S2() determine normalization
+    """
+    if norm in ['a', 'albedo']:
+        return 0
+
+    if norm in ['1', 'one', 'unity']:
+        return 1
+
+    if norm in ['four_pi', '4pi']:
+        return 2
+
+    if norm in ['qsca', 'scattering_efficiency']:
+        return 3
+
+    if norm in ['qext', 'extinction_efficiency']:
+        return 4
+
+    if norm in ['bohren', 'wiscombe', 'vandehulst']:
+        return 5
+
+    raise ValueError("norm must be 'albedo', 'one', '4pi', 'qsca', or 'qsca'")
+
+
+@njit((complex128, float64, float64[:], int32), cache=True)
+def _mie_S1_S2(m, x, mu, norm_int):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -514,17 +592,15 @@ def _mie_S1_S2(m, x, mu):
             pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
             pi_nm2 = temp
 
-    # calculate norm = sqrt(pi * Qext * x**2)
-    n = np.arange(1, nstop + 1)
-    norm = np.sqrt(2 * np.pi * np.sum((2 * n + 1) * (a.real + b.real)))
+    normalization = normalization_factor(a, b, x, norm_int)
 
-    S1 /= norm
-    S2 /= norm
+    S1 /= normalization
+    S2 /= normalization
 
     return [S1, S2]
 
 
-def mie_S1_S2(m, x, mu):
+def mie_S1_S2(m, x, mu, norm='albedo'):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -541,15 +617,16 @@ def mie_S1_S2(m, x, mu):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
+    norm_int = norm_string_to_integer(norm)
     if np.isscalar(mu):
         mu_array = np.array([mu], dtype=float)
-        s1, s2 = _mie_S1_S2(m, x, mu_array)
+        s1, s2 = _mie_S1_S2(m, x, mu_array, norm_int)
         return s1[0], s2[0]
 
-    return _mie_S1_S2(m, x, mu)
+    return _mie_S1_S2(m, x, mu, norm_int)
 
 
-def mie_cdf(m, x, num):
+def mie_cdf(m, x, num, norm='albedo'):
     """
     Create a CDF for unpolarized scattering uniformly spaced in cos(theta).
 
@@ -572,7 +649,7 @@ def mie_cdf(m, x, num):
         cdf: array of cumulative distribution function values
     """
     mu = np.linspace(-1, 1, num)
-    s1, s2 = mie_S1_S2(m, x, mu)
+    s1, s2 = mie_S1_S2(m, x, mu, norm)
 
     s = (np.abs(s1)**2 + np.abs(s2)**2) / 2
 
@@ -586,7 +663,7 @@ def mie_cdf(m, x, num):
     return mu, cdf
 
 
-def mie_mu_with_uniform_cdf(m, x, num):
+def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
     """
     Create a CDF for unpolarized scattering for uniform CDF.
 
@@ -612,7 +689,7 @@ def mie_mu_with_uniform_cdf(m, x, num):
         cdf: array of cumulative distribution function values
     """
     big_num = 2000                  # large to work with x up to 10
-    big_mu, big_cdf = mie_cdf(m, x, big_num)
+    big_mu, big_cdf = mie_cdf(m, x, big_num, norm)
     mu = np.empty(num)
     cdf = np.empty(num)
 
@@ -670,7 +747,7 @@ def generate_mie_costheta(mu_cdf):
     return x
 
 
-def i_per(m, x, mu):
+def i_per(m, x, mu, norm='albedo'):
     """
     Return the scattered intensity in a plane normal to the incident light.
 
@@ -687,12 +764,12 @@ def i_per(m, x, mu):
     Returns
        The intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, _ = mie_S1_S2(m, x, mu)
+    s1, _ = mie_S1_S2(m, x, mu, norm)
     intensity = np.abs(s1)**2
     return intensity.astype('float')
 
 
-def i_par(m, x, mu):
+def i_par(m, x, mu, norm='albedo'):
     """
     Return the scattered intensity in a plane parallel to the incident light.
 
@@ -709,19 +786,18 @@ def i_par(m, x, mu):
     Returns
        The intensity at each angle in the array mu.  Units [1/sr]
     """
-    _, s2 = mie_S1_S2(m, x, mu)
+    _, s2 = mie_S1_S2(m, x, mu, norm)
     intensity = np.abs(s2)**2
     return intensity.astype('float')
 
 
-def i_unpolarized(m, x, mu):
+def i_unpolarized(m, x, mu, norm='albedo'):
     """
     Return the unpolarized scattered intensity at specified angles.
 
     This is the average value for randomly polarized incident light.
-    The intensity is normalized such
-    that the integral of the unpolarized intensity over 4π steradians
-    is equal to the single scattering albedo.
+    The intensity is normalized such that the integral of the unpolarized
+    intensity over 4π steradians is equal to the single scattering albedo.
 
     Args:
        m: the complex index of refraction of the sphere
@@ -731,7 +807,7 @@ def i_unpolarized(m, x, mu):
     Returns
        The intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, s2 = mie_S1_S2(m, x, mu)
+    s1, s2 = mie_S1_S2(m, x, mu, norm)
     intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
     return intensity.astype('float')
 
@@ -757,7 +833,7 @@ def ez_mie(m, d, lambda0, n_env=1.0):
     return mie(m_env, x_env)
 
 
-def ez_intensities(m, d, lambda0, mu, n_env=1.0):
+def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
     """
     Return the scattered intensities from a sphere.
 
@@ -783,7 +859,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0):
     m_env = m / n_env
     lambda_env = lambda0 / n_env
     x_env = np.pi * d / lambda_env
-    s1, s2 = mie_S1_S2(m_env, x_env, mu)
+    s1, s2 = mie_S1_S2(m_env, x_env, mu, norm)
     ipar = np.abs(s2)**2
     iper = np.abs(s1)**2
     Ipar = ipar.astype('float')

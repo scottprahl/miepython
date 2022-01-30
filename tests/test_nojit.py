@@ -395,6 +395,77 @@ class AngleScattering(unittest.TestCase):
         self.assertAlmostEqual(S2[6].real, -0.348844, delta=1e-6)
         self.assertAlmostEqual(S2[6].imag, -0.146829, delta=1e-6)
 
+    def test_13_unity_normalization(self):
+        x = 1.0
+        m = 1.5 - 1.0j
+        theta = np.arange(0, 181, 30)
+        mu = np.cos(theta * np.pi / 180)
+
+        qext, qsca, qback, g = miepython.mie(m, x)
+        S1, S2 = miepython.mie_S1_S2(m, x, mu, norm='bohren')
+
+        self.assertAlmostEqual(S1[0].real, 0.584080, delta=1e-6)
+        self.assertAlmostEqual(S1[0].imag, 0.190515, delta=1e-6)
+        self.assertAlmostEqual(S2[0].real, 0.584080, delta=1e-6)
+        self.assertAlmostEqual(S2[0].imag, 0.190515, delta=1e-6)
+
+        self.assertAlmostEqual(S1[1].real, 0.565702, delta=1e-6)
+        self.assertAlmostEqual(S1[1].imag, 0.187200, delta=1e-6)
+        self.assertAlmostEqual(S2[1].real, 0.500161, delta=1e-6)
+        self.assertAlmostEqual(S2[1].imag, 0.145611, delta=1e-6)
+
+        self.assertAlmostEqual(S1[2].real, 0.517525, delta=1e-6)
+        self.assertAlmostEqual(S1[2].imag, 0.178443, delta=1e-6)
+        self.assertAlmostEqual(S2[2].real, 0.287964, delta=1e-6)
+        self.assertAlmostEqual(S2[2].imag, 0.041054, delta=1e-6)
+
+        self.assertAlmostEqual(S1[3].real, 0.456340, delta=1e-6)
+        self.assertAlmostEqual(S1[3].imag, 0.167167, delta=1e-6)
+        self.assertAlmostEqual(S2[3].real, 0.0362285, delta=1e-6)
+        self.assertAlmostEqual(S2[3].imag, -0.0618265, delta=1e-6)
+
+        self.assertAlmostEqual(S1[4].real, 0.400212, delta=1e-6)
+        self.assertAlmostEqual(S1[4].imag, 0.156643, delta=1e-6)
+        self.assertAlmostEqual(S2[4].real, -0.174875, delta=1e-6)
+        self.assertAlmostEqual(S2[4].imag, -0.122959, delta=1e-6)
+
+        self.assertAlmostEqual(S1[5].real, 0.362157, delta=1e-6)
+        self.assertAlmostEqual(S1[5].imag, 0.149391, delta=1e-6)
+        self.assertAlmostEqual(S2[5].real, -0.305682, delta=1e-6)
+        self.assertAlmostEqual(S2[5].imag, -0.143846, delta=1e-6)
+
+        self.assertAlmostEqual(S1[6].real, 0.348844, delta=1e-6)
+        self.assertAlmostEqual(S1[6].imag, 0.146829, delta=1e-6)
+        self.assertAlmostEqual(S2[6].real, -0.348844, delta=1e-6)
+        self.assertAlmostEqual(S2[6].imag, -0.146829, delta=1e-6)
+
+    def test_i_unpolarized_01(self):
+        m = 1.5 - 1.5j
+        x = 2
+        mu = np.linspace(-1, 1, 1000)
+        qext, qsca, _, _ = miepython.mie(m, x)
+        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * np.pi * x**2]
+
+        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren']):
+            intensity = miepython.i_unpolarized(m, x, mu, norm)
+            total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
+            self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
+
+    def test_i_par_i_per_01(self):
+        m = 1.5 - 1.5j
+        x = 2
+        mu = np.linspace(-1, 1, 10000)
+        qext, qsca, _, _ = miepython.mie(m, x)
+        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * np.pi * x**2]
+
+        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren']):
+            iper = miepython.i_per(m, x, mu, norm)
+            total1 = 2 * np.pi * (mu[1] - mu[0]) * np.sum(iper)
+            ipar = miepython.i_par(m, x, mu, norm)
+            total2 = 2 * np.pi * (mu[1] - mu[0]) * np.sum(ipar)
+            total = (total1 + total2) / 2
+            self.assertAlmostEqual(total / expected[i], 1, delta=1e-3)
+
 
 class NotebookTests(unittest.TestCase):
     def test_nb1_x(self):

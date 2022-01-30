@@ -21,6 +21,7 @@ deps = pytest
 
 commands =
     python3 -m pytest tests/test_jit.py
+    python3 -m pytest tests/test_nojit.py
     python3 miepython/examples/01_dielectric.py
     python3 miepython/examples/02_glass.py
     python3 miepython/examples/03_droplets.py
