@@ -4,6 +4,7 @@
 # pylint: disable=no-member
 # pylint: disable=bare-except
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-return-statements
 
 """
 Mie scattering calculations for perfect spheres.
@@ -476,7 +477,10 @@ def normalization_factor(a, b, x, norm):
     Returns:
         scaling factor needed for scattering function
     """
-    if norm in ['bohren', 'wiscombe', 'vandehulst']:
+    if norm in ['bohren']:
+        return 1 / 2
+
+    if norm in ['wiscombe']:
         return 1
 
     n = np.arange(1, len(a) + 1)
@@ -500,7 +504,7 @@ def normalization_factor(a, b, x, norm):
     if norm in ['qext', 'extinction_efficiency']:
         return np.sqrt(qsca * np.pi * x**2 / qext)
 
-    raise ValueError("norm must be 'albedo', 'one', '4pi', 'qsca', or 'qsca'")
+    raise ValueError("norm must be 'albedo', 'one', '4pi', 'qsca', 'qext', 'bohren', 'wiscombe'")
 
 
 def mie_S1_S2(m, x, mu, norm='albedo'):

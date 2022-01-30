@@ -4,6 +4,7 @@
 # pylint: disable=no-member
 # pylint: disable=bare-except
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-return-statements
 
 """
 Mie scattering calculations for perfect spheres JITTED!.
@@ -488,29 +489,28 @@ def normalization_factor(a, b, x, norm_int):
     Returns:
         scaling factor needed for scattering function
     """
-    if norm_int == 5:
+    if norm_int == 5:  # bohren
+        return 1 / 2
+
+    if norm_int == 6:  # wiscombe
         return 1
 
     n = np.arange(1, len(a) + 1)
     cn = 2.0 * n + 1.0
     qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
 
-    # albedo
-    if norm_int == 0:
+    if norm_int == 0:  # albedo
         return np.sqrt(np.pi * x**2 * qext)
 
     qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
 
-    # 1
-    if norm_int == 1:
+    if norm_int == 1:  # 1
         return np.sqrt(qsca * np.pi * x**2)
 
-    # 4pi
-    if norm_int == 2:
+    if norm_int == 2:  # 4pi
         return np.sqrt(qsca * x**2 / 4)
 
-    # qsca
-    if norm_int == 3:
+    if norm_int == 3:  # qsca
         return np.sqrt(np.pi * x**2)
 
     # qext
@@ -525,7 +525,7 @@ def norm_string_to_integer(norm):
     done in a jitted function under numba.
 
     Args:
-        norm: type of normalization for scattering function.
+        norm: string describing normalization desired.
 
     Returns:
         integer used in _mie_S1_S2() determine normalization
@@ -545,8 +545,11 @@ def norm_string_to_integer(norm):
     if norm in ['qext', 'extinction_efficiency']:
         return 4
 
-    if norm in ['bohren', 'wiscombe', 'vandehulst']:
+    if norm in ['bohren']:
         return 5
+
+    if norm in ['wiscombe']:
+        return 6
 
     raise ValueError("norm must be 'albedo', 'one', '4pi', 'qsca', or 'qsca'")
 

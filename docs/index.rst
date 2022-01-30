@@ -89,6 +89,7 @@ Small Gold Spheres
    01_basics.ipynb
    02_efficiencies.ipynb
    03_angular_scattering.ipynb
+   03a_normalization.ipynb
    05_fog.ipynb
 
 .. toctree::

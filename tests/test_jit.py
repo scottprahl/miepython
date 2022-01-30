@@ -402,7 +402,7 @@ class AngleScattering(unittest.TestCase):
         mu = np.cos(theta * np.pi / 180)
 
         qext, qsca, qback, g = miepython.mie(m, x)
-        S1, S2 = miepython.mie_S1_S2(m, x, mu, norm='bohren')
+        S1, S2 = miepython.mie_S1_S2(m, x, mu, norm='wiscombe')
 
         self.assertAlmostEqual(S1[0].real, 0.584080, delta=1e-6)
         self.assertAlmostEqual(S1[0].imag, 0.190515, delta=1e-6)
@@ -444,9 +444,9 @@ class AngleScattering(unittest.TestCase):
         x = 2
         mu = np.linspace(-1, 1, 1000)
         qext, qsca, _, _ = miepython.mie(m, x)
-        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * np.pi * x**2]
+        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * 4 * np.pi * x**2, qsca * np.pi * x**2]
 
-        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren']):
+        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren', 'wiscombe']):
             intensity = miepython.i_unpolarized(m, x, mu, norm)
             total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
             self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
@@ -456,9 +456,9 @@ class AngleScattering(unittest.TestCase):
         x = 2
         mu = np.linspace(-1, 1, 10000)
         qext, qsca, _, _ = miepython.mie(m, x)
-        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * np.pi * x**2]
+        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * 4 * np.pi * x**2, qsca * np.pi * x**2]
 
-        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren']):
+        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren', 'wiscombe']):
             iper = miepython.i_per(m, x, mu, norm)
             total1 = 2 * np.pi * (mu[1] - mu[0]) * np.sum(iper)
             ipar = miepython.i_par(m, x, mu, norm)
