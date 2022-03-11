@@ -31,6 +31,9 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
     miepython.i_par(m, x, mu)
     miepython.i_unpolarized(m, x, mu)
 """
+__version__ = '2.2.3'
+__author__ = 'Scott Prahl'
+
 from .miepython import *
 
-__version__ = '2.2.3'
+
