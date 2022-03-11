@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.2.4 (unreleased)
+------------------
+*   store version __init__.py so scripts can query it
+
 v2.2.3 (1/26/2022)
 ------------------
 *   update _mie_An_Bn in miepython_nojit

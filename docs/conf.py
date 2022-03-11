@@ -2,12 +2,22 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 import sys
+import os.path
 import sphinx_rtd_theme
 
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('..'))
+def read(rel_path):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, rel_path), 'r', encoding='utf-8') as fp:
+        return fp.read()
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
 
 # -- Project information -----------------------------------------------------
 
@@ -15,9 +25,7 @@ project = 'miepython'
 copyright = '2017-22, Scott Prahl'
 author = 'Scott Prahl'
 
-# The full version, including alpha/beta/rc tags
-release = '2.2.3'
-
+release = get_version("../miepython/__init__.py")
 master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
@@ -26,29 +34,20 @@ master_doc = 'index'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx_automodapi.automodapi',
-    'sphinx_automodapi.smart_resolver',
     'nbsphinx',
 ]
-napoleon_google_docstring = True
 numpydoc_show_class_members = False
 napoleon_use_param = False
-napoleon_use_ivar = False
-napoleon_include_private_with_doc = False
 napoleon_use_rtype = False
-
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
-    '.DS_Store', 
     '_build', 
     '**.ipynb_checkpoints',
     'adaptive_functioning.ipynb'

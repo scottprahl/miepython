@@ -4,8 +4,8 @@ Releasing a new version
   tox
   make rcheck
 
-# update the version in setup.py and docs/conf.py
-  git commit setup.py docs/conf.py -m 'update version' 
+# update the version in miepython/__init__.py
+  git commit miepython/__init__.py -m 'update version' 
   git push
 
 # update CHANGELOG.rst
