@@ -1,21 +1,36 @@
+import re
 import os.path
 from setuptools import setup
 
-def read(rel_path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, rel_path), 'r', encoding='utf-8') as fp:
-        return fp.read()
+project = 'miepython'
 
-def get_version(rel_path):
-    for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
-            delim = '"' if '"' in line else "'"
-            return line.split(delim)[1]
-    else:
-        raise RuntimeError("Unable to find version string.")
+
+def get_init_property(prop):
+    """Return property from __init__.py."""
+    here = os.path.abspath(os.path.dirname(__file__))
+    file_name = os.path.join(here, project, '__init__.py')
+    regex = r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop)
+    with open(file_name, 'r', encoding='utf-8') as file:
+        result = re.search(regex, file.read())
+    return result.group(1)
+
+
+def get_contents(filename):
+    """Return contents of filename relative to the location of this file."""
+    here = os.path.abspath(os.path.dirname(__file__))
+    fn = os.path.join(here, filename)
+    with open(fn, 'r', encoding='utf-8') as f:
+        contents = f.read()
+    return contents
+
 
 setup(
-    long_description = read('README.rst'),
-    long_description_content_type = 'text/x-rst',
-    version = get_version("miepython/__init__.py")
+    name=project,
+    long_description=get_contents('README.rst'),
+    long_description_content_type='text/x-rst',
+    version=get_init_property('__version__'),
+    author=get_init_property('__author__'),
+    author_email=get_init_property('__email__'),
+    license=get_init_property('__license__'),
+    url=get_init_property('__url__')
 )

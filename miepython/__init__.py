@@ -33,7 +33,10 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 __version__ = '2.2.3'
 __author__ = 'Scott Prahl'
+__email__ = 'scott.prahl@oit.edu'
+__copyright__ = 'Copyright 2017-22, Scott Prahl'
+__license__ = 'MIT'
+__url__ = 'https://github.com/scottprahl/miepython.git'
+
 
 from .miepython import *
-
-

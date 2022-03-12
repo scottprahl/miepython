@@ -30,6 +30,7 @@ lintcheck:
 	-pylint tests/test_all_notebooks.py
 	-pylint tests/test_jit.py
 	-pylint tests/test_nojit.py
+	-pylint docs/conf.py
 
 doccheck:
 	-pydocstyle miepython/miepython.py

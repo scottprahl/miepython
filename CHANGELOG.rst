@@ -2,7 +2,10 @@ Changelog
 =========
 
 v2.2.4 (unreleased)
-------------------
+-------------------
+*   add optional argument to change scattering function normalization
+*   document normalization in new notebook
+*   store data in correct place
 *   store version __init__.py so scripts can query it
 
 v2.2.3 (1/26/2022)
