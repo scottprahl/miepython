@@ -464,41 +464,47 @@ def _small_mie_S1_S2(m, x, mu):
     return [S1, S2]
 
 
-def norm_string_to_integer(s):
+def normalization_factor(a, b, x, norm_str):
     """
-    Encode normalization choice as an integer.
-
-    This is needed because these string operations cannot be
-    done in a jitted function under numba.
+    Figure out scattering function normalization.
 
     Args:
-        s: string describing normalization desired.
+        a: complex array of An coefficients
+        b: complex array of Bn coefficients
+        x: dimensionless sphere size
+        norm_str: string describing type of normalization
 
     Returns:
-        integer used in _mie_S1_S2() determine normalization
+        scaling factor needed for scattering function
     """
-    norm = s.lower()
-
-    if norm in ['a', 'albedo']:
-        return 0
-
-    if norm in ['1', 'one', 'unity']:
-        return 1
-
-    if norm in ['four_pi', '4pi']:
-        return 2
-
-    if norm in ['qsca', 'scattering_efficiency']:
-        return 3
-
-    if norm in ['qext', 'extinction_efficiency']:
-        return 4
+    norm = norm_str.lower()
 
     if norm in ['bohren']:
-        return 5
+        return 1 / 2
 
     if norm in ['wiscombe']:
-        return 6
+        return 1
+
+    n = np.arange(1, len(a) + 1)
+    cn = 2.0 * n + 1.0
+    qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+
+    if norm in ['a', 'albedo']:
+        return np.sqrt(np.pi * x**2 * qext)
+
+    qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
+
+    if norm in ['1', 'one', 'unity']:
+        return np.sqrt(qsca * np.pi * x**2)
+
+    if norm in ['four_pi', '4pi']:
+        return np.sqrt(qsca * x**2 / 4)
+
+    if norm in ['qsca', 'scattering_efficiency']:
+        return np.sqrt(np.pi * x**2)
+
+    if norm in ['qext', 'extinction_efficiency']:
+        return np.sqrt(qsca * np.pi * x**2 / qext)
 
     raise ValueError("normalization must be one of 'albedo' (default), 'one'"
                      "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
