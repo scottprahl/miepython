@@ -517,7 +517,7 @@ def normalization_factor(a, b, x, norm_int):
     return np.sqrt(qsca * np.pi * x**2 / qext)
 
 
-def norm_string_to_integer(norm):
+def norm_string_to_integer(s):
     """
     Encode normalization choice as an integer.
 
@@ -525,11 +525,13 @@ def norm_string_to_integer(norm):
     done in a jitted function under numba.
 
     Args:
-        norm: string describing normalization desired.
+        s: string describing normalization desired.
 
     Returns:
         integer used in _mie_S1_S2() determine normalization
     """
+    norm = s.lower()
+
     if norm in ['a', 'albedo']:
         return 0
 
@@ -551,7 +553,8 @@ def norm_string_to_integer(norm):
     if norm in ['wiscombe']:
         return 6
 
-    raise ValueError("norm must be 'albedo', 'one', '4pi', 'qsca', or 'qsca'")
+    raise ValueError("normalization must be one of 'albedo' (default), 'one', 
+                     '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
 
 
 @njit((complex128, float64, float64[:], int32), cache=True)
