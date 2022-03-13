@@ -38,5 +38,4 @@ __copyright__ = 'Copyright 2017-22, Scott Prahl'
 __license__ = 'MIT'
 __url__ = 'https://github.com/scottprahl/miepython.git'
 
-
 from .miepython import *
