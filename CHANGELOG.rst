@@ -7,6 +7,7 @@ v2.2.4 (unreleased)
 *   document normalization in new notebook
 *   store data in correct place
 *   store version __init__.py so scripts can query it
+*   fix typo in header of gold sphere example script
 
 v2.2.3 (1/26/2022)
 ------------------
