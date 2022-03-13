@@ -553,8 +553,8 @@ def norm_string_to_integer(s):
     if norm in ['wiscombe']:
         return 6
 
-    raise ValueError("normalization must be one of 'albedo' (default), 'one', 
-                     '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    raise ValueError("normalization must be one of 'albedo' (default), 'one'"
+                     "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
 
 
 @njit((complex128, float64, float64[:], int32), cache=True)
