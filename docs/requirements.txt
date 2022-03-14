@@ -1,7 +1,10 @@
 numpy
 numba
 matplotlib
-Jinja2==2.11.3
+
+Jinja2<3.0
 nbsphinx==0.8.5
-sphinx_automodapi
+markupsafe==2.0.1
+sphinx-automodapi
 sphinx-rtd-theme
+miepython
