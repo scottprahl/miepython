@@ -34,9 +34,7 @@ master_doc = 'index'
 
 # -- General configuration ---------------------------------------------------
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# Sphinx extension modules
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
@@ -47,28 +45,21 @@ extensions = [
 numpydoc_show_class_members = False
 napoleon_use_param = False
 napoleon_use_rtype = False
+napoleon_custom_sections = [('Returns', 'params_style')]
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [
-    '_build',
-    '**.ipynb_checkpoints',
-    'adaptive_functioning.ipynb'
-]
+# List of patterns, relative to source directory, of files to ignore
+exclude_patterns = ['_build',
+                    '.tox',
+                    '**.ipynb_checkpoints',
+                    'adaptive_functioning.ipynb'
+                    ]
 
-# I execute the notebooks manually in advance. If notebooks test the code,
-# they should be run at build time.
+# I execute the notebooks manually in advance.
 nbsphinx_execute = 'never'
 nbsphinx_allow_errors = True
-
-# Add type of source files
-source_suffix = ['.rst', '.ipynb']
 
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = 'sphinx_rtd_theme'
-
 html_scaled_image_link = False
-
 html_sourcelink_suffix = ''
