@@ -489,32 +489,41 @@ def normalization_factor(a, b, x, norm_int):
     Returns:
         scaling factor needed for scattering function
     """
-    if norm_int == 5:  # bohren
-        return 1 / 2
+    # Qsca normalization
+    if norm_int == 3:
+        return np.sqrt(np.pi * x**2)
 
-    if norm_int == 6:  # wiscombe
+    # Bohren Normalization
+    if norm_int == 5:
+        return 0.5
+
+    # Wiscombe Normalization
+    if norm_int == 6:
         return 1
 
+    # calculate qsca and qext
     n = np.arange(1, len(a) + 1)
     cn = 2.0 * n + 1.0
     qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
-
-    if norm_int == 0:  # albedo
-        return np.sqrt(np.pi * x**2 * qext)
-
     qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
 
-    if norm_int == 1:  # 1
+    # albedo Normalization
+    if norm_int == 0:
+        return np.sqrt(np.pi * x**2 * qext)
+
+    # Unity normalization
+    if norm_int == 1:
         return np.sqrt(qsca * np.pi * x**2)
 
-    if norm_int == 2:  # 4pi
+    # 4pi Normalization
+    if norm_int == 2:
         return np.sqrt(qsca * x**2 / 4)
 
-    if norm_int == 3:  # qsca
-        return np.sqrt(np.pi * x**2)
+    # Qext Normalization
+    if norm_int == 4:  # 4pi
+        return np.sqrt(qsca * np.pi * x**2 / qext)
 
-    # qext
-    return np.sqrt(qsca * np.pi * x**2 / qext)
+    raise ValueError("norm-int must be in the range 0..6")
 
 
 def norm_string_to_integer(s):
@@ -522,7 +531,8 @@ def norm_string_to_integer(s):
     Encode normalization choice as an integer.
 
     This is needed because these string operations cannot be
-    done in a jitted function under numba.
+    done in a jitted function under numba.  We cannot use enums for
+    the same reason!
 
     Args:
         s: string describing normalization desired.
