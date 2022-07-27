@@ -49,17 +49,18 @@ Mie scattering is used in a wide variety of disciplines to describe the scatteri
 
 Integrating the scattering phase function all solid angles suggests the following dimensionless possibilities which have been chosen by one or more authors for their convenience.  `miepython` now supports all of these.
 
-$$
-\begin{align}
-\int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad&\qquad \mbox{albedo (default)}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega = 1       \qquad&\qquad \mbox{one}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi    \qquad&\qquad \mbox{4pi}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{sca} \qquad&\qquad \mbox{qsca}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{ext} \qquad&\qquad \mbox{qext}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi x^2 Q_{sca}\qquad&\qquad \mbox{Bohren}\\[2mm]
-\int_{4\pi} p(\theta,\phi) \,d\Omega =\pi x^2 Q_{sca}\qquad&\qquad \mbox{Wiscombe}\\[2mm]
-\end{align}
-$$
+.. math::
+
+    \begin{align}
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad&\qquad \mbox{albedo (default)}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = 1       \qquad&\qquad \mbox{one}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi    \qquad&\qquad \mbox{4pi}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{sca} \qquad&\qquad \mbox{qsca}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{ext} \qquad&\qquad \mbox{qext}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi x^2 Q_{sca}\qquad&\qquad \mbox{Bohren}\\[2mm]
+    \int_{4\pi} p(\theta,\phi) \,d\Omega =\pi x^2 Q_{sca}\qquad&\qquad \mbox{Wiscombe}\\[2mm]
+    \end{align}
+
 
 where $x=2\pi a/\lambda$ is the size parameter of a sphere with radius $a$ at wavelength $\lambda$.
 
