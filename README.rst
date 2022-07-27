@@ -41,40 +41,8 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 
 #. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
 
-#. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.
+#. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.  As of version 2.3, this can be changed.
 
-## Normalization of the scattered light
-
-Mie scattering is used in a wide variety of disciplines to describe the scattering pattern from spheres.  Not surprisingly a bunch of different normalizations have arisen that can be described based on the integrating the scattering function over all directions ($4\pi$ steradians).
-
-Integrating the scattering phase function all solid angles suggests the following dimensionless possibilities which have been chosen by one or more authors for their convenience.  `miepython` now supports all of these.
-
-.. math::
-
-        \int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad\qquad \mbox{albedo (default)}
-
-.. math::
-
-    \begin{align}
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad&\qquad \mbox{albedo (default)}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = 1       \qquad&\qquad \mbox{one}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi    \qquad&\qquad \mbox{4pi}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{sca} \qquad&\qquad \mbox{qsca}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = Q_{ext} \qquad&\qquad \mbox{qext}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega = 4\pi x^2 Q_{sca}\qquad&\qquad \mbox{Bohren}\\[2mm]
-    \int_{4\pi} p(\theta,\phi) \,d\Omega =\pi x^2 Q_{sca}\qquad&\qquad \mbox{Wiscombe}\\[2mm]
-    \end{align}
-
-
-where $x=2\pi a/\lambda$ is the size parameter of a sphere with radius $a$ at wavelength $\lambda$.
-
-The single scattering albedo is $a$, defined as
-
-$$
-a = \frac{Q_\mathrm{sca}}{Q_\mathrm{ext}} = \frac{Q_\mathrm{sca}}{Q_\mathrm{sca}+Q_\mathrm{abs}}
-$$
-
-and $Q_\mathrm{sca}$, $Q_\mathrm{ext}$, and $Q_\mathrm{abs}$ are the scattering, extinction, and absorption efficiencies.
 
 Using miepython
 ---------------

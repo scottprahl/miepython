@@ -40,7 +40,7 @@ following assumptions
 
 * the imaginary part of the complex index of refraction for absorbing spheres is *negative*.
 
-* the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.
+* the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians by default.  As of version 2.3, this can be changed (see the normalization notebook for details).
 
 Using miepython
 ---------------
