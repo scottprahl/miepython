@@ -51,6 +51,10 @@ Integrating the scattering phase function all solid angles suggests the followin
 
 .. math::
 
+        \int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad\qquad \mbox{albedo (default)}
+
+.. math::
+
     \begin{align}
     \int_{4\pi} p(\theta,\phi) \,d\Omega = a       \qquad&\qquad \mbox{albedo (default)}\\[2mm]
     \int_{4\pi} p(\theta,\phi) \,d\Omega = 1       \qquad&\qquad \mbox{one}\\[2mm]
