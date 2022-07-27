@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v2.2.4 (unreleased)
+v2.3.0
 -------------------
 *   add optional argument to change scattering function normalization
 *   document normalization in new notebook
