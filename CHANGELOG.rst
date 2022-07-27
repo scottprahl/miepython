@@ -8,6 +8,7 @@ v2.3.0
 *   store data in correct place
 *   store version __init__.py so scripts can query it
 *   fix typo in header of gold sphere example script
+*   remove workaround for older Sphinx version
 
 v2.2.3 (1/26/2022)
 ------------------
