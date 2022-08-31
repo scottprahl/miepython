@@ -469,6 +469,13 @@ class AngleScattering(unittest.TestCase):
         """mie_phase_matrix returns (4, 4) array when mu is scalar."""
         assert miepython.mie_phase_matrix(m=1.5, x=2.0, mu=0.0).shape == (4, 4)
 
+    def test_mie_phase_matrix_symmetry(self):
+        """Upper left 2X2 block is symmetric and lower right 2X2 block is
+        antisymmetric."""
+        p = miepython.mie_phase_matrix(m=1.5, x=2.0, mu=np.linspace(-1, 1, 10))
+        assert np.allclose(p[0, 1], p[1, 0])
+        assert np.allclose(p[2, 3], -p[3, 2])
+
     def test_i_par_i_per_01(self):
         m = 1.5 - 1.5j
         x = 2
