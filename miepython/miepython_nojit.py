@@ -574,6 +574,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     Returns:
         p: the phase scattering matrix [sr**(-1.0)]
     """
+    mu = np.atleast_1d(mu)
     s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm)
 
     s1_star = np.conjugate(s1)
@@ -592,7 +593,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     phase[3, 2] = d21
     phase[3, 3] = s21
 
-    return phase
+    return phase.squeeze()
 
 
 def mie_cdf(m, x, num, norm='albedo'):

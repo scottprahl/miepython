@@ -452,8 +452,8 @@ class AngleScattering(unittest.TestCase):
             total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
             self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
 
-    def test_phase_matrix_basic(self):
-        """Element (0, 0) of array returned by phase_matrix should match output
+    def test_mie_phase_matrix_basic(self):
+        """Element (0, 0) of array returned by mie_phase_matrix should match output
         of i_unpolarized."""
         m = 1.5 - 1.5j
         x = 2
@@ -463,6 +463,11 @@ class AngleScattering(unittest.TestCase):
         p00 = miepython.i_unpolarized(m, x, mu)  # reference result
         
         assert np.allclose(p[0, 0], p00, rtol=1e-9)
+    
+    def test_mie_phase_matrix_mu_scalar(self):
+        """mie_phase_matrix returns (4, 4) array when mu is scalar."""
+        assert miepython.mie_phase_matrix(m=1.5, x=2.0, mu=0.0).shape == (4, 4)
+
 
     def test_i_par_i_per_01(self):
         m = 1.5 - 1.5j
