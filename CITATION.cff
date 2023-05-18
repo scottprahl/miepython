@@ -1,0 +1,48 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: miepython
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Scott
+    name-particle: A
+    family-names: Prahl
+    email: scott.prahl@oit.edu
+    affiliation: Oregon Tech
+    orcid: 'https://orcid.org/0000-0003-1468-6851'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7949264
+repository-code: 'https://github.com/scottprahl/miepython'
+url: 'https://github.com/scottprahl/miepython'
+repository: 'https://miepython.readthedocs.io/en/latest/'
+abstract: >-
+  miepython is a pure Python module to calculate light
+  scattering by non-absorbing, partially-absorbing, or
+  perfectly conducting spheres. Mie theory is used,
+  following the procedure described by Wiscombe. This code
+  has been validated against his results.
+
+
+  This code provides functions for calculating the
+  extinction efficiency, scattering efficiency,
+  backscattering, and scattering asymmetry. Moreover, a set
+  of angles can be given to calculate the scattering at
+  various angles for a sphere.
+keywords:
+  - mie
+  - scattering
+  - rainbow
+  - droplet
+  - nanoparticle
+  - sphere
+  - cloud
+  - phase function
+  - efficiency
+  - rayleigh
+  - backscattering
+license: MIT
