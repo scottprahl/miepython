@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.3.1
+-------------------
+*   add DOI for citation purposes
+
 v2.3.0
 -------------------
 *   add optional argument to change scattering function normalization
