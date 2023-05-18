@@ -6,7 +6,6 @@ message: >-
 type: software
 authors:
   - given-names: Scott
-    name-particle: A
     family-names: Prahl
     email: scott.prahl@oit.edu
     affiliation: Oregon Tech
