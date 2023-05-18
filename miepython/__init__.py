@@ -37,7 +37,7 @@ Mie scattering intensities normalized to one when integrated over all angles::
     miepython.i_par(m, x, mu, norm='one')
     miepython.i_unpolarized(m, x, mu, norm='one')
 """
-__version__ = '2.3.0'
+__version__ = '2.3.1'
 __author__ = 'Scott Prahl'
 __email__ = 'scott.prahl@oit.edu'
 __copyright__ = 'Copyright 2017-22, Scott Prahl'
