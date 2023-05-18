@@ -1,23 +1,19 @@
 miepython
 =========
 
+by Scott Prahl
+
 .. image:: https://img.shields.io/pypi/v/miepython.svg
    :target: https://pypi.org/project/miepython/
-
-.. image:: https://colab.research.google.com/assets/colab-badge.svg
-   :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
-
-.. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
-   :target: https://miepython.readthedocs.io
 
 .. image:: https://img.shields.io/badge/github-code-green.svg
    :target: https://github.com/scottprahl/miepython
 
-.. image:: https://img.shields.io/badge/MIT-license-yellow.svg
-   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
-
 .. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
+
+.. image:: https://zenodo.org/badge/99259684.svg
+   :target: https://zenodo.org/badge/latestdoi/99259684
 
 ----
 
@@ -47,7 +43,7 @@ Using miepython
 
 1. You can install locally using pip::
     
-    pip install --user miepython
+    pip install miepython
 
 2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
