@@ -21,6 +21,8 @@ by Scott Prahl
 .. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
 
+.. image:: https://zenodo.org/badge/99259684.svg
+   :target: https://zenodo.org/badge/latestdoi/99259684
 __________
 
 ``miepython`` is a pure Python module to calculate light scattering for
