@@ -23,6 +23,7 @@ by Scott Prahl
 
 .. image:: https://zenodo.org/badge/99259684.svg
    :target: https://zenodo.org/badge/latestdoi/99259684
+
 __________
 
 ``miepython`` is a pure Python module to calculate light scattering for
@@ -51,7 +52,7 @@ Using miepython
 
 1. You can install locally using pip::
     
-    pip install --user miepython
+    pip install miepython
 
 2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
