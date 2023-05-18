@@ -1,6 +1,3 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
 title: miepython
 message: >-
@@ -17,22 +14,17 @@ authors:
 identifiers:
   - type: doi
     value: 10.5281/zenodo.7949264
-repository-code: 'https://github.com/scottprahl/miepython'
+repository-code: 'https://github.com/scottprahl/miepython.git'
 url: 'https://github.com/scottprahl/miepython'
 repository: 'https://miepython.readthedocs.io/en/latest/'
 abstract: >-
   miepython is a pure Python module to calculate light
   scattering by non-absorbing, partially-absorbing, or
-  perfectly conducting spheres. Mie theory is used,
-  following the procedure described by Wiscombe. This code
-  has been validated against his results.
-
-
+  perfectly conducting spheres. Mie theory is 
+  validated against published results by Wiscombe.
   This code provides functions for calculating the
   extinction efficiency, scattering efficiency,
-  backscattering, and scattering asymmetry. Moreover, a set
-  of angles can be given to calculate the scattering at
-  various angles for a sphere.
+  backscattering, and scattering asymmetry.
 keywords:
   - mie
   - scattering

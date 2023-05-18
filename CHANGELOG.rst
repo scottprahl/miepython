@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v2.3.2
+-------------------
+*   fix typo in README.rst that prevented pypi upload
+*   add CITATION.cff to base level of miepython repository
+
 v2.3.1
 -------------------
 *   add DOI for citation purposes
