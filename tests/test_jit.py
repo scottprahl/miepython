@@ -19,43 +19,43 @@ import miepython
 #         m = 1.0
 #         x = 1.0
 #         nstop = 10
-#         dn = miepython._D_calc(m,x,nstop)
+#         dn = miepython._D_calc(m, x, nstop)
 #         self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
 #
 #         x = 62
 #         m = 1.28 - 1.37j
 #         nstop = 50
-#         dn = _D_calc(m,x,nstop)
+#         dn = _D_calc(m, x, nstop)
 #         self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
 #         self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
 #
 #     def test_02_an_bn(self):
 #         m = 4.0/3.0
 #         x = 50
-#         a, b = miepython.mie_An_Bn(m,x)
+#         a, b = miepython.mie_An_Bn(m, x)
 # #        print(a)
 #     #        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
-#     #        self.assertAlmostEqual(a[1].imag,-0.4990314856310943073, delta=0.00000001)
+#     #        self.assertAlmostEqual(a[1].imag, -0.4990314856310943073, delta=0.00000001)
 #     #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-#     #        self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
+#     #        self.assertAlmostEqual(b[1].imag, -0.067160541299, delta=0.00001)
 #
 #         m = 1.5-1.1j
 #         x = 2
-#         a, b = miepython.mie_An_Bn(m,x)
+#         a, b = miepython.mie_An_Bn(m, x)
 #         self.assertAlmostEqual(a[0].real, 0.555091767665, delta=0.00001)
 #         self.assertAlmostEqual(a[0].imag, 0.158587776121, delta=0.00001)
 #         self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
 #         self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
 #         self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-#         self.assertAlmostEqual(b[1].imag,-0.067160541299, delta=0.00001)
+#         self.assertAlmostEqual(b[1].imag, -0.067160541299, delta=0.00001)
 #
 #         m = 1.1-25j
 #         x = 2
-#         a, b = miepython.mie_An_Bn(m,x)
+#         a, b = miepython.mie_An_Bn(m, x)
 #         self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
 #         self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
 #         self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
-#         self.assertAlmostEqual(b[1].imag,-0.236805417045, delta=0.0001)
+#         self.assertAlmostEqual(b[1].imag, -0.236805417045, delta=0.0001)
 
 
 class NonAbsorbing(unittest.TestCase):
@@ -467,6 +467,7 @@ class AngleScattering(unittest.TestCase):
             total = (total1 + total2) / 2
             self.assertAlmostEqual(total / expected[i], 1, delta=1e-3)
 
+
 class MiePhaseMatrix(unittest.TestCase):
     def test_mie_phase_matrix_basic(self):
         """Element (0, 0) of array returned by mie_phase_matrix should match output
@@ -477,9 +478,9 @@ class MiePhaseMatrix(unittest.TestCase):
 
         p = miepython.mie_phase_matrix(m, x, mu)  # result to be validated
         p00 = miepython.i_unpolarized(m, x, mu)  # reference result
-        
+
         assert np.allclose(p[0, 0], p00, rtol=1e-9)
-    
+
     def test_mie_phase_matrix_mu_scalar(self):
         """mie_phase_matrix returns (4, 4) array when mu is scalar."""
         assert miepython.mie_phase_matrix(m=1.5, x=2.0, mu=0.0).shape == (4, 4)
@@ -492,59 +493,58 @@ class MiePhaseMatrix(unittest.TestCase):
         assert np.allclose(p[2, 3], -p[3, 2])
 
     def test_mie_phase_matrix_unity(self):
-        """Element p[0,0,:]**2 = sum of squares of other three"""
+        """Element p[0, 0, :]**2 = sum of squares of other three"""
         m = 1.5 - 1.5j
         x = 2
         mu = np.linspace(-1, 1, 1000)
 
         p = miepython.mie_phase_matrix(m, x, mu)  # result to be validated
-        
-        assert np.allclose(p[0, 0]**2, p[0,1]**2+p[2,2]**2+ p[2,3]**2, rtol=1e-9)
+
+        assert np.allclose(p[0, 0]**2, p[0, 1]**2 + p[2, 2]**2 + p[2, 3]**2, rtol=1e-9)
 
     def test_mie_phase_matrix_bohren(self):
         """Compare with output from Bohren's program
-        
+
         s33 and s34 elements are normalized by s11
         s11 is normalized to 1 in the forward direction
         pol is -s12 normalized by s11
         """
-        
-        mm = np.array([
-            [000.00, 0.100000E+01, 0.000000E+00, 0.100000E+01, 0.000000E+00],
-            [009.00, 0.785390E+00,-0.459811E-02, 0.999400E+00, 0.343261E-01],
-            [018.00, 0.356897E+00,-0.458541E-01, 0.986022E+00, 0.160184E+00],
-            [027.00, 0.766119E-01,-0.364744E+00, 0.843603E+00, 0.394076E+00],
-            [036.00, 0.355355E-01,-0.534997E+00, 0.686967E+00,-0.491787E+00],
-            [045.00, 0.701845E-01, 0.959953E-02, 0.959825E+00,-0.280434E+00],
-            [054.00, 0.574313E-01, 0.477927E-01, 0.985371E+00, 0.163584E+00],
-            [063.00, 0.219660E-01,-0.440604E+00, 0.648043E+00, 0.621216E+00],
-            [072.00, 0.125959E-01,-0.831996E+00, 0.203255E+00,-0.516208E+00],
-            [081.00, 0.173750E-01, 0.341670E-01, 0.795354E+00,-0.605182E+00],
-            [090.00, 0.124601E-01, 0.230462E+00, 0.937497E+00, 0.260742E+00],
-            [099.00, 0.679093E-02,-0.713472E+00,-0.717397E-02, 0.700647E+00],
-            [108.00, 0.954239E-02,-0.756255E+00,-0.394748E-01,-0.653085E+00],
-            [117.00, 0.863419E-02,-0.281215E+00, 0.536251E+00,-0.795835E+00],
-            [126.00, 0.227421E-02,-0.239612E+00, 0.967602E+00, 0.795798E-01],
-            [135.00, 0.543998E-02,-0.850804E+00, 0.187531E+00,-0.490882E+00],
-            [144.00, 0.160243E-01,-0.706334E+00, 0.495254E+00,-0.505781E+00],
-            [153.00, 0.188852E-01,-0.891081E+00, 0.453277E+00,-0.226817E-01],
-            [162.00, 0.195254E-01,-0.783319E+00,-0.391613E+00, 0.482752E+00],
-            [171.00, 0.301676E-01,-0.196194E+00,-0.962069E+00, 0.189556E+00],
-            [180.00, 0.383189E-01, 0.000000E+00,-0.100000E+01, 0.000000E+00]
-            ])
-        
+
+        mm = np.array([[000.00, 0.100000E+01, 0.000000E+00, 0.100000E+01, 0.000000E+00],
+                       [009.00, 0.785390E+00, -0.459811E-02, 0.999400E+00, 0.343261E-01],
+                       [018.00, 0.356897E+00, -0.458541E-01, 0.986022E+00, 0.160184E+00],
+                       [027.00, 0.766119E-01, -0.364744E+00, 0.843603E+00, 0.394076E+00],
+                       [036.00, 0.355355E-01, -0.534997E+00, 0.686967E+00, -0.491787E+00],
+                       [045.00, 0.701845E-01, 0.959953E-02, 0.959825E+00, -0.280434E+00],
+                       [054.00, 0.574313E-01, 0.477927E-01, 0.985371E+00, 0.163584E+00],
+                       [063.00, 0.219660E-01, -0.440604E+00, 0.648043E+00, 0.621216E+00],
+                       [072.00, 0.125959E-01, -0.831996E+00, 0.203255E+00, -0.516208E+00],
+                       [081.00, 0.173750E-01, 0.341670E-01, 0.795354E+00, -0.605182E+00],
+                       [090.00, 0.124601E-01, 0.230462E+00, 0.937497E+00, 0.260742E+00],
+                       [099.00, 0.679093E-02, -0.713472E+00, -0.717397E-02, 0.700647E+00],
+                       [108.00, 0.954239E-02, -0.756255E+00, -0.394748E-01, -0.653085E+00],
+                       [117.00, 0.863419E-02, -0.281215E+00, 0.536251E+00, -0.795835E+00],
+                       [126.00, 0.227421E-02, -0.239612E+00, 0.967602E+00, 0.795798E-01],
+                       [135.00, 0.543998E-02, -0.850804E+00, 0.187531E+00, -0.490882E+00],
+                       [144.00, 0.160243E-01, -0.706334E+00, 0.495254E+00, -0.505781E+00],
+                       [153.00, 0.188852E-01, -0.891081E+00, 0.453277E+00, -0.226817E-01],
+                       [162.00, 0.195254E-01, -0.783319E+00, -0.391613E+00, 0.482752E+00],
+                       [171.00, 0.301676E-01, -0.196194E+00, -0.962069E+00, 0.189556E+00],
+                       [180.00, 0.383189E-01, 0.000000E+00, -0.100000E+01, 0.000000E+00]
+                       ])
+
         m = 1.55
         x = 5.213
-        theta = np.linspace(0,180,21)
+        theta = np.linspace(0, 180, 21)
 
         mu = np.cos(np.radians(theta))
         p = miepython.mie_phase_matrix(m, x, mu, norm='bohren')  # result to be validated
-        
-        assert np.allclose(theta, mm[:,0], rtol=1e-9)
-        assert np.allclose(p[0,0,:]/p[0,0,0], mm[:,1], atol=1e-3)
-        assert np.allclose(-p[0,1,:]/p[0,0,:], mm[:,2], atol=1e-3)
-        assert np.allclose(p[2,2,:]/p[0,0,:], mm[:,3], atol=1e-3)
-        assert np.allclose(p[3,2,:]/p[0,0,:], mm[:,4], atol=1e-3)
+
+        assert np.allclose(theta, mm[:, 0], rtol=1e-9)
+        assert np.allclose(p[0, 0, :] / p[0, 0, 0], mm[:, 1], atol=1e-3)
+        assert np.allclose(-p[0, 1, :] / p[0, 0, :], mm[:, 2], atol=1e-3)
+        assert np.allclose(p[2, 2, :] / p[0, 0, :], mm[:, 3], atol=1e-3)
+        assert np.allclose(p[3, 2, :] / p[0, 0, :], mm[:, 4], atol=1e-3)
 
 
 class NotebookTests(unittest.TestCase):

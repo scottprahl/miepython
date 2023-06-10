@@ -652,7 +652,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
 
     The phase scattering matrix is computed from the scattering amplitude
     functions, according to equations 5.2.105-6 in K. N. Liou (**2002**) -
-    *An Introduction to Atmospheric Radiation*, Second Edition. or
+    *An Introduction to Atmospheric Radiation*, Second Edition.
 
     or
 
@@ -662,14 +662,13 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), at which to calculate the phase scattering
-            matrix 
+        mu: the angles, cos(theta), for the phase scattering matrix
 
     Returns:
         p: the phase scattering matrix [sr**(-1.0)]
     """
     s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm)
-    
+
     mu = np.atleast_1d(mu)
     s1_star = np.conjugate(s1)
     s2_star = np.conjugate(s2)

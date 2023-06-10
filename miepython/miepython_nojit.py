@@ -556,6 +556,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
 
     return [S1, S2]
 
+
 def mie_phase_matrix(m, x, mu, norm='albedo'):
     """
     Calculate the phase scattering matrix.
@@ -575,8 +576,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), at which to calculate the phase scattering
-            matrix 
+        mu: the angles, cos(theta), of the phase scattering matrix
 
     Returns:
         p: the phase scattering matrix [sr**(-1.0)]
