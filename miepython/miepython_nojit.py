@@ -49,6 +49,7 @@ __all__ = ('ez_mie',
            'i_unpolarized',
            'mie',
            'mie_S1_S2',
+           'mie_phase_matrix',
            'mie_cdf',
            'mie_mu_with_uniform_cdf',
            'generate_mie_costheta',
@@ -554,6 +555,45 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
     S2 /= normalization
 
     return [S1, S2]
+
+def mie_phase_matrix(m, x, mu, norm='albedo'):
+    """
+    Calculate the phase scattering matrix.
+
+    The units are sr**(-1.0).
+    The phase scattering matrix is computed from the scattering amplitude
+    functions, according to equations 5.2.105-6 in K. N. Liou (**2002**) -
+    *An Introduction to Atmospheric Radiation*, Second Edition.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: the angles, cos(theta), at which to calculate the phase scattering
+            matrix 
+
+    Returns:
+        p: the phase scattering matrix [sr**(-1.0)]
+    """
+    mu = np.atleast_1d(mu)
+    s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm)
+
+    s1_star = np.conjugate(s1)
+    s2_star = np.conjugate(s2)
+    m1 = (s1 * s1_star).real
+    m2 = (s2 * s2_star).real
+    s21 = (0.5 * (s1 * s2_star + s2 * s1_star)).real
+    d21 = (-0.5j * (s1 * s2_star - s2 * s1_star)).real
+    phase = np.zeros(shape=(4, 4, mu.size))
+    phase[0, 0] = 0.5 * (m2 + m1)
+    phase[0, 1] = 0.5 * (m2 - m1)
+    phase[1, 0] = phase[0, 1]
+    phase[1, 1] = phase[0, 0]
+    phase[2, 2] = s21
+    phase[2, 3] = -d21
+    phase[3, 2] = d21
+    phase[3, 3] = s21
+
+    return phase.squeeze()
 
 
 def mie_cdf(m, x, num, norm='albedo'):

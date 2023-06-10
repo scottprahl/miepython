@@ -396,6 +396,7 @@ class AngleScattering(unittest.TestCase):
         self.assertAlmostEqual(S2[6].real, -0.348844, delta=1e-6)
         self.assertAlmostEqual(S2[6].imag, -0.146829, delta=1e-6)
 
+
     def test_13_unity_normalization(self):
         x = 1.0
         m = 1.5 - 1.0j
@@ -451,6 +452,29 @@ class AngleScattering(unittest.TestCase):
             intensity = miepython.i_unpolarized(m, x, mu, norm)
             total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
             self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
+
+    def test_mie_phase_matrix_basic(self):
+        """Element (0, 0) of array returned by mie_phase_matrix should match output
+        of i_unpolarized."""
+        m = 1.5 - 1.5j
+        x = 2
+        mu = np.linspace(-1, 1, 1000)
+
+        p = miepython.mie_phase_matrix(m, x, mu)  # result to be validated
+        p00 = miepython.i_unpolarized(m, x, mu)  # reference result
+        
+        assert np.allclose(p[0, 0], p00, rtol=1e-9)
+        
+    def test_mie_phase_matrix_mu_scalar(self):
+        """mie_phase_matrix returns (4, 4) array when mu is scalar."""
+        assert miepython.mie_phase_matrix(m=1.5, x=2.0, mu=0.0).shape == (4, 4)
+
+    def test_mie_phase_matrix_symmetry(self):
+        """Upper left 2X2 block is symmetric and lower right 2X2 block is
+        antisymmetric."""
+        p = miepython.mie_phase_matrix(m=1.5, x=2.0, mu=np.linspace(-1, 1, 10))
+        assert np.allclose(p[0, 1], p[1, 0])
+        assert np.allclose(p[2, 3], -p[3, 2])
 
     def test_i_par_i_per_01(self):
         m = 1.5 - 1.5j
