@@ -647,10 +647,17 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     """
     Calculate the phase scattering matrix.
 
-    The units are sr**(-1.0).
+    If mu has length N, then the returned matrix is 4x4xN.  If mu is a scalar
+    then the matrix is 4x4
+
     The phase scattering matrix is computed from the scattering amplitude
     functions, according to equations 5.2.105-6 in K. N. Liou (**2002**) -
-    *An Introduction to Atmospheric Radiation*, Second Edition.
+    *An Introduction to Atmospheric Radiation*, Second Edition. or
+
+    or
+
+    Bohren and Huffman, *Absorption and Scattering of Light by Small Particles*,
+    JOHN WILEY & SONS, page 112, (1983).
 
     Args:
         m: the complex index of refraction of the sphere
