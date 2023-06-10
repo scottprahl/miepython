@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.4.0 (6/10/2023)
+-------------------
+*   add mie_phase_matrix() to calculate scattering (Mueller) matrix
+
 v2.3.2
 -------------------
 *   fix typo in README.rst that prevented pypi upload

@@ -36,8 +36,13 @@ Mie scattering intensities normalized to one when integrated over all angles::
     miepython.i_per(m, x, mu, norm='one')
     miepython.i_par(m, x, mu, norm='one')
     miepython.i_unpolarized(m, x, mu, norm='one')
+
+The scattering matrix
+
+    miepython.mie_phase_matrix(m, x, mu)
+
 """
-__version__ = '2.3.2'
+__version__ = '2.4.0'
 __author__ = 'Scott Prahl'
 __email__ = 'scott.prahl@oit.edu'
 __copyright__ = 'Copyright 2017-23, Scott Prahl'

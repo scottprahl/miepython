@@ -559,7 +559,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
 
 def mie_phase_matrix(m, x, mu, norm='albedo'):
     """
-    Calculate the phase scattering matrix.
+    Calculate the scattering (Mueller) matrix.
 
     If mu has length N, then the returned matrix is 4x4xN.  If mu is a scalar
     then the matrix is 4x4

@@ -19,7 +19,6 @@ rstcheck:
 	-rstcheck README.rst
 	-rstcheck CHANGELOG.rst
 	-rstcheck docs/index.rst
-	-rstcheck docs/changelog.rst
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
 lintcheck:
