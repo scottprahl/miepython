@@ -465,13 +465,12 @@ def _small_mie_S1_S2(m, x, mu):
     return [S1, S2]
 
 
-def normalization_factor(a, b, x, norm_str):
+def normalization_factor(m, x, norm_str):
     """
     Figure out scattering function normalization.
 
     Args:
-        a: complex array of An coefficients
-        b: complex array of Bn coefficients
+        m: complex index of refraction of sphere
         x: dimensionless sphere size
         norm_str: string describing type of normalization
 
@@ -486,26 +485,22 @@ def normalization_factor(a, b, x, norm_str):
     if norm in ['wiscombe']:
         return 1
 
-    n = np.arange(1, len(a) + 1)
-    cn = 2.0 * n + 1.0
-    qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+    if norm in ['qsca', 'scattering_efficiency']:
+        return x * np.sqrt(np.pi)
+
+    qext, qsca, _, _ = _mie_scalar(m, x)
 
     if norm in ['a', 'albedo']:
-        return np.sqrt(np.pi * x**2 * qext)
-
-    qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
+        return x * np.sqrt(np.pi * qext)
 
     if norm in ['1', 'one', 'unity']:
-        return np.sqrt(qsca * np.pi * x**2)
+        return x * np.sqrt(qsca * np.pi)
 
     if norm in ['four_pi', '4pi']:
-        return np.sqrt(qsca * x**2 / 4)
-
-    if norm in ['qsca', 'scattering_efficiency']:
-        return np.sqrt(np.pi * x**2)
+        return x * np.sqrt(qsca / 4)
 
     if norm in ['qext', 'extinction_efficiency']:
-        return np.sqrt(qsca * np.pi * x**2 / qext)
+        return x * np.sqrt(qsca * np.pi / qext)
 
     raise ValueError("normalization must be one of 'albedo' (default), 'one'"
                      "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
@@ -549,7 +544,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
             pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
             pi_nm2 = temp
 
-    normalization = normalization_factor(a, b, x, norm)
+    normalization = normalization_factor(m, x, norm)
 
     S1 /= normalization
     S2 /= normalization

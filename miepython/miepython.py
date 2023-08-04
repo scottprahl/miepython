@@ -476,8 +476,8 @@ def _small_mie_S1_S2(m, x, mu):
     return [S1, S2]
 
 
-@njit((complex128[:], complex128[:], float64, int32), cache=True)
-def normalization_factor(a, b, x, norm_int):
+@njit((complex128, float64, int32), cache=True)
+def normalization_factor(m, x, norm_int):
     """
     Figure out scattering function normalization.
 
@@ -492,7 +492,7 @@ def normalization_factor(a, b, x, norm_int):
     """
     # Qsca normalization
     if norm_int == 3:
-        return np.sqrt(np.pi * x**2)
+        return x * np.sqrt(np.pi)
 
     # Bohren Normalization
     if norm_int == 5:
@@ -503,26 +503,23 @@ def normalization_factor(a, b, x, norm_int):
         return 1
 
     # calculate qsca and qext
-    n = np.arange(1, len(a) + 1)
-    cn = 2.0 * n + 1.0
-    qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
-    qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
+    qext, qsca, _, _ = _mie_scalar(m, x)
 
     # albedo Normalization
     if norm_int == 0:
-        return np.sqrt(np.pi * x**2 * qext)
+        return x * np.sqrt(np.pi * qext)
 
     # Unity normalization
     if norm_int == 1:
-        return np.sqrt(qsca * np.pi * x**2)
+        return x * np.sqrt(qsca * np.pi)
 
     # 4pi Normalization
     if norm_int == 2:
-        return np.sqrt(qsca * x**2 / 4)
+        return x * np.sqrt(qsca / 4)
 
     # Qext Normalization
     if norm_int == 4:  # 4pi
-        return np.sqrt(qsca * np.pi * x**2 / qext)
+        return x * np.sqrt(qsca * np.pi / qext)
 
     raise ValueError("norm-int must be in the range 0..6")
 
@@ -609,7 +606,7 @@ def _mie_S1_S2(m, x, mu, norm_int):
             pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
             pi_nm2 = temp
 
-    normalization = normalization_factor(a, b, x, norm_int)
+    normalization = normalization_factor(m, x, norm_int)
 
     S1 /= normalization
     S2 /= normalization

@@ -467,6 +467,12 @@ class AngleScattering(unittest.TestCase):
             total = (total1 + total2) / 2
             self.assertAlmostEqual(total / expected[i], 1, delta=1e-3)
 
+    def test_molecular_hydrogen(self):
+        m = 1.00013626
+        x = 0.0006403246172921872
+        mu = np.linspace(-1, 1, 100)
+        ph = miepython.i_unpolarized(m, x, mu)
+        self.assertAlmostEqual(ph[1], 0.1169791, delta=1e-5)
 
 class MiePhaseMatrix(unittest.TestCase):
     def test_mie_phase_matrix_basic(self):

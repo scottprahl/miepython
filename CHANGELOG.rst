@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.5.0 (8/4/2023)
+-------------------
+*   fix scattering function for very small spheres
+
 v2.4.0 (6/10/2023)
 -------------------
 *   add mie_phase_matrix() to calculate scattering (Mueller) matrix
