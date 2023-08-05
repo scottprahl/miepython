@@ -7,23 +7,3 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 markers = ["notebooks"]
-
-[tool.tox]
-legacy_tox_ini = """
-
-[tox]
-envlist = py3.10
-
-[testenv]
-deps = pytest
-       matplotlib
-       numba
-
-commands =
-    python3 -m pytest tests/test_jit.py
-    python3 -m pytest tests/test_nojit.py
-    python3 miepython/examples/01_dielectric.py
-    python3 miepython/examples/02_glass.py
-    python3 miepython/examples/03_droplets.py
-    python3 miepython/examples/04_gold.py
-"""
