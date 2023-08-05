@@ -2,7 +2,6 @@
 #
 # Test
 pytest
-tox
 #
 # Testing notebooks
 numpy
@@ -11,6 +10,7 @@ scipy
 nbconvert
 nbformat
 numba
+unittest
 #
 # Lint
 rstcheck

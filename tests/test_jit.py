@@ -474,6 +474,7 @@ class AngleScattering(unittest.TestCase):
         ph = miepython.i_unpolarized(m, x, mu)
         self.assertAlmostEqual(ph[1], 0.1169791, delta=1e-5)
 
+
 class MiePhaseMatrix(unittest.TestCase):
     def test_mie_phase_matrix_basic(self):
         """Element (0, 0) of array returned by mie_phase_matrix should match output

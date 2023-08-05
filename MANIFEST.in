@@ -2,8 +2,16 @@ include CHANGELOG.rst
 include CITATION.cff
 include LICENSE.txt
 include README.rst
+include requirements-dev.txt
+include requirements.txt
+
 include miepython/examples/*.py
 include miepython/data/*.txt
 
+exclude .readthedocs.yaml
+exclude .testignore
+exclude Makefile
+exclude release.txt
 exclude tests/*
+exclude docs/*
 

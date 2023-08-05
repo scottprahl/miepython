@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.5.1 (8/5/2023)
+-------------------
+*   change tests to accommodate conda-forge
+
 v2.5.0 (8/4/2023)
 -------------------
 *   fix scattering function for very small spheres

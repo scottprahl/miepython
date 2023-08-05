@@ -12,7 +12,7 @@ html:
 
 notecheck:
 	make clean
-	pytest --verbose --notebooks tests/test_all_notebooks.py
+	python -m pytest --verbose --notebooks tests/test_all_notebooks.py
 	rm -rf __pycache__
 
 rstcheck:
@@ -49,14 +49,12 @@ rcheck:
 	pyroma -d .
 	check-manifest
 	make html
-	make jittest
-
-jittest:
-	python3 -m pytest tests/test_nojit.py
-	python3 -m pytest tests/test_jit.py
+	make test
 
 test:
-	tox
+	python -m pytest tests/test_nojit.py
+	python -m pytest tests/test_jit.py
+	python -m pytest tests/test_all_examples.py
 
 clean:
 	rm -rf dist

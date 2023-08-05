@@ -3,7 +3,7 @@
 """
 This file is intended to be the target of a pytest run.
 
-It will recursively find all .ipynb files in the current directory, ignoring
+It will recursively find all .ipynb files in the ../docs directory, ignoring
 directories that start with . and any files matching patterins found in the file
 .testignore
 
@@ -31,7 +31,7 @@ import nbconvert.preprocessors
 
 # Default search path is the current directory
 # searchpath = pathlib.Path('.')
-searchpath = pathlib.Path('./docs/')  # all notebooks are in here
+searchpath = pathlib.Path('docs/')  # all notebooks are in here
 
 # Read patterns from .testignore file
 ignores = ''
@@ -40,13 +40,15 @@ if os.path.exists('.testignore'):
         ignores = [line.strip() for line in ff if line.strip()]
 
 # Ignore hidden folders (startswith('.')) and files matching ignore patterns
-notebooks = [notebook for notebook in searchpath.glob('**/*.ipynb')
+notebooks = [notebook for notebook in searchpath.glob('*.ipynb')
              if not (any(parent.startswith('.')
                          for parent in notebook.parent.parts)
                      or any(notebook.match(pattern)
                             for pattern in ignores))]
 
 notebooks.sort()
+print(notebooks)
+
 ids = [n.as_posix() for n in notebooks]
 
 for n in notebooks:
