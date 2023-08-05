@@ -4,6 +4,8 @@ Changelog
 v2.5.1 (8/5/2023)
 -------------------
 *   change tests to accommodate conda-forge
+*   require python>=3.9 to accommodate latest numba
+*   get rid of tox
 
 v2.5.0 (8/4/2023)
 -------------------

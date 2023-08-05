@@ -1,7 +1,6 @@
 Releasing a new version
 
 # run sanity checks
-  tox
   make rcheck
 
 # update the version in miepython/__init__.py
@@ -25,3 +24,4 @@ Releasing a new version
   open https://github.com/scottprahl/miepython
   open https://pypi.org/project/miepython/
   open https://miepython.readthedocs.io
+  do something about conda-forge?
