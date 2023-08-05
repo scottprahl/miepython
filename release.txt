@@ -17,8 +17,8 @@ Releasing a new version
   git push origin v2.1.0
 
 # upload source to pypi
-  python3 -m build
-  python3 -m twine upload dist/*
+  python -m build
+  python -m twine upload dist/*
 
 # update/check releases
   open https://github.com/scottprahl/miepython

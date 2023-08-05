@@ -8,10 +8,15 @@ include requirements.txt
 include miepython/examples/*.py
 include miepython/data/*.txt
 
+include tests/test_jit.py
+include tests/test_nojit.py
+
 exclude .readthedocs.yaml
 exclude .testignore
 exclude Makefile
 exclude release.txt
-exclude tests/*
+exclude tests/test_all_examples.py
+exclude tests/conftest.py
+exclude tests/test_all_notebooks.py
 exclude docs/*
 

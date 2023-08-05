@@ -67,6 +67,7 @@ clean:
 	rm -rf docs/.ipynb_checkpoints
 	rm -rf docs/.pytest_cache
 	rm -rf tests/__pycache__
+	rm -rf tests/.ipynb_checkpoints
 	rm -rf 04_plot.png
 	rm -rf .pytest_cache
 	rm -rf build
