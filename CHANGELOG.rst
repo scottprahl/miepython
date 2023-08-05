@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v2.5.2 (8/5/2023)
+-------------------
+*   conda-forge fails because test files are not included
+
 v2.5.1 (8/5/2023)
 -------------------
 *   change tests to accommodate conda-forge
