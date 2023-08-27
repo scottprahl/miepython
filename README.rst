@@ -6,6 +6,9 @@ by Scott Prahl
 .. image:: https://img.shields.io/pypi/v/miepython.svg
    :target: https://pypi.org/project/miepython/
 
+.. image:: https://img.shields.io/conda/v/conda-forge/miepython.svg
+   :target: https://anaconda.org/conda-forge/miepython
+
 .. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
    :target: https://miepython.readthedocs.io
 
@@ -44,9 +47,13 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 Using miepython
 ---------------
 
-1. You can install locally using pip::
-    
+1. You can install using pip::
+
     pip install miepython
+
+or using conda::
+
+    conda install -c conda-forge miepython
 
 2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
@@ -73,14 +80,14 @@ should produce::
     The backscatter efficiency is 0.573
     The scattering anisotropy  is 0.192
 
-Here are a few short scripts in the github repository.
+There are a few short scripts in the github repository.
 
 * `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_ 
 * `Four Micron Glass Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py>`_ 
-* `One Micron Water Droplets <https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py>`_ 
-* `Gold Nanospheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py>`_ 
 
-Detailed documentation is available at <https://miepython.readthedocs.io>
+* `One Micron Water Droplets <https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py>`_ 
+
+* `Gold Nanospheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py>`_ 
 
 
 License

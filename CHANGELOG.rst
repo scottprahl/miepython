@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.6.0 (unreleased)
+--------------------
+*   add version and year to CITATION.cff
+*   remove 'v' from version numbers
+*   add github script and workflow to auto-update CITATION.cff
+
 v2.5.3 (8/5/2023)
 -------------------
 *   conda-forge fails because test files are not included
