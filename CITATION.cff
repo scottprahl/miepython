@@ -1,10 +1,11 @@
-cff-version: 1.2.0
-message: If you use this software, please cite it as below.
 authors:
 - family-names: Prahl
   given-names: Scott
   orcid: https://orcid.org/0000-0003-1468-6851
+cff-version: 1.2.0
 date-released: '2023-08-05'
 doi: 10.5281/zenodo.7949264
+message: If you use this software, please cite it as below.
 title: 'miepython: Pure python calculation of Mie scattering'
 url: https://doi.org/10.5281/zenodo.7949403
+version: v2.5.3
