@@ -6,6 +6,9 @@ Changelog
 *   add version and year to CITATION.cff
 *   remove 'v' from version numbers
 *   add github script and workflow to auto-update CITATION.cff
+*   add conda badge to readme
+*   clean up README.rst a bit
+*   stop example script from saving a PNG
 
 v2.5.3 (8/5/2023)
 -------------------
