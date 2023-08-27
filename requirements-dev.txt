@@ -22,3 +22,4 @@ notebook
 # Release
 check-manifest
 pyroma
+pyyaml
