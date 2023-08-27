@@ -8,7 +8,8 @@ REPO = "miepython"
 
 # Fetch latest release date
 response = requests.get(f"https://api.github.com/repos/{USERNAME}/{REPO}/releases/latest")
-release_date = json.loads(response.text)["published_at"].split("T")[0]
+release_info = json.loads(response.text)
+release_date = release_info["published_at"].split("T")[0]
 version = release_info["tag_name"]
 
 # Read the existing CITATION.cff file
