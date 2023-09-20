@@ -3,23 +3,33 @@ miepython
 
 by Scott Prahl
 
-.. image:: https://img.shields.io/pypi/v/miepython.svg
+.. image:: https://img.shields.io/pypi/v/miepython
    :target: https://pypi.org/project/miepython/
+   :alt: pypi
 
 .. image:: https://img.shields.io/conda/v/conda-forge/miepython.svg
    :target: https://anaconda.org/conda-forge/miepython
-
-.. image:: https://img.shields.io/badge/readthedocs-latest-blue.svg
-   :target: https://miepython.readthedocs.io
-
-.. image:: https://img.shields.io/badge/MIT-license-yellow.svg
-   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
-
-.. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
+   :alt: conda
 
 .. image:: https://zenodo.org/badge/99259684.svg
    :target: https://zenodo.org/badge/latestdoi/99259684
+   :alt: doi
+|
+.. image:: https://img.shields.io/github/license/scottprahl/miepython
+   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
+   :alt: License
+
+.. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
+   :alt: Testing
+
+.. image:: https://readthedocs.org/projects/miepython/badge
+   :target: https://miepython.readthedocs.io
+   :alt: Docs
+
+.. image:: https://img.shields.io/pypi/dm/miepython
+   :target: https://pypi.org/project/miepython/
+   :alt: Downloads
 
 __________
 
@@ -82,7 +92,8 @@ should produce::
 
 There are a few short scripts in the github repository.
 
-* `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_ 
+* `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_
+ 
 * `Four Micron Glass Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py>`_ 
 
 * `One Micron Water Droplets <https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py>`_ 
