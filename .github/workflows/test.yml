@@ -30,7 +30,7 @@ jobs:
         run: |
           pip install -U pip setuptools wheel
           pip install -r requirements-dev.txt
-        
+
       - name: Test with pytest
         run: |
           python -m pytest tests/test_nojit.py
