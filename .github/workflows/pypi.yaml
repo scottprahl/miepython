@@ -1,0 +1,36 @@
+---
+name: pypi
+
+on:    # yamllint disable-line rule:truthy
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi repository
+      url: https://pypi.org/p/iadpython
+
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@master
+
+      - uses: actions/setup-python@master
+        with:
+          python-version: 3.11
+
+      - name: Build
+        run: |
+          pip install setuptools wheel twine build
+          pip install -r requirements.txt
+          python -m build
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
