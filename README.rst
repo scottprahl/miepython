@@ -57,11 +57,11 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 Installation
 ---------------
 
-Use `pip`::
+Use ``pip``::
 
     pip install miepython
 
-or `conda`::
+or ``conda``::
 
     conda install -c conda-forge miepython
 
