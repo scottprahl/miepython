@@ -54,18 +54,18 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 #. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.  As of version 2.3, this can be changed.
 
 
-Using miepython
+Installation
 ---------------
 
-1. You can install using pip::
+Use `pip`::
 
     pip install miepython
 
-or using conda::
+or `conda`::
 
     conda install -c conda-forge miepython
 
-2. or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
+Or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
 
 An example
 ----------
