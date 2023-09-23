@@ -8,7 +8,7 @@ by Scott Prahl
    :alt: pypi
 
 .. image:: https://img.shields.io/conda/v/conda-forge/miepython.svg
-   :target: https://anaconda.org/conda-forge/miepython
+   :target: https://github.com/conda-forge/miepython-feedstock
    :alt: conda
 
 .. image:: https://zenodo.org/badge/99259684.svg
