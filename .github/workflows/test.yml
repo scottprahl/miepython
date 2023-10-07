@@ -28,8 +28,8 @@ jobs:
 
       - name: Install package and dependencies
         run: |
-          pip install -U pip setuptools wheel
-          pip install -r requirements-dev.txt
+          pip install -r requirements.txt
+          pip install -e .  # current package in editable mode
 
       - name: Test with pytest
         run: |
