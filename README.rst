@@ -3,11 +3,15 @@ miepython
 
 by Scott Prahl
 
-.. image:: https://img.shields.io/pypi/v/miepython
+.. image:: https://img.shields.io/pypi/v/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: pypi
 
-.. image:: https://img.shields.io/conda/v/conda-forge/miepython.svg
+.. image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
+   :target: https://github.com/scottprahl/miepython
+   :alt: github
+
+.. image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
    :target: https://github.com/conda-forge/miepython-feedstock
    :alt: conda
 
@@ -15,7 +19,7 @@ by Scott Prahl
    :target: https://zenodo.org/badge/latestdoi/99259684
    :alt: doi
 |
-.. image:: https://img.shields.io/github/license/scottprahl/miepython
+.. image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
    :alt: License
 
@@ -23,11 +27,11 @@ by Scott Prahl
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
    :alt: Testing
 
-.. image:: https://readthedocs.org/projects/miepython/badge
+.. image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
    :target: https://miepython.readthedocs.io
    :alt: Docs
 
-.. image:: https://img.shields.io/pypi/dm/miepython
+.. image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: Downloads
 
