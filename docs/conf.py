@@ -16,6 +16,7 @@ import re
 import os.path
 
 project = 'miepython'
+master_doc = 'index'
 
 def get_init_property(prop):
     """Return property from __init__.py."""
@@ -29,10 +30,6 @@ def get_init_property(prop):
 release = get_init_property("__version__")
 author = get_init_property("__author__")
 copyright = get_init_property("__copyright__")
-
-master_doc = 'index'
-
-# -- General configuration ---------------------------------------------------
 
 # Sphinx extension modules
 extensions = [
