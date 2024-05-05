@@ -1,19 +1,20 @@
 # pylint: disable=invalid-name
 """Run all the scripts in the examples directory."""
+
 import importlib
-import time
 import sys
 import pathlib
 
+from unittest.mock import patch
+import matplotlib.pyplot as plt
 import pytest
 
 examples = list(pathlib.Path("miepython/examples").glob("*.py"))
-ids = [p.as_posix() for p in examples]
-
+ids = [example.as_posix() for example in examples]
 
 @pytest.mark.parametrize("path", examples, ids=ids)
 def test_example_runs(path):
-    """Test each example script."""
-    sys.path.append(str(path.parent))
-    importlib.import_module(path.stem)
-    time.sleep(0.2)
+    """Test all examples."""
+    with patch.object(plt, 'show'):
+        sys.path.append(str(path.parent))
+        importlib.import_module(path.stem)
