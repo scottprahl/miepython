@@ -1,41 +1,44 @@
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
+   :target: https://pypi.org/project/miepython/
+   :alt: pypi
+
+.. |github-badge| image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
+   :target: https://github.com/scottprahl/miepython
+   :alt: github
+
+.. |conda-badge| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
+   :target: https://github.com/conda-forge/miepython-feedstock
+   :alt: conda
+
+.. |doi-badge| image:: https://zenodo.org/badge/99259684.svg
+   :target: https://zenodo.org/badge/latestdoi/99259684
+   :alt: doi
+
+.. |license-badge| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
+   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
+   :alt: License
+
+.. |testing-badge| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
+   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
+   :alt: Testing
+
+.. |docs-badge| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
+   :target: https://miepython.readthedocs.io
+   :alt: Docs
+
+.. |downloads-badge| image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
+   :target: https://pypi.org/project/miepython/
+   :alt: Downloads
+
 miepython
 =========
 
 by Scott Prahl
 
-.. image:: https://img.shields.io/pypi/v/miepython?color=68CA66
-   :target: https://pypi.org/project/miepython/
-   :alt: pypi
+|pypi-badge| |github-badge| |conda-badge| |doi-badge|
 
-.. image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
-   :target: https://github.com/scottprahl/miepython
-   :alt: github
+|license-badge| |testing-badge| |docs-badge| |downloads-badge|
 
-.. image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
-   :target: https://github.com/conda-forge/miepython-feedstock
-   :alt: conda
-
-.. image:: https://zenodo.org/badge/99259684.svg
-   :target: https://zenodo.org/badge/latestdoi/99259684
-   :alt: doi
-|
-.. image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
-   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
-   :alt: License
-
-.. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
-   :alt: Testing
-
-.. image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
-   :target: https://miepython.readthedocs.io
-   :alt: Docs
-
-.. image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
-   :target: https://pypi.org/project/miepython/
-   :alt: Downloads
-
-__________
 
 ``miepython`` is a pure Python module to calculate light scattering for
 non-absorbing, partially-absorbing, or perfectly-conducting spheres. Mie
