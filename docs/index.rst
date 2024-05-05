@@ -54,25 +54,25 @@ Simple Dielectric
 ^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../miepython/examples/01_dielectric.py
-.. image:: 01_plot.png
+.. image:: 01_plot.svg
 
 Glass Spheres
 ^^^^^^^^^^^^^
 
 .. literalinclude:: ../miepython/examples/02_glass.py
-.. image:: 02_plot.png
+.. image:: 02_plot.svg
 
 Water Droplets
 ^^^^^^^^^^^^^^
 
 .. literalinclude:: ../miepython/examples/03_droplets.py
-.. image:: 03_plot.png
+.. image:: 03_plot.svg
 
 Small Gold Spheres
 ^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../miepython/examples/04_gold.py
-.. image:: 04_plot.png
+.. image:: 04_plot.svg
 
 
 .. toctree::
