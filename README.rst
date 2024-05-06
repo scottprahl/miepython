@@ -48,9 +48,11 @@ been validated against his results.
 
 
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram1.png
+   :scale: 50 %
    :alt: montage of laser images
 
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram2.png
+   :scale: 40 %
    :alt: montage of laser images
 
 This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere at each of those
