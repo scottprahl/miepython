@@ -1,9 +1,4 @@
-# pylint: disable=invalid-name
 # pylint: disable=unused-argument
-# pylint: disable=too-many-locals
-# pylint: disable=no-member
-# pylint: disable=bare-except
-# pylint: disable=too-many-arguments
 # pylint: disable=too-many-return-statements
 
 """
@@ -376,95 +371,6 @@ def mie(m, x):
     return qext, qsca, qback, g
 
 
-def _small_mie_conducting_S1_S2(m, x, mu):
-    """
-    Calculate the scattering amplitudes for small conducting spheres.
-
-    The spheres are small perfectly conducting (reflecting) spheres (x<0.1).
-    The amplitude functions have been normalized so that when integrated
-    over all 4𝜋 solid angles, the integral will be qext(𝜋x²).
-
-    The units are weird, sr**(-0.5)
-
-    Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate scattering amplitudes
-
-    Returns:
-        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
-    """
-    ahat1 = 2j / 3 * (1 - 0.2 * x**2) / (1 - 0.5 * x**2 + 2j / 3 * x**3)
-    bhat1 = 1j / 3 * (0.1 * x**2 - 1) / (1 + 0.5 * x**2 - 1j / 3 * x**3)
-    ahat2 = 1j / 30 * x**2
-    bhat2 = -1j * x**2 / 45
-
-    S1 = 1.5 * x**3 * (ahat1 + bhat1 * mu
-                       + 5 / 3 * ahat2 * mu
-                       + 5 / 3 * bhat2 * (2 * mu**2 - 1))
-
-    S2 = 1.5 * x**3 * (bhat1 + ahat1 * mu
-                       + 5 / 3 * bhat2 * mu
-                       + 5 / 3 * ahat2 * (2 * mu**2 - 1))
-
-    qext = x**4 * (6 * np.abs(ahat1)**2
-                   + 6 * np.abs(bhat1)**2
-                   + 10 * np.abs(ahat2)**2
-                   + 10 * np.abs(bhat2)**2)
-
-    norm = np.sqrt(qext * np.pi * x**2)
-    S1 /= norm
-    S2 /= norm
-
-    return [S1, S2]
-
-
-def _small_mie_S1_S2(m, x, mu):
-    """
-    Calculate the scattering amplitude functions for small spheres (x<0.1).
-
-    The amplitude functions have been normalized so that when integrated
-    over all 4*pi solid angles, the integral will be qext*pi*x**2.
-
-    The units are weird, sr**(-0.5)
-
-    Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate scattering amplitudes
-
-    Returns:
-        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
-    """
-    m2 = m * m
-    m4 = m2 * m2
-    x2 = x * x
-    x3 = x2 * x
-    x4 = x2 * x2
-
-    D = m2 + 2 + (1 - 0.7 * m2) * x2
-    D -= (8 * m4 - 385 * m2 + 350) * x4 / 1400.0
-    D += 2j * (m2 - 1) * x3 * (1 - 0.1 * x2) / 3
-
-    ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x4 / 1400) / D
-
-    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
-    bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
-
-    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
-    ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
-
-    S1 = 1.5 * x3 * (ahat1 + bhat1 * mu + 5 / 3 * ahat2 * mu)
-    S2 = 1.5 * x3 * (bhat1 + ahat1 * mu + 5 / 3 * ahat2 * (2 * mu**2 - 1))
-
-    # norm = sqrt(qext*pi*x**2)
-    norm = np.sqrt(np.pi * 6 * x**3 * (ahat1 + bhat1 + 5 * ahat2 / 3).real)
-    S1 /= norm
-    S2 /= norm
-
-    return [S1, S2]
-
-
 def normalization_factor(m, x, norm_str):
     """
     Figure out scattering function normalization.
@@ -513,12 +419,18 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
     The amplitude functions have been normalized so that when integrated
     over all 4*pi solid angles, the integral will be qext*pi*x**2.
 
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
+
     The units are weird, sr**(-0.5)
 
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         mu: the angles, cos(theta), to calculate scattering amplitudes
+        norm: (optional) string describing scattering function normalization
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
@@ -568,10 +480,16 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     Bohren and Huffman, *Absorption and Scattering of Light by Small Particles*,
     JOHN WILEY & SONS, page 112, (1983).
 
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
+
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         mu: the angles, cos(theta), of the phase scattering matrix
+        norm: (optional) string describing scattering function normalization
 
     Returns:
         p: the phase scattering matrix [sr**(-1.0)]
@@ -598,7 +516,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     return phase.squeeze()
 
 
-def mie_cdf(m, x, num, norm='albedo'):
+def mie_cdf(m, x, num):
     """
     Create a CDF for unpolarized scattering uniformly spaced in cos(theta).
 
@@ -621,7 +539,7 @@ def mie_cdf(m, x, num, norm='albedo'):
         cdf: array of cumulative distribution function values
     """
     mu = np.linspace(-1, 1, num)
-    s1, s2 = mie_S1_S2(m, x, mu, norm)
+    s1, s2 = mie_S1_S2(m, x, mu, norm='one')
 
     s = (np.abs(s1)**2 + np.abs(s2)**2) / 2
 
@@ -635,7 +553,7 @@ def mie_cdf(m, x, num, norm='albedo'):
     return mu, cdf
 
 
-def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
+def mie_mu_with_uniform_cdf(m, x, num):
     """
     Create a CDF for unpolarized scattering for uniform CDF.
 
@@ -661,7 +579,7 @@ def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
         cdf: array of cumulative distribution function values
     """
     big_num = 2000                  # large to work with x up to 10
-    big_mu, big_cdf = mie_cdf(m, x, big_num, norm)
+    big_mu, big_cdf = mie_cdf(m, x, big_num)
     mu = np.empty(num)
     cdf = np.empty(num)
 
@@ -703,7 +621,7 @@ def generate_mie_costheta(mu_cdf):
     Args:
        mu_cdf: a cumulative distribution function
 
-    Returns
+    Returns:
        an array of random scattering angle cosines based on the CDF supplied.
     """
     # the following should be equivalent to these four lines
@@ -728,13 +646,19 @@ def i_per(m, x, mu, norm='albedo'):
     that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
-    Args:
-       m: the complex index of refraction of the sphere
-       x: the size parameter of the sphere
-       mu: the angles, cos(theta), to calculate intensities
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
 
-    Returns
-       The intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        mu: the angles, cos(theta), to calculate intensities
+        norm: (optional) string describing scattering function normalization
+
+    Returns:
+        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, _ = mie_S1_S2(m, x, mu, norm)
     intensity = np.abs(s1)**2
@@ -750,13 +674,19 @@ def i_par(m, x, mu, norm='albedo'):
     that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
-    Args:
-       m: the complex index of refraction of the sphere
-       x: the size parameter
-       mu: the cos(theta) of each direction desired
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
 
-    Returns
-       The intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter
+        mu: the cos(theta) of each direction desired
+        norm: (optional) string describing scattering function normalization
+
+    Returns:
+        The intensity at each angle in the array mu.  Units [1/sr]
     """
     _, s2 = mie_S1_S2(m, x, mu, norm)
     intensity = np.abs(s2)**2
@@ -772,13 +702,19 @@ def i_unpolarized(m, x, mu, norm='albedo'):
     that the integral of the unpolarized intensity over 4π steradians
     is equal to the single scattering albedo.
 
-    Args:
-       m: the complex index of refraction of the sphere
-       x: the size parameter
-       mu: the cos(theta) of each direction desired
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
 
-    Returns
-       The intensity at each angle in the array mu.  Units [1/sr]
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter
+        mu: the cos(theta) of each direction desired
+        norm: (optional) string describing scattering function normalization
+
+    Returns:
+        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, s2 = mie_S1_S2(m, x, mu, norm)
     intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
@@ -819,12 +755,18 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
 
     The unpolarized scattering is the average of the two scattered intensities.
 
+    The normalization is controlled by `norm` and should be one of
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
+    The normalization describes the integral of the scattering phase
+    function over all 4𝜋 steradians.
+
     Args:
         m: the complex index of refraction of the sphere [-]
         d: the diameter of the sphere                    [same units as lambda0]
         lambda0: wavelength in a vacuum                  [same units as d]
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
+        norm: (optional) string describing scattering function normalization
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
