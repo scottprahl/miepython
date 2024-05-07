@@ -1,9 +1,34 @@
 [build-system]
-requires = [
-    "setuptools >= 44",
-    "setuptools_scm >= 2.0.0, <3"
-]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 110
+exclude =['.git', '__pycache__', 'docs']
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "W"]
+ignore = ["D212", "F403"]
+pydocstyle.convention = "google"
+
+[tool.check-manifest]
+ignore = [
+    ".readthedocs.yaml",
+    "docs/*",
+    "Makefile",
+    "release.txt",
+    "requirements.txt",
+    "todo.rst",
+]
 
 [tool.pytest.ini_options]
 markers = ["notebooks"]
+
+[tool.pylint]
+disable = [
+    "invalid-name",
+    "line-too-long",
+    "too-many-locals",
+    "too-many-arguments",
+    "consider-using-f-string",
+  ]
