@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name
-
 """
 This file is intended to be the target of a pytest run.
 
