@@ -8,20 +8,21 @@ Releasing a new version
   git push
 
 # update CHANGELOG.rst
-  git shortlog v2.1.0..HEAD
+  git shortlog v2.5.4..HEAD
   git commit CHANGELOG.rst -m 'update recent changes'
   git push
 
 # create release tag on github
-  git tag v2.1.0
-  git push origin v2.1.0
+  git tag 2.5.4
+  git push origin 2.5.4
 
-# upload source to pypi
-  python -m build
-  python -m twine upload dist/*
+# create release
+  open https://github.com/scottprahl/miepython/release
 
-# update/check releases
-  open https://github.com/scottprahl/miepython
+# check releases
   open https://pypi.org/project/miepython/
   open https://miepython.readthedocs.io
-  do something about conda-forge?
+  open https://zenodo.org/records/8218010
+
+# wait for conda-forge notice and approve conda release
+  open https://github.com/conda-forge/miepython-feedstock
