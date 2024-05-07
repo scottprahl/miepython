@@ -1,5 +1,3 @@
-# pylint: disable=invalid-name
-# pylint: disable=consider-using-f-string
 """
 Configuration file for building documentation.
 
@@ -29,7 +27,7 @@ def get_init_property(prop):
 
 release = get_init_property("__version__")
 author = get_init_property("__author__")
-copyright = get_init_property("__copyright__")
+copyright = get_init_property("__copyright__") # pylint: disable=redefined-builtin
 
 # Sphinx extension modules
 extensions = [
