@@ -1,3 +1,0 @@
-[submodule "jupyterlite"]
-	path = jupyterlite
-	url = https://github.com/jupyterlite/jupyterlite.git
