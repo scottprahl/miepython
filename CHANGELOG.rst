@@ -1,14 +1,21 @@
 Changelog
 =========
 
-2.6.0 (unreleased)
+2.5.4 (5/7/2024)
 --------------------
+*   document normalization in docstrings
 *   add version and year to CITATION.cff
 *   remove 'v' from version numbers
 *   add github script and workflow to auto-update CITATION.cff
 *   add conda badge to readme
-*   clean up README.rst a bit
-*   stop example script from saving a PNG
+*   clean up README.rst
+*   use svg images
+*   use a single tests/test_mie for jit and non-jit tests
+*   support ruff
+*   test python versions 3.7 to 3.12
+*   fix badges
+*   remove unused functions
+*   fix zenodo link
 
 v2.5.3 (8/5/2023)
 -------------------
