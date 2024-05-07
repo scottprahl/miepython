@@ -27,6 +27,7 @@ def get_contents(filename):
 
 setup(
     name=project,
+    python_requires='>=3.6',
     long_description=get_contents('README.rst'),
     long_description_content_type='text/x-rst',
     version=get_init_property('__version__'),

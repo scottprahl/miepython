@@ -623,7 +623,7 @@ def mie_cdf(m, x, num):
     """
     mu = np.linspace(-1, 1, num)
     intensity_per_mu = i_unpolarized(m, x, mu, norm='4pi') / num
-    cdf = np.cumsum(intensity_per_mu) 
+    cdf = np.cumsum(intensity_per_mu)
     return mu, cdf
 
 
