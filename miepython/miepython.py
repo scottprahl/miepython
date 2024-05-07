@@ -622,17 +622,8 @@ def mie_cdf(m, x, num):
         cdf: array of cumulative distribution function values
     """
     mu = np.linspace(-1, 1, num)
-    s1, s2 = mie_S1_S2(m, x, mu, norm='one')
-
-    s = (np.abs(s1)**2 + np.abs(s2)**2) / 2
-
-    cdf = np.zeros(num)
-    total = 0
-    for i in range(num):
-        # need the extra 2pi because scattering normalized over 4π steradians
-        total += s[i] * (2 / num)
-        cdf[i] = total
-
+    intensity_per_mu = i_unpolarized(m, x, mu, norm='4pi') / num
+    cdf = np.cumsum(intensity_per_mu) 
     return mu, cdf
 
 
