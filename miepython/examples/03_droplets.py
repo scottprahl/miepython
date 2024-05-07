@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-"""
-Plot the scattering cross section for 1 micron water droplets.
-
-The plot shows the cross section as a function of wavelength.
-"""
-
+"""Plot the scattering cross section for 1 micron water droplets."""
 import numpy as np
 import matplotlib.pyplot as plt
 import miepython
 
+
 def n_water(wavelength):
     """
     Refractive index of water at wavelength.
-    
+
     Equation is from https://refractiveindex.info/?shelf=main&book=H2O&page=Daimon - 24.0C
 
     Args:
@@ -29,6 +25,7 @@ def n_water(wavelength):
     refractive_index = np.sqrt(m_squared)
     return refractive_index
 
+
 diameter = 1                               # microns
 radius = diameter / 2                      # microns
 num = 200                                  # points to plot
@@ -38,10 +35,10 @@ x = 2 * np.pi * radius / lambda_range
 
 qext, qsca, qback, g = miepython.mie(ref_index, x)
 
-plt.figure(figsize=(8,4.5))
+plt.figure(figsize=(8, 4.5))
 plt.plot(lambda_range * 1000, qsca)
 plt.title("%.2f µm Diameter Water Droplets" % diameter)
 plt.xlabel("Wavelength [nm]")
 plt.ylabel("Scattering Cross Section [µm²]")
-#plt.savefig('../../docs/03_plot.svg')
+# plt.savefig('../../docs/03_plot.svg')
 plt.show()

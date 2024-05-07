@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-"""
-Plot the scattering cross section for 100nm gold spheres.
-
-The resulting graph is as a function of wavelength.
-"""
+"""Plot the scattering cross section for 100nm gold spheres."""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -42,7 +38,7 @@ qext, qsca, qback, g = miepython.mie(m, x)
 sca_cross_section = qsca * cross_section_area
 abs_cross_section = (qext - qsca) * cross_section_area
 
-plt.subplots(3, 1, figsize=(8,8))
+plt.subplots(3, 1, figsize=(8, 8))
 plt.subplot(311)
 plt.plot(ref_lam * 1000, ref_n, 'ob', markersize=2)
 plt.plot(ref_lam * 1000, -ref_k, 'sr', markersize=2)
@@ -61,5 +57,5 @@ plt.xlabel("Wavelength (nm)")
 plt.ylabel("Cross Section [µm²]")
 plt.text(700, 0.01, "absorption", color='blue')
 plt.text(750, 0.1, "scattering", color='red')
-#plt.savefig("../../docs/04_plot.svg")
+# plt.savefig("../../docs/04_plot.svg")
 plt.show()
