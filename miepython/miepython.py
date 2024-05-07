@@ -636,7 +636,7 @@ def mie_cdf(m, x, num):
     return mu, cdf
 
 
-def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
+def mie_mu_with_uniform_cdf(m, x, num):
     """
     Create a CDF for unpolarized scattering for uniform CDF.
 
