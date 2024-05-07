@@ -44,11 +44,11 @@ by Scott Prahl
 non-absorbing, partially-absorbing, or perfectly-conducting spheres. Mie
 theory is used, following `the procedure described by Wiscombe
 <http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
-been validated against his results. 
+been validated against his work. 
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram1.png
-   :scale: 50 %
-   :alt: montage of laser images
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram2.svg
+   :width: 700px
+   :alt: scattering diagram
 
 This code provides functions for calculating the extinction efficiency,
 scattering efficiency, backscattering, and scattering asymmetry.
@@ -61,11 +61,7 @@ following assumptions
 
 * the imaginary part of the complex index of refraction for absorbing spheres is *negative*.
 
-* the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians by default.  This normalization can be changed As of version 2.3, this can be changed (see the normalization notebook for details).
-
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram2.png
-   :scale: 40 %
-   :alt: montage of laser images
+* the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians by default.  This normalization can be changed (see the normalization notebook for details).
 
 This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere at each of those
 angles.
