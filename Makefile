@@ -21,39 +21,28 @@ rstcheck:
 	-rstcheck docs/index.rst
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
-lintcheck:
+lint:
 	-pylint miepython/miepython.py
 	-pylint miepython/miepython_nojit.py
 	-pylint miepython/__init__.py
 	-pylint tests/test_all_examples.py
 	-pylint tests/test_all_notebooks.py
-	-pylint tests/test_jit.py
-	-pylint tests/test_nojit.py
+	-pylint tests/test_mie.py
 	-pylint docs/conf.py
 
-doccheck:
-	-pydocstyle miepython/miepython.py
-	-pydocstyle miepython/miepython_nojit.py
-	-pydocstyle miepython/__init__.py
-	-pydocstyle tests/test_all_examples.py
-	-pydocstyle tests/test_all_notebooks.py
-	-pydocstyle --ignore D100,D101,D102 tests/test_jit.py
-	-pydocstyle --ignore D100,D101,D102 tests/test_nojit.py
-
 rcheck:
-	make notecheck
+	make clean
+	ruff check
 	make rstcheck
-	make lintcheck
-	make doccheck
-	- flake8 .
-	pyroma -d .
-	check-manifest
+	make lint
 	make html
 	make test
+	make notecheck
+	pyroma -d .
+	check-manifest
 
 test:
-	python -m pytest tests/test_nojit.py
-	python -m pytest tests/test_jit.py
+	python -m pytest tests/test_mie.py
 	python -m pytest tests/test_all_examples.py
 
 clean:
@@ -68,12 +57,7 @@ clean:
 	rm -rf docs/.pytest_cache
 	rm -rf tests/__pycache__
 	rm -rf tests/.ipynb_checkpoints
-	rm -rf 04_plot.png
 	rm -rf .pytest_cache
 	rm -rf build
 
-realclean:
-	make clean
-
-.PHONY: clean html test realclean \
-        rcheck doccheck lintcheck rstcheck notecheck
+.PHONY: clean html test rcheck lint rstcheck notecheck
