@@ -189,7 +189,7 @@ def _mie_An_Bn(m, x):
     return a, b
 
 
-def _small_conducting_mie(m, x):
+def _small_conducting_mie(_m, x):
     """
     Calculate the efficiencies for a small conducting spheres.
 
@@ -197,7 +197,7 @@ def _small_conducting_mie(m, x):
     m.real == 0
 
     Args:
-        m: the complex index of refraction of the sphere
+        _m: the complex index of refraction of the sphere (unused)
         x: the size parameter of the sphere
 
     Returns:
@@ -383,33 +383,37 @@ def normalization_factor(m, x, norm_str):
     Returns:
         scaling factor needed for scattering function
     """
+    factor = None
     norm = norm_str.lower()
 
     if norm in ['bohren']:
-        return 1 / 2
+        factor = 1 / 2
 
-    if norm in ['wiscombe']:
-        return 1
+    elif norm in ['wiscombe']:
+        factor = 1
 
-    if norm in ['qsca', 'scattering_efficiency']:
-        return x * np.sqrt(np.pi)
+    elif norm in ['qsca', 'scattering_efficiency']:
+        factor = x * np.sqrt(np.pi)
 
-    qext, qsca, _, _ = _mie_scalar(m, x)
+    else:
+        qext, qsca, _, _ = _mie_scalar(m, x)
 
-    if norm in ['a', 'albedo']:
-        return x * np.sqrt(np.pi * qext)
+        if norm in ['a', 'albedo']:
+            factor = x * np.sqrt(np.pi * qext)
 
-    if norm in ['1', 'one', 'unity']:
-        return x * np.sqrt(qsca * np.pi)
+        if norm in ['1', 'one', 'unity']:
+            factor = x * np.sqrt(qsca * np.pi)
 
-    if norm in ['four_pi', '4pi']:
-        return x * np.sqrt(qsca / 4)
+        if norm in ['four_pi', '4pi']:
+            factor = x * np.sqrt(qsca / 4)
 
-    if norm in ['qext', 'extinction_efficiency']:
-        return x * np.sqrt(qsca * np.pi / qext)
+        if norm in ['qext', 'extinction_efficiency']:
+            factor = x * np.sqrt(qsca * np.pi / qext)
 
-    raise ValueError("normalization must be one of 'albedo' (default), 'one'"
-                     "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    if factor is None:
+        raise ValueError("normalization must be one of 'albedo' (default), 'one'"
+                         "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    return factor
 
 
 def mie_S1_S2(m, x, mu, norm='albedo'):

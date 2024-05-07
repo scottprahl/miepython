@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=no-member
-# pylint: disable=bare-except
-# pylint: disable=too-many-return-statements
-
 """
 Mie scattering calculations for perfect spheres JITTED!.
 
@@ -198,7 +193,7 @@ def _mie_An_Bn(m, x):
 
 
 @njit((complex128, float64), cache=True)
-def _small_conducting_mie(m, x):
+def _small_conducting_mie(_m, x):
     """
     Calculate the efficiencies for a small conducting spheres.
 
@@ -206,7 +201,7 @@ def _small_conducting_mie(m, x):
     m.real == 0
 
     Args:
-        m: the complex index of refraction of the sphere
+        _m: the complex index of refraction of the sphere (unused)
         x: the size parameter of the sphere
 
     Returns:
@@ -398,38 +393,44 @@ def normalization_factor(m, x, norm_int):
     Returns:
         scaling factor needed for scattering function
     """
+    norm = None
+
     # Qsca normalization
     if norm_int == 3:
-        return x * np.sqrt(np.pi)
+        norm = x * np.sqrt(np.pi)
 
     # Bohren Normalization
-    if norm_int == 5:
-        return 0.5
+    elif norm_int == 5:
+        norm = 0.5
 
     # Wiscombe Normalization
-    if norm_int == 6:
-        return 1
+    elif norm_int == 6:
+        norm = 1
 
-    # calculate qsca and qext
-    qext, qsca, _, _ = _mie_scalar(m, x)
+    else:
+        # calculate qsca and qext
+        qext, qsca, _, _ = _mie_scalar(m, x)
 
-    # albedo Normalization
-    if norm_int == 0:
-        return x * np.sqrt(np.pi * qext)
+        # albedo Normalization
+        if norm_int == 0:
+            norm = x * np.sqrt(np.pi * qext)
 
-    # Unity normalization
-    if norm_int == 1:
-        return x * np.sqrt(qsca * np.pi)
+        # Unity normalization
+        elif norm_int == 1:
+            norm = x * np.sqrt(qsca * np.pi)
 
-    # 4pi Normalization
-    if norm_int == 2:
-        return x * np.sqrt(qsca / 4)
+        # 4pi Normalization
+        elif norm_int == 2:
+            norm = x * np.sqrt(qsca / 4)
 
-    # Qext Normalization
-    if norm_int == 4:  # 4pi
-        return x * np.sqrt(qsca * np.pi / qext)
+        # Qext Normalization
+        elif norm_int == 4:  # 4pi
+            norm = x * np.sqrt(qsca * np.pi / qext)
 
-    raise ValueError("norm-int must be in the range 0..6")
+    if norm is None:
+        raise ValueError("norm-int must be in the range 0..6")
+
+    return norm
 
 
 def norm_string_to_integer(s):
@@ -446,31 +447,34 @@ def norm_string_to_integer(s):
     Returns:
         integer used in _mie_S1_S2() determine normalization
     """
+    ii = None
     norm = s.lower()
 
     if norm in ['a', 'albedo']:
-        return 0
+        ii = 0
 
-    if norm in ['1', 'one', 'unity']:
-        return 1
+    elif norm in ['1', 'one', 'unity']:
+        ii = 1
 
-    if norm in ['four_pi', '4pi']:
-        return 2
+    elif norm in ['four_pi', '4pi']:
+        ii = 2
 
-    if norm in ['qsca', 'scattering_efficiency']:
-        return 3
+    elif norm in ['qsca', 'scattering_efficiency']:
+        ii = 3
 
-    if norm in ['qext', 'extinction_efficiency']:
-        return 4
+    elif norm in ['qext', 'extinction_efficiency']:
+        ii = 4
 
-    if norm in ['bohren']:
-        return 5
+    elif norm in ['bohren']:
+        ii = 5
 
-    if norm in ['wiscombe']:
-        return 6
+    elif norm in ['wiscombe']:
+        ii = 6
 
-    raise ValueError("normalization must be one of 'albedo' (default), 'one'"
-                     "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    if ii is None:
+        raise ValueError("normalization must be one of 'albedo' (default), 'one'"
+                         "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    return ii
 
 
 @njit((complex128, float64, float64[:], int32), cache=True)
