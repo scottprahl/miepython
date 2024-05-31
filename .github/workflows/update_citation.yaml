@@ -11,17 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@master
-        with:
-          ref: master
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@master
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
-          pip install requests PyYAML
+          pip install requests PyYAML needed for update_citation.py
 
       - name: Update CITATION.cff
         run: |
