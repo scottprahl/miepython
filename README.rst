@@ -15,7 +15,7 @@
    :alt: doi
 
 .. |license-badge| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
-   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
+   :target: https://github.com/scottprahl/miepython/blob/main/LICENSE.txt
    :alt: License
 
 .. |testing-badge| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
@@ -46,7 +46,7 @@ theory is used, following `the procedure described by Wiscombe
 <http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
 been validated against his work. 
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/mie-diagram2.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/mie-diagram2.svg
    :width: 700px
    :alt: scattering diagram
 
@@ -89,7 +89,7 @@ or ``conda``::
 
     conda install -c conda-forge miepython
 
-Or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
+Or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/main>`_ by selecting the Jupyter notebook that interests you.
 
 Usage for those that don't do Jupyter
 --------------------------------------
@@ -119,30 +119,30 @@ should produce::
 Simple Dielectric
 ^^^^^^^^^^^^^^^^^^
 
-The script `01_dielectric.py <https://raw.githubusercontent.com/scottprahl/miepython/master/miepython/examples/01_dielectric.py>`_
+The script `01_dielectric.py <https://raw.githubusercontent.com/scottprahl/miepython/main/miepython/examples/01_dielectric.py>`_
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/01_plot.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/01_plot.svg
 
 Glass Spheres
 ^^^^^^^^^^^^^^
 
-The script `02_glass.py <https://raw.githubusercontent.com/scottprahl/miepython/master/miepython/examples/02_glass.py>`_
+The script `02_glass.py <https://raw.githubusercontent.com/scottprahl/miepython/main/miepython/examples/02_glass.py>`_
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/02_plot.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/02_plot.svg
 
 Water Droplets
 ^^^^^^^^^^^^^^^
 
-The script `03_droplets.py <https://raw.githubusercontent.com/scottprahl/miepython/master/miepython/examples/03_droplets.py>`_
+The script `03_droplets.py <https://raw.githubusercontent.com/scottprahl/miepython/main/miepython/examples/03_droplets.py>`_
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/03_plot.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/03_plot.svg
 
 Small Gold Spheres
 ^^^^^^^^^^^^^^^^^^^
 
-The script `04_gold.py <https://raw.githubusercontent.com/scottprahl/miepython/master/miepython/examples/04_gold.py>`_
+The script `04_gold.py <https://raw.githubusercontent.com/scottprahl/miepython/main/miepython/examples/04_gold.py>`_
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/master/docs/04_plot.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/04_plot.svg
 
 
 Usage for those that use Jupyter
@@ -159,7 +159,7 @@ All the Jupyter notebooks are in the docs directory and shown at <https://miepyt
 You can also use a Jupyter notebook immediately (well, you do have wait a bit for everything to get uploaded) by clicking the Google Colaboratory button below
 
 .. image:: https://colab.research.google.com/assets/colab-badge.svg
-  :target: https://colab.research.google.com/github/scottprahl/miepython/blob/master
+  :target: https://colab.research.google.com/github/scottprahl/miepython/blob/main
   :alt: Colab
 
 
