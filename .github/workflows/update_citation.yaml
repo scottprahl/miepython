@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests PyYAML needed for update_citation.py
+          pip install requests PyYAML
 
       - name: Update CITATION.cff
         run: |
