@@ -3,9 +3,9 @@ name: test
 
 on:    # yamllint disable-line rule:truthy
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:  # allow manual triggering
 
 jobs:
