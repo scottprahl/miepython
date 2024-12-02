@@ -509,7 +509,7 @@ def _mie_S1_S2(m, x, mu, norm_int, nth):
         pi_nm1 = 1
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            if nth==0 or n==nth:
+            if nth in (0, n):
                 S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1] + tau_nm1 * b[n - 1]) / (n + 1) / n
                 S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1] + pi_nm1 * b[n - 1]) / (n + 1) / n
             temp = pi_nm1

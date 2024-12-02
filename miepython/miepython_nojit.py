@@ -452,7 +452,7 @@ def mie_S1_S2(m, x, mu, norm='albedo', nth=0):
         pi_nm1 = 1
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            if nth==0 or n==nth:
+            if nth in (0, n):
                 S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1]
                                     + tau_nm1 * b[n - 1]) / (n + 1) / n
                 S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1]
@@ -495,6 +495,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo', nth=0):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         mu: the angles, cos(theta), of the phase scattering matrix
+        nth: return nth term from series (default=0 means include all terms)
         norm: (optional) string describing scattering function normalization
 
     Returns:
