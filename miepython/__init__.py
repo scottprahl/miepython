@@ -42,7 +42,7 @@ The scattering matrix
     miepython.mie_phase_matrix(m, x, mu)
 
 """
-__version__ = '2.5.4'
+__version__ = '2.5.5'
 __author__ = 'Scott Prahl'
 __email__ = 'scott.prahl@oit.edu'
 __copyright__ = '2017-24, Scott Prahl'
