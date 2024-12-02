@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import miepython
 
-radius = 2                      # in microns
+radius = 2  # in microns
 lambda0 = np.linspace(0.2, 1.2, 200)  # also in microns
 x = 2 * np.pi * radius / lambda0
 
