@@ -43,18 +43,19 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 import numpy as np
 from numba import njit, int32, float64, complex128
 
-__all__ = ('ez_mie',
-           'ez_intensities',
-           'i_par',
-           'i_per',
-           'i_unpolarized',
-           'mie',
-           'mie_S1_S2',
-           'mie_phase_matrix',
-           'mie_cdf',
-           'mie_mu_with_uniform_cdf',
-           'generate_mie_costheta',
-           )
+__all__ = (
+    "ez_mie",
+    "ez_intensities",
+    "i_par",
+    "i_per",
+    "i_unpolarized",
+    "mie",
+    "mie_S1_S2",
+    "mie_phase_matrix",
+    "mie_cdf",
+    "mie_mu_with_uniform_cdf",
+    "generate_mie_costheta",
+)
 
 
 @njit((complex128, int32), cache=True)
@@ -168,8 +169,8 @@ def _mie_An_Bn(m, x):
     a = np.zeros(nstop - 1, dtype=np.complex128)
     b = np.zeros(nstop - 1, dtype=np.complex128)
 
-    psi_nm1 = np.sin(x)                   # nm1 = n-1 = 0
-    psi_n = psi_nm1 / x - np.cos(x)       # n = 1
+    psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
+    psi_n = psi_nm1 / x - np.cos(x)  # n = 1
     xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
@@ -222,21 +223,23 @@ def _small_conducting_mie(m, x):
     ahat1 /= complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
 
     bhat1 = complex(0.0, (x**2 - 10.0) / 30.0)
-    bhat1 /= complex(1 + 0.5 * x**2, -x**3 / 3.0)
+    bhat1 /= complex(1 + 0.5 * x**2, -(x**3) / 3.0)
     ahat2 = complex(0.0, x**2 / 30.0)
-    bhat2 = complex(0.0, -x**2 / 45.0)
+    bhat2 = complex(0.0, -(x**2) / 45.0)
 
-    qsca = x**4 * (6 * np.abs(ahat1)**2
-                   + 6 * np.abs(bhat1)**2
-                   + 10 * np.abs(ahat2)**2
-                   + 10 * np.abs(bhat2)**2)
+    qsca = x**4 * (
+        6 * np.abs(ahat1) ** 2
+        + 6 * np.abs(bhat1) ** 2
+        + 10 * np.abs(ahat2) ** 2
+        + 10 * np.abs(bhat2) ** 2
+    )
     qext = qsca
     g = ahat1.imag * (ahat2.imag + bhat1.imag)
     g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)
     g += ahat1.real * bhat1.real
     g *= 6 * x**4 / qsca
 
-    qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2))**2
+    qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2)) ** 2
 
     return [qext, qsca, qback, g]
 
@@ -272,7 +275,7 @@ def _small_mie(m, x):
     ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
     ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
 
-    T = np.abs(ahat1)**2 + np.abs(bhat1)**2 + 5 / 3 * np.abs(ahat2)**2
+    T = np.abs(ahat1) ** 2 + np.abs(bhat1) ** 2 + 5 / 3 * np.abs(ahat2) ** 2
     temp = ahat2 + bhat1
     g = (ahat1 * temp.conjugate()).real / T
 
@@ -284,7 +287,7 @@ def _small_mie(m, x):
         qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
 
     sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
-    qback = 4 * np.abs(sback)**2 / x2
+    qback = 4 * np.abs(sback) ** 2 / x2
 
     return [qext, qsca, qback, g]
 
@@ -321,16 +324,18 @@ def _mie_scalar(m, x):
         qsca = qext
 
         if m.imag != 0:
-            qsca = 2 * np.sum(cn * (np.abs(a)**2 + np.abs(b)**2)) / x**2
+            qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
 
-        qback = np.abs(np.sum((-1)**n * cn * (a - b)))**2 / x**2
+        qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
 
         c1n = n * (n + 2) / (n + 1)
         c2n = cn / n / (n + 1)
         g = 0
         for i in range(nmax - 1):
-            asy1 = c1n[i] * (a[i] * a[i + 1].conjugate()
-                             + b[i] * b[i + 1].conjugate()).real
+            asy1 = (
+                c1n[i]
+                * (a[i] * a[i + 1].conjugate() + b[i] * b[i + 1].conjugate()).real
+            )
             asy2 = c2n[i] * (a[i] * b[i].conjugate()).real
             g += 4 * (asy1 + asy2) / qsca / x**2
 
@@ -368,7 +373,7 @@ def mie(m, x):
         xlen = len(x)
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
-        raise RuntimeError('m and x arrays to mie must be same length')
+        raise RuntimeError("m and x arrays to mie must be same length")
 
     thelen = max(xlen, mlen)
     qext = np.empty(thelen, dtype=np.float64)
@@ -412,18 +417,24 @@ def _small_mie_conducting_S1_S2(m, x, mu):
     ahat2 = 1j / 30 * x**2
     bhat2 = -1j * x**2 / 45
 
-    S1 = 1.5 * x**3 * (ahat1 + bhat1 * mu
-                       + 5 / 3 * ahat2 * mu
-                       + 5 / 3 * bhat2 * (2 * mu**2 - 1))
+    S1 = (
+        1.5
+        * x**3
+        * (ahat1 + bhat1 * mu + 5 / 3 * ahat2 * mu + 5 / 3 * bhat2 * (2 * mu**2 - 1))
+    )
 
-    S2 = 1.5 * x**3 * (bhat1 + ahat1 * mu
-                       + 5 / 3 * bhat2 * mu
-                       + 5 / 3 * ahat2 * (2 * mu**2 - 1))
+    S2 = (
+        1.5
+        * x**3
+        * (bhat1 + ahat1 * mu + 5 / 3 * bhat2 * mu + 5 / 3 * ahat2 * (2 * mu**2 - 1))
+    )
 
-    qext = x**4 * (6 * np.abs(ahat1)**2
-                   + 6 * np.abs(bhat1)**2
-                   + 10 * np.abs(ahat2)**2
-                   + 10 * np.abs(bhat2)**2)
+    qext = x**4 * (
+        6 * np.abs(ahat1) ** 2
+        + 6 * np.abs(bhat1) ** 2
+        + 10 * np.abs(ahat2) ** 2
+        + 10 * np.abs(bhat2) ** 2
+    )
 
     norm = np.sqrt(qext * np.pi * x**2)
     S1 /= norm
@@ -540,29 +551,31 @@ def norm_string_to_integer(s):
     """
     norm = s.lower()
 
-    if norm in ['a', 'albedo']:
+    if norm in ["a", "albedo"]:
         return 0
 
-    if norm in ['1', 'one', 'unity']:
+    if norm in ["1", "one", "unity"]:
         return 1
 
-    if norm in ['four_pi', '4pi']:
+    if norm in ["four_pi", "4pi"]:
         return 2
 
-    if norm in ['qsca', 'scattering_efficiency']:
+    if norm in ["qsca", "scattering_efficiency"]:
         return 3
 
-    if norm in ['qext', 'extinction_efficiency']:
+    if norm in ["qext", "extinction_efficiency"]:
         return 4
 
-    if norm in ['bohren']:
+    if norm in ["bohren"]:
         return 5
 
-    if norm in ['wiscombe']:
+    if norm in ["wiscombe"]:
         return 6
 
-    raise ValueError("normalization must be one of 'albedo' (default), 'one'"
-                     "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'")
+    raise ValueError(
+        "normalization must be one of 'albedo' (default), 'one'"
+        "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
+    )
 
 
 @njit((complex128, float64, float64[:], int32), cache=True)
@@ -596,11 +609,13 @@ def _mie_S1_S2(m, x, mu, norm_int):
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
 
-            S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1]
-                                    + tau_nm1 * b[n - 1]) / (n + 1) / n
+            S1[k] += (
+                (2 * n + 1) * (pi_nm1 * a[n - 1] + tau_nm1 * b[n - 1]) / (n + 1) / n
+            )
 
-            S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1]
-                                    + pi_nm1 * b[n - 1]) / (n + 1) / n
+            S2[k] += (
+                (2 * n + 1) * (tau_nm1 * a[n - 1] + pi_nm1 * b[n - 1]) / (n + 1) / n
+            )
 
             temp = pi_nm1
             pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
@@ -614,7 +629,7 @@ def _mie_S1_S2(m, x, mu, norm_int):
     return [S1, S2]
 
 
-def mie_S1_S2(m, x, mu, norm='albedo'):
+def mie_S1_S2(m, x, mu, norm="albedo"):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -640,7 +655,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
     return _mie_S1_S2(m, x, mu, norm_int)
 
 
-def mie_phase_matrix(m, x, mu, norm='albedo'):
+def mie_phase_matrix(m, x, mu, norm="albedo"):
     """
     Calculate the scattering (Mueller) matrix.
 
@@ -686,7 +701,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
     return phase.squeeze()
 
 
-def mie_cdf(m, x, num, norm='albedo'):
+def mie_cdf(m, x, num, norm="albedo"):
     """
     Create a CDF for unpolarized scattering uniformly spaced in cos(theta).
 
@@ -711,7 +726,7 @@ def mie_cdf(m, x, num, norm='albedo'):
     mu = np.linspace(-1, 1, num)
     s1, s2 = mie_S1_S2(m, x, mu, norm)
 
-    s = (np.abs(s1)**2 + np.abs(s2)**2) / 2
+    s = (np.abs(s1) ** 2 + np.abs(s2) ** 2) / 2
 
     cdf = np.zeros(num)
     total = 0
@@ -723,7 +738,7 @@ def mie_cdf(m, x, num, norm='albedo'):
     return mu, cdf
 
 
-def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
+def mie_mu_with_uniform_cdf(m, x, num, norm="albedo"):
     """
     Create a CDF for unpolarized scattering for uniform CDF.
 
@@ -748,15 +763,15 @@ def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
         mu: array of cosines of angles (irregularly spaced)
         cdf: array of cumulative distribution function values
     """
-    big_num = 2000                  # large to work with x up to 10
+    big_num = 2000  # large to work with x up to 10
     big_mu, big_cdf = mie_cdf(m, x, big_num, norm)
     mu = np.empty(num)
     cdf = np.empty(num)
 
-    mu[0] = -1                       # cos[180 degrees] is -1
-    cdf[0] = 0                       # initial cdf is zero
+    mu[0] = -1  # cos[180 degrees] is -1
+    cdf[0] = 0  # initial cdf is zero
 
-    big_k = 0                        # index into big_cdf
+    big_k = 0  # index into big_cdf
     for k in range(1, num - 1):
 
         target = k / (num - 1)
@@ -767,14 +782,14 @@ def mie_mu_with_uniform_cdf(m, x, num, norm='albedo'):
         delta_cdf = big_cdf[big_k] - big_cdf[big_k - 1]
         delta_mu = big_mu[big_k] - big_mu[big_k - 1]
 
-        mu[k] = big_mu[big_k] - delta / delta_cdf * delta_mu   # interpolate
+        mu[k] = big_mu[big_k] - delta / delta_cdf * delta_mu  # interpolate
         cdf[k] = target
 
-#       print(' mu[',k,']=% .5f'%mu[k],' cdf[',k,']=% .5f'%cdf[k],
-#       'cdf=',big_cdf[big_k], fraction)
+    #       print(' mu[',k,']=% .5f'%mu[k],' cdf[',k,']=% .5f'%cdf[k],
+    #       'cdf=',big_cdf[big_k], fraction)
 
-    mu[num - 1] = 1                    # cos[0 degrees] is 1
-    cdf[num - 1] = 1                   # last cdf is one
+    mu[num - 1] = 1  # cos[0 degrees] is 1
+    cdf[num - 1] = 1  # last cdf is one
 
     return [mu, cdf]
 
@@ -807,7 +822,7 @@ def generate_mie_costheta(mu_cdf):
     return x
 
 
-def i_per(m, x, mu, norm='albedo'):
+def i_per(m, x, mu, norm="albedo"):
     """
     Return the scattered intensity in a plane normal to the incident light.
 
@@ -825,11 +840,11 @@ def i_per(m, x, mu, norm='albedo'):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, _ = mie_S1_S2(m, x, mu, norm)
-    intensity = np.abs(s1)**2
-    return intensity.astype('float')
+    intensity = np.abs(s1) ** 2
+    return intensity.astype("float")
 
 
-def i_par(m, x, mu, norm='albedo'):
+def i_par(m, x, mu, norm="albedo"):
     """
     Return the scattered intensity in a plane parallel to the incident light.
 
@@ -847,11 +862,11 @@ def i_par(m, x, mu, norm='albedo'):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     _, s2 = mie_S1_S2(m, x, mu, norm)
-    intensity = np.abs(s2)**2
-    return intensity.astype('float')
+    intensity = np.abs(s2) ** 2
+    return intensity.astype("float")
 
 
-def i_unpolarized(m, x, mu, norm='albedo'):
+def i_unpolarized(m, x, mu, norm="albedo"):
     """
     Return the unpolarized scattered intensity at specified angles.
 
@@ -868,8 +883,8 @@ def i_unpolarized(m, x, mu, norm='albedo'):
        The intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, s2 = mie_S1_S2(m, x, mu, norm)
-    intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
-    return intensity.astype('float')
+    intensity = (np.abs(s1) ** 2 + np.abs(s2) ** 2) / 2
+    return intensity.astype("float")
 
 
 def ez_mie(m, d, lambda0, n_env=1.0):
@@ -893,7 +908,7 @@ def ez_mie(m, d, lambda0, n_env=1.0):
     return mie(m_env, x_env)
 
 
-def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
+def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo"):
     """
     Return the scattered intensities from a sphere.
 
@@ -920,8 +935,8 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
     lambda_env = lambda0 / n_env
     x_env = np.pi * d / lambda_env
     s1, s2 = mie_S1_S2(m_env, x_env, mu, norm)
-    ipar = np.abs(s2)**2
-    iper = np.abs(s1)**2
-    Ipar = ipar.astype('float')
-    Iper = iper.astype('float')
+    ipar = np.abs(s2) ** 2
+    iper = np.abs(s1) ** 2
+    Ipar = ipar.astype("float")
+    Iper = iper.astype("float")
     return Ipar, Iper
