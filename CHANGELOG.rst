@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.5.5 (12/1/2024)
+--------------------
+*   add ability to get individual multipole intensities
+*   add 12_multipoles.ipynb as documentation
+*   improve github workflows
+
 2.5.4 (5/7/2024)
 --------------------
 *   document normalization in docstrings
