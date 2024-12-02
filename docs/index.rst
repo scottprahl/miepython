@@ -103,6 +103,7 @@ Small Gold Spheres
 
    07_algorithm.ipynb
    06_random_deviates.ipynb
+   12_multipoles.ipynb
 
 .. toctree::
    :caption: Numba Performance
