@@ -455,9 +455,7 @@ class AngleScattering(unittest.TestCase):
             qsca * np.pi * x**2,
         ]
 
-        for i, norm in enumerate(
-            ["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]
-        ):
+        for i, norm in enumerate(["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]):
             intensity = miepython.i_unpolarized(m, x, mu, norm)
             total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
             self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
@@ -477,9 +475,7 @@ class AngleScattering(unittest.TestCase):
             qsca * np.pi * x**2,
         ]
 
-        for i, norm in enumerate(
-            ["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]
-        ):
+        for i, norm in enumerate(["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]):
             iper = miepython.i_per(m, x, mu, norm)
             total1 = 2 * np.pi * (mu[1] - mu[0]) * np.sum(iper)
             ipar = miepython.i_par(m, x, mu, norm)
@@ -498,7 +494,8 @@ class AngleScattering(unittest.TestCase):
 class MiePhaseMatrix(unittest.TestCase):
     def test_mie_phase_matrix_basic(self):
         """Element (0, 0) of array returned by mie_phase_matrix should match output
-        of i_unpolarized."""
+        of i_unpolarized.
+        """
         m = 1.5 - 1.5j
         x = 2
         mu = np.linspace(-1, 1, 1000)
@@ -514,7 +511,8 @@ class MiePhaseMatrix(unittest.TestCase):
 
     def test_mie_phase_matrix_symmetry(self):
         """Upper left 2X2 block is symmetric and lower right 2X2 block is
-        antisymmetric."""
+        antisymmetric.
+        """
         p = miepython.mie_phase_matrix(m=1.5, x=2.0, mu=np.linspace(-1, 1, 10))
         assert np.allclose(p[0, 1], p[1, 0])
         assert np.allclose(p[2, 3], -p[3, 2])
@@ -527,9 +525,7 @@ class MiePhaseMatrix(unittest.TestCase):
 
         p = miepython.mie_phase_matrix(m, x, mu)  # result to be validated
 
-        assert np.allclose(
-            p[0, 0] ** 2, p[0, 1] ** 2 + p[2, 2] ** 2 + p[2, 3] ** 2, rtol=1e-9
-        )
+        assert np.allclose(p[0, 0] ** 2, p[0, 1] ** 2 + p[2, 2] ** 2 + p[2, 3] ** 2, rtol=1e-9)
 
     def test_mie_phase_matrix_bohren(self):
         """Compare with output from Bohren's program
@@ -538,7 +534,6 @@ class MiePhaseMatrix(unittest.TestCase):
         s11 is normalized to 1 in the forward direction
         pol is -s12 normalized by s11
         """
-
         mm = np.array(
             [
                 [000.00, 0.100000e01, 0.000000e00, 0.100000e01, 0.000000e00],
@@ -570,9 +565,7 @@ class MiePhaseMatrix(unittest.TestCase):
         theta = np.linspace(0, 180, 21)
 
         mu = np.cos(np.radians(theta))
-        p = miepython.mie_phase_matrix(
-            m, x, mu, norm="bohren"
-        )  # result to be validated
+        p = miepython.mie_phase_matrix(m, x, mu, norm="bohren")  # result to be validated
 
         assert np.allclose(theta, mm[:, 0], rtol=1e-9)
         assert np.allclose(p[0, 0, :] / p[0, 0, 0], mm[:, 1], atol=1e-3)
