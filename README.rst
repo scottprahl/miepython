@@ -18,7 +18,9 @@ by Scott Prahl
 .. image:: https://zenodo.org/badge/99259684.svg
    :target: https://zenodo.org/badge/latestdoi/99259684
    :alt: doi
+
 |
+
 .. image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
    :alt: License
