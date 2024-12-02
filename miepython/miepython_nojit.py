@@ -416,7 +416,7 @@ def normalization_factor(m, x, norm_str):
     return factor
 
 
-def mie_S1_S2(m, x, mu, norm='albedo'):
+def mie_S1_S2(m, x, mu, norm='albedo', nth=0):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -435,6 +435,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
         x: the size parameter of the sphere
         mu: the angles, cos(theta), to calculate scattering amplitudes
         norm: (optional) string describing scattering function normalization
+        nth: return nth term from series (default=0 means include all terms)
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
@@ -451,9 +452,10 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
         pi_nm1 = 1
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1]
+            if nth==0 or n==nth:
+                S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1]
                                     + tau_nm1 * b[n - 1]) / (n + 1) / n
-            S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1]
+                S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1]
                                     + pi_nm1 * b[n - 1]) / (n + 1) / n
 
             temp = pi_nm1
@@ -468,7 +470,7 @@ def mie_S1_S2(m, x, mu, norm='albedo'):
     return [S1, S2]
 
 
-def mie_phase_matrix(m, x, mu, norm='albedo'):
+def mie_phase_matrix(m, x, mu, norm='albedo', nth=0):
     """
     Calculate the scattering (Mueller) matrix.
 
@@ -499,7 +501,7 @@ def mie_phase_matrix(m, x, mu, norm='albedo'):
         p: the phase scattering matrix [sr**(-1.0)]
     """
     mu = np.atleast_1d(mu)
-    s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm)
+    s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm, nth=nth)
 
     s1_star = np.conjugate(s1)
     s2_star = np.conjugate(s2)
@@ -660,7 +662,7 @@ def i_per(m, x, mu, norm='albedo'):
     return intensity.astype('float')
 
 
-def i_par(m, x, mu, norm='albedo'):
+def i_par(m, x, mu, norm='albedo', nth=0):
     """
     Return the scattered intensity in a plane parallel to the incident light.
 
@@ -679,16 +681,17 @@ def i_par(m, x, mu, norm='albedo'):
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
+        nth: return nth term from series (default=0 means include all terms)
 
     Returns:
         The intensity at each angle in the array mu.  Units [1/sr]
     """
-    _, s2 = mie_S1_S2(m, x, mu, norm)
+    _, s2 = mie_S1_S2(m, x, mu, norm, nth)
     intensity = np.abs(s2)**2
     return intensity.astype('float')
 
 
-def i_unpolarized(m, x, mu, norm='albedo'):
+def i_unpolarized(m, x, mu, norm='albedo', nth=0):
     """
     Return the unpolarized scattered intensity at specified angles.
 
@@ -707,11 +710,12 @@ def i_unpolarized(m, x, mu, norm='albedo'):
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
+        nth: return nth term from series (default=0 means include all terms)
 
     Returns:
         The intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, s2 = mie_S1_S2(m, x, mu, norm)
+    s1, s2 = mie_S1_S2(m, x, mu, norm, nth)
     intensity = (np.abs(s1)**2 + np.abs(s2)**2) / 2
     return intensity.astype('float')
 
@@ -737,7 +741,7 @@ def ez_mie(m, d, lambda0, n_env=1.0):
     return mie(m_env, x_env)
 
 
-def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
+def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo', nth=0):
     """
     Return the scattered intensities from a sphere.
 
@@ -762,6 +766,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
         norm: (optional) string describing scattering function normalization
+        nth: return nth term from series (default=0 means include all terms)
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
@@ -769,7 +774,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm='albedo'):
     m_env = m / n_env
     lambda_env = lambda0 / n_env
     x_env = np.pi * d / lambda_env
-    s1, s2 = mie_S1_S2(m_env, x_env, mu, norm)
+    s1, s2 = mie_S1_S2(m_env, x_env, mu, norm, nth)
     ipar = np.abs(s2)**2
     iper = np.abs(s1)**2
     Ipar = ipar.astype('float')
