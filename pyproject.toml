@@ -1,9 +1,51 @@
 [build-system]
-requires = [
-    "setuptools >= 44",
-    "setuptools_scm >= 2.0.0, <3"
-]
+requires = ["setuptools >= 44"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "miepython"
+version = "2.5.5"
+description = "Mie scattering of a plane wave by a sphere"
+requires-python = ">=3.8" 
+keywords = [
+    "mie",
+    "scattering",
+    "rainbow",
+    "droplet",
+    "backscatter",
+    "sphere",
+    "nanoparticle",
+    "cloud",
+    "phase function",
+    "efficiency",
+    "rayleigh",
+    "backscattering"
+]
+license = {text = "MIT License"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+readme = { file = "README.rst", content-type = "text/x-rst" }
+
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "numba"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
 [tool.pytest.ini_options]
-markers = ["notebooks"]
+markers = ["notebooks: tests related to Jupyter notebooks"]
