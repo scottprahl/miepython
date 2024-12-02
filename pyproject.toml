@@ -1,12 +1,14 @@
 [build-system]
-requires = ["setuptools >= 44"]
+requires = ["setuptools >= 44", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "miepython"
 version = "2.5.5"
 description = "Mie scattering of a plane wave by a sphere"
-requires-python = ">=3.8" 
+requires-python = ">=3.8"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+license = { text = "MIT License" }
 keywords = [
     "mie",
     "scattering",
@@ -21,13 +23,11 @@ keywords = [
     "rayleigh",
     "backscattering"
 ]
-license = {text = "MIT License"}
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python",
-    "Topic :: Scientific/Engineering :: Physics",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -35,8 +35,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12"
 ]
-readme = { file = "README.rst", content-type = "text/x-rst" }
-
 dependencies = [
     "numpy",
     "matplotlib",
@@ -44,8 +42,34 @@ dependencies = [
 ]
 
 [tool.black]
-line-length = 88
+line-length = 100
 target-version = ["py38", "py39", "py310", "py311", "py312"]
 
 [tool.pytest.ini_options]
 markers = ["notebooks: tests related to Jupyter notebooks"]
+
+[tool.flake8]
+ignore = ["W503", "D212", "N802", "N803", "N806", "E501"]
+per-file-ignores = [
+    "__init__.py:F401,F403",
+    "setup.py:D100",
+    "tests/test_jit.py:D100,D101,D102",
+    "tests/test_nojit.py:D100,D101,D102",
+    "tests/conftest.py:D100,D101,D102,D103"
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "docs"
+]
+max-line-length = 99
+docstring-convention = "google"
+
+[tool.ruff]
+line-length = 150
+exclude =['.git', '__pycache__', 'docs']
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "W"]
+ignore = ["D212", "F403"]
+pydocstyle.convention = "google"
