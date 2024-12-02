@@ -31,20 +31,23 @@ import nbconvert.preprocessors
 
 # Default search path is the current directory
 # searchpath = pathlib.Path('.')
-searchpath = pathlib.Path('docs/')  # all notebooks are in here
+searchpath = pathlib.Path("docs/")  # all notebooks are in here
 
 # Read patterns from .testignore file
-ignores = ''
-if os.path.exists('.testignore'):
-    with open('.testignore', encoding='utf-8') as ff:
+ignores = ""
+if os.path.exists(".testignore"):
+    with open(".testignore", encoding="utf-8") as ff:
         ignores = [line.strip() for line in ff if line.strip()]
 
 # Ignore hidden folders (startswith('.')) and files matching ignore patterns
-notebooks = [notebook for notebook in searchpath.glob('*.ipynb')
-             if not (any(parent.startswith('.')
-                         for parent in notebook.parent.parts)
-                     or any(notebook.match(pattern)
-                            for pattern in ignores))]
+notebooks = [
+    notebook
+    for notebook in searchpath.glob("*.ipynb")
+    if not (
+        any(parent.startswith(".") for parent in notebook.parent.parts)
+        or any(notebook.match(pattern) for pattern in ignores)
+    )
+]
 
 notebooks.sort()
 print(notebooks)
@@ -66,7 +69,7 @@ def test_run_notebook(notebook):
     caught by pytest
 
     """
-    with open(notebook, encoding='utf-8') as f:
+    with open(notebook, encoding="utf-8") as f:
         nb = nbformat.read(f, as_version=4)
     ep = nbconvert.preprocessors.ExecutePreprocessor(timeout=600)
-    ep.preprocess(nb, {'metadata': {'path': notebook.parent}})
+    ep.preprocess(nb, {"metadata": {"path": notebook.parent}})

@@ -1,7 +1,10 @@
 def pytest_addoption(parser):
     parser.addoption(
-        "--notebooks", action="store_true", default=False, dest="notebooks",
-        help="test notebooks by running them"
+        "--notebooks",
+        action="store_true",
+        default=False,
+        dest="notebooks",
+        help="test notebooks by running them",
     )
 
 

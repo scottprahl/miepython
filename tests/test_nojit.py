@@ -78,7 +78,7 @@ class NonAbsorbing(unittest.TestCase):
         m = complex(0.75, 0.0)
         x = 0.099
         s1 = 1.81756e-8 - 1.64810e-4 * 1j
-        G = abs(2 * s1 / x)**2
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 0.000007, delta=1e-6)
         self.assertAlmostEqual(g, 0.001448, delta=1e-6)
@@ -87,8 +87,8 @@ class NonAbsorbing(unittest.TestCase):
         # MIEV0 Test Case 6
         m = complex(0.75, 0.0)
         x = 0.101
-        s1 = 2.04875E-08 - 1.74965E-04 * 1j
-        G = abs(2 * s1 / x)**2
+        s1 = 2.04875e-08 - 1.74965e-04 * 1j
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 0.000008, delta=1e-6)
         self.assertAlmostEqual(g, 0.001507, delta=1e-6)
@@ -97,8 +97,8 @@ class NonAbsorbing(unittest.TestCase):
         # MIEV0 Test Case 7
         m = complex(0.75, 0.0)
         x = 10.0
-        s1 = -1.07857E+00 - 3.60881E-02 * 1j
-        G = abs(2 * s1 / x)**2
+        s1 = -1.07857e00 - 3.60881e-02 * 1j
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.232265, delta=1e-6)
         self.assertAlmostEqual(g, 0.896473, delta=1e-6)
@@ -107,8 +107,8 @@ class NonAbsorbing(unittest.TestCase):
         # MIEV0 Test Case 8
         m = complex(0.75, 0.0)
         x = 1000.0
-        s1 = 1.70578E+01 + 4.84251E+02 * 1j
-        G = abs(2 * s1 / x)**2
+        s1 = 1.70578e01 + 4.84251e02 * 1j
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 1.997908, delta=1e-6)
         self.assertAlmostEqual(g, 0.844944, delta=1e-6)
@@ -119,8 +119,8 @@ class NonAbsorbing(unittest.TestCase):
         # OLD MIEV0 Test Case 1
         m = complex(1.5, 0.0)
         x = 10
-        s1 = 4.322E+00 + 4.868E+00 * 1j
-        G = abs(2 * s1 / x)**2
+        s1 = 4.322e00 + 4.868e00 * 1j
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.8820, delta=1e-4)
         self.assertAlmostEqual(qback, G, delta=1e-4)
@@ -128,8 +128,8 @@ class NonAbsorbing(unittest.TestCase):
         # OLD MIEV0 Test Case 2
         m = complex(1.5, 0.0)
         x = 100
-        s1 = 4.077E+01 + 5.175E+01 * 1j
-        G = abs(2 * s1 / x)**2
+        s1 = 4.077e01 + 5.175e01 * 1j
+        G = abs(2 * s1 / x) ** 2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.0944, delta=1e-4)
         self.assertAlmostEqual(qback, G, delta=1e-4)
@@ -137,7 +137,7 @@ class NonAbsorbing(unittest.TestCase):
         # OLD MIEV0 Test Case 3
         m = complex(1.5, 0.0)
         x = 1000
-        G = 4 * 2.576E+06 / x**2
+        G = 4 * 2.576e06 / x**2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.0139, delta=1e-4)
         self.assertAlmostEqual(qback, G, delta=1e-3)
@@ -145,7 +145,7 @@ class NonAbsorbing(unittest.TestCase):
         # OLD MIEV0 Test Case 4
         m = complex(1.5, 0.0)
         x = 5000.0
-        G = 4 * 2.378E+08 / x**2
+        G = 4 * 2.378e08 / x**2
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.0086, delta=1e-4)
         self.assertAlmostEqual(qback, G, delta=3e-3)
@@ -269,7 +269,7 @@ class PerfectlyReflecting(unittest.TestCase):
         m = 0
         x = 0.001
         qext, qsca, qback, g = miepython.mie(m, x)
-        self.assertAlmostEqual(qsca, 3.3333E-12, delta=1e-13)
+        self.assertAlmostEqual(qsca, 3.3333e-12, delta=1e-13)
 
         # MIEV0 Test Case 1
         m = 0
@@ -403,7 +403,7 @@ class AngleScattering(unittest.TestCase):
         mu = np.cos(theta * np.pi / 180)
 
         qext, qsca, qback, g = miepython.mie(m, x)
-        S1, S2 = miepython.mie_S1_S2(m, x, mu, norm='wiscombe')
+        S1, S2 = miepython.mie_S1_S2(m, x, mu, norm="wiscombe")
 
         self.assertAlmostEqual(S1[0].real, 0.584080, delta=1e-6)
         self.assertAlmostEqual(S1[0].imag, 0.190515, delta=1e-6)
@@ -445,9 +445,19 @@ class AngleScattering(unittest.TestCase):
         x = 2
         mu = np.linspace(-1, 1, 1000)
         qext, qsca, _, _ = miepython.mie(m, x)
-        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * 4 * np.pi * x**2, qsca * np.pi * x**2]
+        expected = [
+            qsca / qext,
+            1.0,
+            4 * np.pi,
+            qsca,
+            qext,
+            qsca * 4 * np.pi * x**2,
+            qsca * np.pi * x**2,
+        ]
 
-        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren', 'wiscombe']):
+        for i, norm in enumerate(
+            ["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]
+        ):
             intensity = miepython.i_unpolarized(m, x, mu, norm)
             total = 2 * np.pi * (mu[1] - mu[0]) * np.sum(intensity)
             self.assertAlmostEqual(total / expected[i], 1.0, delta=4e-3)
@@ -457,9 +467,19 @@ class AngleScattering(unittest.TestCase):
         x = 2
         mu = np.linspace(-1, 1, 10000)
         qext, qsca, _, _ = miepython.mie(m, x)
-        expected = [qsca / qext, 1.0, 4 * np.pi, qsca, qext, qsca * 4 * np.pi * x**2, qsca * np.pi * x**2]
+        expected = [
+            qsca / qext,
+            1.0,
+            4 * np.pi,
+            qsca,
+            qext,
+            qsca * 4 * np.pi * x**2,
+            qsca * np.pi * x**2,
+        ]
 
-        for i, norm in enumerate(['albedo', 'one', '4pi', 'qsca', 'qext', 'bohren', 'wiscombe']):
+        for i, norm in enumerate(
+            ["albedo", "one", "4pi", "qsca", "qext", "bohren", "wiscombe"]
+        ):
             iper = miepython.i_per(m, x, mu, norm)
             total1 = 2 * np.pi * (mu[1] - mu[0]) * np.sum(iper)
             ipar = miepython.i_par(m, x, mu, norm)
@@ -500,14 +520,16 @@ class MiePhaseMatrix(unittest.TestCase):
         assert np.allclose(p[2, 3], -p[3, 2])
 
     def test_mie_phase_matrix_unity(self):
-        """Element p[0, 0, :]**2 = """
+        """Element p[0, 0, :]**2 ="""
         m = 1.5 - 1.5j
         x = 2
         mu = np.linspace(-1, 1, 1000)
 
         p = miepython.mie_phase_matrix(m, x, mu)  # result to be validated
 
-        assert np.allclose(p[0, 0]**2, p[0, 1]**2 + p[2, 2]**2 + p[2, 3]**2, rtol=1e-9)
+        assert np.allclose(
+            p[0, 0] ** 2, p[0, 1] ** 2 + p[2, 2] ** 2 + p[2, 3] ** 2, rtol=1e-9
+        )
 
     def test_mie_phase_matrix_bohren(self):
         """Compare with output from Bohren's program
@@ -517,35 +539,40 @@ class MiePhaseMatrix(unittest.TestCase):
         pol is -s12 normalized by s11
         """
 
-        mm = np.array([[000.00, 0.100000E+01, 0.000000E+00, 0.100000E+01, 0.000000E+00],
-                       [009.00, 0.785390E+00, -0.459811E-02, 0.999400E+00, 0.343261E-01],
-                       [018.00, 0.356897E+00, -0.458541E-01, 0.986022E+00, 0.160184E+00],
-                       [027.00, 0.766119E-01, -0.364744E+00, 0.843603E+00, 0.394076E+00],
-                       [036.00, 0.355355E-01, -0.534997E+00, 0.686967E+00, -0.491787E+00],
-                       [045.00, 0.701845E-01, 0.959953E-02, 0.959825E+00, -0.280434E+00],
-                       [054.00, 0.574313E-01, 0.477927E-01, 0.985371E+00, 0.163584E+00],
-                       [063.00, 0.219660E-01, -0.440604E+00, 0.648043E+00, 0.621216E+00],
-                       [072.00, 0.125959E-01, -0.831996E+00, 0.203255E+00, -0.516208E+00],
-                       [081.00, 0.173750E-01, 0.341670E-01, 0.795354E+00, -0.605182E+00],
-                       [090.00, 0.124601E-01, 0.230462E+00, 0.937497E+00, 0.260742E+00],
-                       [099.00, 0.679093E-02, -0.713472E+00, -0.717397E-02, 0.700647E+00],
-                       [108.00, 0.954239E-02, -0.756255E+00, -0.394748E-01, -0.653085E+00],
-                       [117.00, 0.863419E-02, -0.281215E+00, 0.536251E+00, -0.795835E+00],
-                       [126.00, 0.227421E-02, -0.239612E+00, 0.967602E+00, 0.795798E-01],
-                       [135.00, 0.543998E-02, -0.850804E+00, 0.187531E+00, -0.490882E+00],
-                       [144.00, 0.160243E-01, -0.706334E+00, 0.495254E+00, -0.505781E+00],
-                       [153.00, 0.188852E-01, -0.891081E+00, 0.453277E+00, -0.226817E-01],
-                       [162.00, 0.195254E-01, -0.783319E+00, -0.391613E+00, 0.482752E+00],
-                       [171.00, 0.301676E-01, -0.196194E+00, -0.962069E+00, 0.189556E+00],
-                       [180.00, 0.383189E-01, 0.000000E+00, -0.100000E+01, 0.000000E+00]
-                       ])
+        mm = np.array(
+            [
+                [000.00, 0.100000e01, 0.000000e00, 0.100000e01, 0.000000e00],
+                [009.00, 0.785390e00, -0.459811e-02, 0.999400e00, 0.343261e-01],
+                [018.00, 0.356897e00, -0.458541e-01, 0.986022e00, 0.160184e00],
+                [027.00, 0.766119e-01, -0.364744e00, 0.843603e00, 0.394076e00],
+                [036.00, 0.355355e-01, -0.534997e00, 0.686967e00, -0.491787e00],
+                [045.00, 0.701845e-01, 0.959953e-02, 0.959825e00, -0.280434e00],
+                [054.00, 0.574313e-01, 0.477927e-01, 0.985371e00, 0.163584e00],
+                [063.00, 0.219660e-01, -0.440604e00, 0.648043e00, 0.621216e00],
+                [072.00, 0.125959e-01, -0.831996e00, 0.203255e00, -0.516208e00],
+                [081.00, 0.173750e-01, 0.341670e-01, 0.795354e00, -0.605182e00],
+                [090.00, 0.124601e-01, 0.230462e00, 0.937497e00, 0.260742e00],
+                [099.00, 0.679093e-02, -0.713472e00, -0.717397e-02, 0.700647e00],
+                [108.00, 0.954239e-02, -0.756255e00, -0.394748e-01, -0.653085e00],
+                [117.00, 0.863419e-02, -0.281215e00, 0.536251e00, -0.795835e00],
+                [126.00, 0.227421e-02, -0.239612e00, 0.967602e00, 0.795798e-01],
+                [135.00, 0.543998e-02, -0.850804e00, 0.187531e00, -0.490882e00],
+                [144.00, 0.160243e-01, -0.706334e00, 0.495254e00, -0.505781e00],
+                [153.00, 0.188852e-01, -0.891081e00, 0.453277e00, -0.226817e-01],
+                [162.00, 0.195254e-01, -0.783319e00, -0.391613e00, 0.482752e00],
+                [171.00, 0.301676e-01, -0.196194e00, -0.962069e00, 0.189556e00],
+                [180.00, 0.383189e-01, 0.000000e00, -0.100000e01, 0.000000e00],
+            ]
+        )
 
         m = 1.55
         x = 5.213
         theta = np.linspace(0, 180, 21)
 
         mu = np.cos(np.radians(theta))
-        p = miepython.mie_phase_matrix(m, x, mu, norm='bohren')  # result to be validated
+        p = miepython.mie_phase_matrix(
+            m, x, mu, norm="bohren"
+        )  # result to be validated
 
         assert np.allclose(theta, mm[:, 0], rtol=1e-9)
         assert np.allclose(p[0, 0, :] / p[0, 0, 0], mm[:, 1], atol=1e-3)
@@ -598,10 +625,10 @@ class NotebookTests(unittest.TestCase):
     def test_nb1_spheres(self):
         N = 500
         m = 1.0
-        r = 500                            # nm
+        r = 500  # nm
         lambda0 = np.linspace(300, 800, N)  # also in nm
 
-        mwater = 4 / 3   # rough approximation
+        mwater = 4 / 3  # rough approximation
         mm = m / mwater
         xx = 2 * np.pi * r * mwater / lambda0
 
@@ -629,5 +656,5 @@ class NotebookTests(unittest.TestCase):
         self.assertAlmostEqual(qsca[49], 1.640006561518987, delta=1e-6)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
