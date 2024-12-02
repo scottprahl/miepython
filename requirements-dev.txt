@@ -2,10 +2,13 @@
 #
 # Test
 pytest
+debugpy
+setuptools
 #
 # Testing notebooks
 numpy
 matplotlib
+matplotlib-inline
 scipy
 nbconvert
 nbformat
