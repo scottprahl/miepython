@@ -67,9 +67,12 @@ docstring-convention = "google"
 
 [tool.ruff]
 line-length = 150
-exclude =['.git', '__pycache__', 'docs']
+exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "W"]
 ignore = ["D212", "F403"]
+per-file-ignores = { "tests/test_jit.py" = ["D102"], "tests/test_nojit.py" = ["D102"] }
 pydocstyle.convention = "google"
+
+
