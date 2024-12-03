@@ -32,13 +32,13 @@ lintcheck:
 	-pylint docs/conf.py
 
 doccheck:
-	-pydocstyle miepython/miepython.py
-	-pydocstyle miepython/miepython_nojit.py
-	-pydocstyle miepython/__init__.py
-	-pydocstyle tests/test_all_examples.py
-	-pydocstyle tests/test_all_notebooks.py
-	-pydocstyle --ignore D100,D101,D102 tests/test_jit.py
-	-pydocstyle --ignore D100,D101,D102 tests/test_nojit.py
+	-ruff check miepython/miepython.py
+	-ruff check miepython/miepython_nojit.py
+	-ruff check miepython/__init__.py
+	-ruff check tests/test_all_examples.py
+	-ruff check tests/test_all_notebooks.py
+	-ruff check tests/test_jit.py
+	-ruff check tests/test_nojit.py
 
 rcheck:
 	make notecheck
