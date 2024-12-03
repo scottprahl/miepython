@@ -1,3 +1,10 @@
+# pylint: disable=unused-argument
+# pylint: disable=too-many-return-statements
+# pylint: disable=invalid-name
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-arguments
+
 """
 Mie scattering calculations for perfect spheres JITTED!.
 
