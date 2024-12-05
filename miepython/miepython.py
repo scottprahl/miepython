@@ -149,7 +149,7 @@ def _D_calc(m, x, N):
 
 
 @njit((complex128, float64), cache=True)
-def _mie_An_Bn(m, x):
+def mie_An_Bn(m, x):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -313,7 +313,7 @@ def _mie_scalar(m, x):
         qext, qsca, qback, g = _small_mie(m, x)
 
     else:
-        a, b = _mie_An_Bn(m, x)
+        a, b = mie_An_Bn(m, x)
 
         nmax = len(a)
         n = np.arange(1, nmax + 1)
@@ -508,7 +508,7 @@ def _mie_S1_S2(m, x, mu, norm_int, nth):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = _mie_An_Bn(m, x)
+    a, b = mie_An_Bn(m, x)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
