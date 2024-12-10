@@ -49,6 +49,7 @@ __all__ = (
     "mie",
     "mie_S1_S2",
     "mie_phase_matrix",
+    "mie_An_Bn",
     "mie_cdf",
     "mie_mu_with_uniform_cdf",
     "generate_mie_costheta",
@@ -142,7 +143,7 @@ def _D_calc(m, x, N):
     return D
 
 
-def mie_An_Bn(m, x):
+def mie_An_Bn(m, x, n_pole=0):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -157,7 +158,14 @@ def mie_An_Bn(m, x):
     Returns:
         An, Bn: arrays of Mie coefficents
     """
-    nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    # ensure imaginary part of refractive index is negative
+    m = np.where(np.imag(m) > 0, np.conj(m), m)
+
+    if n_pole == 0:
+        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    else:
+        nstop = n_pole + 1
+
     a = np.zeros(nstop - 1, dtype=np.complex128)
     b = np.zeros(nstop - 1, dtype=np.complex128)
 
@@ -229,7 +237,7 @@ def _small_conducting_mie(_m, x):
 
     qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2)) ** 2
 
-    return [qext, qsca, qback, g]
+    return qext, qsca, qback, g
 
 
 def _small_mie(m, x):
@@ -274,16 +282,17 @@ def _small_mie(m, x):
     sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
     qback = 4 * np.abs(sback) ** 2 / x2
 
-    return [qext, qsca, qback, g]
+    return qext, qsca, qback, g
 
 
-def _mie_scalar(m, x):
+def _mie_scalar(m, x, n_pole=0):
     """
     Calculate the efficiencies for a sphere when both m and x are scalars.
 
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
+        n_pole: a non-zero value returns the contribution by the n_pole multipole
 
     Returns:
         qext: the total extinction efficiency
@@ -291,23 +300,24 @@ def _mie_scalar(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    if m.real == 0 and x < 0.1:
-        qext, qsca, qback, g = _small_conducting_mie(m, x)
+    if m.real == 0 and x < 0.1 and n_pole==0:
+        return _small_conducting_mie(m, x)
 
-    elif m.real > 0.0 and np.abs(m) * x < 0.1:
-        qext, qsca, qback, g = _small_mie(m, x)
+    if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole==0:
+        return _small_mie(m, x)
 
-    else:
-        a, b = mie_An_Bn(m, x)
+    a, b = mie_An_Bn(m, x, n_pole)
 
+    if n_pole==0:
         nmax = len(a)
         n = np.arange(1, nmax + 1)
         cn = 2.0 * n + 1.0
 
         qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
-        qsca = qext
 
-        if m.imag != 0:
+        if m.imag == 0:
+            qsca = qext
+        else:
             qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
 
         qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
@@ -320,38 +330,96 @@ def _mie_scalar(m, x):
             asy2 = c2n[i] * (a[i] * b[i].conjugate()).real
             g += 4 * (asy1 + asy2) / qsca / x**2
 
-    return [qext, qsca, qback, g]
+    else:
+        cn = 2.0 * n_pole + 1
+        qext = 2 * cn * (a[-1].real + b[-1].real) / x**2
+        if m.imag == 0:
+            qsca = qext
+        else:
+            qsca = 2 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x**2
+        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x**2
+
+        c1n = n_pole * (n_pole + 2) / (n_pole + 1)
+        c2n = cn / n_pole / (n_pole + 1)
+        asy1 = c1n * (a[-2] * a[-1].conjugate() + b[-2] * b[-1].conjugate()).real
+        asy2 = c2n * (a[-1] * b[-1].conjugate()).real
+        g = 4 * (asy1 + asy2) / qsca / x**2
+
+    return qext, qsca, qback, g
 
 
-def mie(m, x):
+def mie(m, x, n_pole=0):
     """
-    Calculate the efficiencies for a sphere where m or x may be arrays.
+    Computes scattering and extinction efficiencies for a spherical particle using Mie theory.
+
+    Supports array inputs for wavelength-dependent calculations of the refractive index
+    and size parameter.
 
     Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
+        m (complex or array-like): 
+            Complex refractive index of the sphere, defined as m = n - ik, 
+            where n is the real part (phase velocity) and k is the 
+            imaginary part (absorption). Can be a scalar or an array.
+        x (float or array-like): 
+            Size parameter of the sphere, defined as x = π d / λ,
+            where d is the diameter of the sphere and λ is the 
+            wavelength in the surrounding medium. Can be a scalar or an array.
+        n_pole (int): 
+            Multipole order to compute:
+            - If 0 (default), computes contributions from all multipoles.
+            - If non-zero, computes contributions from the specified multipole order.
 
     Returns:
-        qext: the total extinction efficiency
-        qsca: the scattering efficiency
-        qback: the backscatter efficiency
-        g: the average cosine of the scattering phase function
+        tuple:
+            qext (float or array-like): 
+                Extinction efficiency, representing the total attenuation of light 
+                (scattering plus absorption) by the particle.
+            qsca (float or array-like): 
+                Scattering efficiency, representing the fraction of incident light 
+                scattered by the particle.
+            qback (float or array-like): 
+                Backscattering efficiency, describing the fraction of incident light 
+                scattered in the exact backward direction (theta = 180 degrees).
+            g (float or array-like): 
+                Asymmetry parameter, representing the average cosine of the scattering 
+                angle over all angles.
+
+    Notes:
+        - Ensure m and x have compatible dimensions if passed as arrays.
+        - For accurate results, n_pole should be within the range of significant 
+          multipole contributions, typically n ~ x + 4*x**(1/3).
+        - This implementation assumes spherical, homogeneous particles in a 
+          non-absorbing medium.
+
+    Examples:
+        Compute efficiencies for a sphere with fixed parameters:
+        
+        >>> mie(1.5 - 0.01j, 2.0, 0)
+        (qext: 1.81, qsca: 1.72, qback: 0.27, g: 0.63)
+
+        Compute efficiencies for wavelength-dependent refractive indices:
+
+        >>> m_array = np.array([1.5 - 0.01j, 1.45 - 0.02j])
+        >>> x_array = np.array([2.0, 2.5])
+        >>> mie(m_array, x_array, 0)
+        (qext: [1.81, 2.15], qsca: [1.72, 1.95], qback: [0.27, 0.31], g: [0.63, 0.70])
     """
-    mm = m
-    xx = x
-
-    if np.isscalar(m) and np.isscalar(x):
-        return _mie_scalar(mm, xx)
-
+    # ensure imaginary part of refractive index is negative
     if np.isscalar(m):
-        mlen = 0
+        m = np.conj(m) if np.imag(m) > 0 else m
     else:
+        m = np.where(np.imag(m) > 0, np.conj(m), m)
+
+    mlen = 0
+    if hasattr(m, '__len__'):
         mlen = len(m)
 
-    if np.isscalar(x):
-        xlen = 0
-    else:
+    xlen = 0
+    if hasattr(x, '__len__'):
         xlen = len(x)
+
+    if mlen==0 and xlen==0:
+        return _mie_scalar(m, x, n_pole)
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
         raise RuntimeError("m and x arrays to mie must be same length")
@@ -362,6 +430,8 @@ def mie(m, x):
     qback = np.empty(thelen, dtype=np.float64)
     g = np.empty(thelen, dtype=np.float64)
 
+    mm = m
+    xx = x
     for i in range(thelen):
         if mlen > 0:
             mm = m[i]
@@ -369,12 +439,12 @@ def mie(m, x):
         if xlen > 0:
             xx = x[i]
 
-        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx)
+        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole)
 
-    return qext, qsca, qback, g
+    return [qext, qsca, qback, g]
 
 
-def normalization_factor(m, x, norm_str):
+def normalization_factor(m, x, norm_str, n_pole=0):
     """
     Figure out scattering function normalization.
 
@@ -399,7 +469,7 @@ def normalization_factor(m, x, norm_str):
         factor = x * np.sqrt(np.pi)
 
     else:
-        qext, qsca, _, _ = _mie_scalar(m, x)
+        qext, qsca, _, _ = _mie_scalar(m, x, n_pole)
 
         if norm in ["a", "albedo"]:
             factor = x * np.sqrt(np.pi * qext)
@@ -421,7 +491,7 @@ def normalization_factor(m, x, norm_str):
     return factor
 
 
-def mie_S1_S2(m, x, mu, norm="albedo", nth=0):
+def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -440,7 +510,7 @@ def mie_S1_S2(m, x, mu, norm="albedo", nth=0):
         x: the size parameter of the sphere
         mu: the angles, cos(theta), to calculate scattering amplitudes
         norm: (optional) string describing scattering function normalization
-        nth: return nth term from series (default=0 means include all terms)
+        n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
@@ -457,7 +527,7 @@ def mie_S1_S2(m, x, mu, norm="albedo", nth=0):
         pi_nm1 = 1
         for n in range(1, nstop):
             tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            if nth in (0, n):
+            if n_pole in (0, n):
                 S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1] + tau_nm1 * b[n - 1]) / (n + 1) / n
                 S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1] + pi_nm1 * b[n - 1]) / (n + 1) / n
 
@@ -473,7 +543,7 @@ def mie_S1_S2(m, x, mu, norm="albedo", nth=0):
     return [S1, S2]
 
 
-def mie_phase_matrix(m, x, mu, norm="albedo", nth=0):
+def mie_phase_matrix(m, x, mu, norm="albedo", n_pole=0):
     """
     Calculate the scattering (Mueller) matrix.
 
@@ -498,14 +568,14 @@ def mie_phase_matrix(m, x, mu, norm="albedo", nth=0):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         mu: the angles, cos(theta), of the phase scattering matrix
-        nth: return nth term from series (default=0 means include all terms)
+        n_pole: return n_pole term from series (default=0 means include all terms)
         norm: (optional) string describing scattering function normalization
 
     Returns:
         p: the phase scattering matrix [sr**(-1.0)]
     """
     mu = np.atleast_1d(mu)
-    s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm, nth=nth)
+    s1, s2 = mie_S1_S2(m=m, x=x, mu=mu, norm=norm, n_pole=n_pole)
 
     s1_star = np.conjugate(s1)
     s2_star = np.conjugate(s2)
@@ -638,7 +708,7 @@ def generate_mie_costheta(mu_cdf):
     return x
 
 
-def i_per(m, x, mu, norm="albedo"):
+def i_per(m, x, mu, norm="albedo", n_pole=0):
     """
     Return the scattered intensity in a plane normal to the incident light.
 
@@ -661,12 +731,12 @@ def i_per(m, x, mu, norm="albedo"):
     Returns:
         The intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, _ = mie_S1_S2(m, x, mu, norm)
+    s1, _ = mie_S1_S2(m, x, mu, norm, n_pole)
     intensity = np.abs(s1) ** 2
     return intensity.astype("float")
 
 
-def i_par(m, x, mu, norm="albedo", nth=0):
+def i_par(m, x, mu, norm="albedo", n_pole=0):
     """
     Return the scattered intensity in a plane parallel to the incident light.
 
@@ -685,17 +755,17 @@ def i_par(m, x, mu, norm="albedo", nth=0):
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
-        nth: return nth term from series (default=0 means include all terms)
+        n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         The intensity at each angle in the array mu.  Units [1/sr]
     """
-    _, s2 = mie_S1_S2(m, x, mu, norm, nth)
+    _, s2 = mie_S1_S2(m, x, mu, norm, n_pole)
     intensity = np.abs(s2) ** 2
     return intensity.astype("float")
 
 
-def i_unpolarized(m, x, mu, norm="albedo", nth=0):
+def i_unpolarized(m, x, mu, norm="albedo", n_pole=0):
     """
     Return the unpolarized scattered intensity at specified angles.
 
@@ -714,12 +784,12 @@ def i_unpolarized(m, x, mu, norm="albedo", nth=0):
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
-        nth: return nth term from series (default=0 means include all terms)
+        n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         The intensity at each angle in the array mu.  Units [1/sr]
     """
-    s1, s2 = mie_S1_S2(m, x, mu, norm, nth)
+    s1, s2 = mie_S1_S2(m, x, mu, norm, n_pole)
     intensity = (np.abs(s1) ** 2 + np.abs(s2) ** 2) / 2
     return intensity.astype("float")
 
@@ -745,7 +815,7 @@ def ez_mie(m, d, lambda0, n_env=1.0):
     return mie(m_env, x_env)
 
 
-def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", nth=0):
+def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
     """
     Return the scattered intensities from a sphere.
 
@@ -770,7 +840,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", nth=0):
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
         norm: (optional) string describing scattering function normalization
-        nth: return nth term from series (default=0 means include all terms)
+        n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
@@ -778,7 +848,7 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", nth=0):
     m_env = m / n_env
     lambda_env = lambda0 / n_env
     x_env = np.pi * d / lambda_env
-    s1, s2 = mie_S1_S2(m_env, x_env, mu, norm, nth)
+    s1, s2 = mie_S1_S2(m_env, x_env, mu, norm, n_pole)
     ipar = np.abs(s2) ** 2
     iper = np.abs(s1) ** 2
     Ipar = ipar.astype("float")

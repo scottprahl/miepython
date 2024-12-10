@@ -193,6 +193,7 @@ class Absorbing(unittest.TestCase):
         m = 1.5 - 1j
         x = 0.055
         qext, qsca, qback, g = miepython.mie(m, x)
+        self.assertAlmostEqual(qext, 0.101491, delta=1e-6)
         self.assertAlmostEqual(qsca, 0.000011, delta=1e-6)
         self.assertAlmostEqual(g, 0.000491, delta=1e-6)
 
@@ -200,6 +201,7 @@ class Absorbing(unittest.TestCase):
         m = 1.5 - 1j
         x = 0.056
         qext, qsca, qback, g = miepython.mie(m, x)
+        self.assertAlmostEqual(qext, 0.1033467, delta=1e-6)
         self.assertAlmostEqual(qsca, 0.000012, delta=1e-6)
         self.assertAlmostEqual(g, 0.000509, delta=1e-6)
 
@@ -207,6 +209,7 @@ class Absorbing(unittest.TestCase):
         m = 1.5 - 1j
         x = 1
         qext, qsca, qback, g = miepython.mie(m, x)
+        self.assertAlmostEqual(qext, 2.336321, delta=1e-6)
         self.assertAlmostEqual(qsca, 0.6634538, delta=1e-6)
         self.assertAlmostEqual(g, 0.192136, delta=1e-6)
 
@@ -215,6 +218,7 @@ class Absorbing(unittest.TestCase):
         x = 100
         x = 100.0
         qext, qsca, qback, g = miepython.mie(m, x)
+        self.assertAlmostEqual(qext, 2.097502, delta=1e-6)
         self.assertAlmostEqual(qsca, 1.283697, delta=1e-3)
         self.assertAlmostEqual(qext, 2.097502, delta=1e-2)
         self.assertAlmostEqual(g, 0.850252, delta=1e-3)
