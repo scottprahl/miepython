@@ -2,7 +2,6 @@
 # pylint: disable=too-many-return-statements
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals
-# pylint: disable=too-many-positional-arguments
 # pylint: disable=too-many-arguments
 
 """
@@ -51,7 +50,7 @@ __all__ = (
     "mie",
     "mie_S1_S2",
     "mie_phase_matrix",
-    "mie_An_Bn",
+    "mie_coefficients",
     "mie_cdf",
     "mie_mu_with_uniform_cdf",
     "generate_mie_costheta",
@@ -150,14 +149,14 @@ def _D_calc(m, x, N):
 
 
 @njit((complex128, float64, int64), cache=True)
-def mie_An_Bn(m, x, n_pole):
+def _mie_An_Bn(m, x, n_pole):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
-    When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's formula. The length
-    of the arrays is chosen so that the error when the series are summed is
-    around 1e-6.
-    
+    When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's
+    formula. The length of the arrays is chosen so that the error when the series 
+    is summed is around 1e-6.
+
     If n_pole>0, then the array sizes will be n_pole+1. This is useful when
     trying to isolate the behavior of a particular multipole.
 
@@ -175,25 +174,30 @@ def mie_An_Bn(m, x, n_pole):
         a, b: arrays of Mie coefficents An and Bn
     """
     # ensure imaginary part of refractive index is negative
-#    m = np.where(np.imag(m) > 0, np.conj(m), m)
-
     if n_pole == 0:
         nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
     else:
         nstop = n_pole + 1
 
-    a = np.zeros(nstop - 1, dtype=np.complex128)
-    b = np.zeros(nstop - 1, dtype=np.complex128)
+    a = np.zeros(nstop, dtype=np.complex128)
+    b = np.zeros(nstop, dtype=np.complex128)
 
-    psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-    psi_n = psi_nm1 / x - np.cos(x)  # n = 1
+    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
+        return a, b
+
+    if x == 0:
+        return a, b
+
+    # initialize psi and xi values for recursion calculations (nm1 => n - 1)
+    psi_nm1 = np.sin(x)
     xi_nm1 = complex(psi_nm1, np.cos(x))
+    psi_n = psi_nm1 / x - np.cos(x)
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
-    if m.real > 0.0:
-        D = _D_calc(m, x, nstop + 1)
+    if m.real > 0:
+        D = _D_calc(m, x, nstop)
 
-        for n in range(1, nstop):
+        for n in range(1, nstop + 1):
             temp = D[n] / m + n / x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
             temp = D[n] * m + n / x
@@ -204,8 +208,8 @@ def mie_An_Bn(m, x, n_pole):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
-    else:
-        for n in range(1, nstop):
+    else:  # prefectly conducting case
+        for n in range(1, nstop + 1):
             a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
             b[n - 1] = psi_n / xi_n
             xi = (2 * n + 1) * xi_n / x - xi_nm1
@@ -213,6 +217,98 @@ def mie_An_Bn(m, x, n_pole):
             xi_n = xi
             psi_nm1 = psi_n
             psi_n = xi_n.real
+
+    return a, b
+
+
+def mie_coefficients(m, x, n_pole=0):
+    """
+    Computes the Mie coefficients (A_n and B_n) for a sphere.
+
+    This function calculates the Mie coefficients for electromagnetic scattering
+    by a sphere. It supports both single values and arrays for the refractive
+    index and size parameter. For arrays, the lengths of `m` and `x` must match.
+    If the length of `m` or `x` is zero, the function assumes scalar values.
+
+    If `n_pole > 0`, the function returns only the nth multipole coefficient
+    for each input.
+
+    Args:
+        m (complex or array-like): The complex refractive index of the sphere.
+            If an array, must match the length of `x`.
+        x (float or array-like): The size parameter of the sphere. If an array,
+            must match the length of `m`.
+        n_pole (int, optional): The specific multipole order to compute. Defaults to 0,
+            which calculates all terms and returns the full arrays of coefficients.
+
+    Returns:
+        tuple:
+            - a (complex or array-like): The computed Mie coefficient A_n or an array of A_n values.
+            - b (complex or array-like): The computed Mie coefficient B_n or an array of B_n values.
+
+    Notes:
+        - If the imaginary part of the refractive index is positive, it is
+          automatically corrected to its conjugate value to ensure a valid input.
+
+    Examples:
+        Compute coefficients for a single sphere:
+        >>> m = 1.5 - 0.1j
+        >>> x = 0.1
+        >>> mie_coefficients(m, x)
+        (array([3.33370015e-05+1.97363100e-04j, 1.77504613e-08+1.11834113e-07j,
+        4.60529820e-12+2.97368373e-11j, 1.58460985e-28+1.25881287e-14j]),
+        array([6.67296256e-08+2.75469444e-07j, 1.90474848e-11+7.86835968e-11j,
+        3.02615454e-15+1.24937186e-14j, 1.58460985e-28+1.25881287e-14j]))
+
+        Compute first multipoles for multiple spheres:
+        >>> m = [1.5 + 0.1j, 1.4 + 0.05j]
+        >>> x = [2.0, 1.8]
+        >>> mie_coefficients(m, x, 1)
+        (array([0.44794644+0.38665192j, 0.27813728+0.38495241j]),
+        array([0.5621083 +0.25504616j, 0.20206531+0.29589842j]))
+    """
+    mlen = 0
+    try:
+        mlen = len(m)
+    except TypeError:
+        pass
+
+    xlen = 0
+    try:
+        xlen = len(x)
+    except TypeError:
+        pass
+
+    if xlen > 0 and mlen > 0 and xlen != mlen:
+        raise RuntimeError("m and x arrays to mie must be same length")
+
+    if mlen == 0 and xlen == 0:
+        a, b = _mie_An_Bn(m, x, n_pole)
+        if n_pole == 0:
+            return a, b
+        return a[n_pole - 1], b[n_pole - 1]
+
+    if np.isscalar(m):
+        m = np.conj(m) if np.imag(m) > 0 else m
+    else:
+        m = np.where(np.imag(m) > 0, np.conj(m), m)
+
+    thelen = max(xlen, mlen)
+    a = np.zeros(thelen, dtype=np.complex128)
+    b = np.zeros(thelen, dtype=np.complex128)
+
+    mm = m
+    xx = x
+    for i in range(thelen):
+        if mlen > 0:
+            mm = m[i]
+
+        if xlen > 0:
+            xx = x[i]
+
+        an, bn = _mie_An_Bn(mm, xx, n_pole)
+        a[i] = an[n_pole - 1]
+        b[i] = bn[n_pole - 1]
 
     return a, b
 
@@ -317,6 +413,7 @@ def _mie_scalar(m, x, n_pole, e_field):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         n_pole: a non-zero value returns the contribution by the n_pole multipole
+        e_field: True ==> Electric Field, False ==> Magnetic Field
 
     Returns:
         qext: the total extinction efficiency
@@ -324,15 +421,24 @@ def _mie_scalar(m, x, n_pole, e_field):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    if m.real == 0 and x < 0.1 and n_pole==0:
+    # wierd case of conducting sphere with no absorption
+    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
+        return 0, 0, 0, 0
+
+    # case when sphere matches its environment
+    if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
+        return 0, 0, 0, 0
+
+    # small conducting spheres --- see Wiscombe
+    if m.real == 0 and x < 0.1 and n_pole == 0:
         return _small_conducting_mie(m, x)
 
-    if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole==0:
+    if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
         return _small_mie(m, x)
 
-    a, b = mie_An_Bn(m, x, n_pole)
+    a, b = _mie_An_Bn(m, x, n_pole)
 
-    if n_pole==0:
+    if n_pole == 0:
         n = np.arange(1, len(a) + 1)
         cn = 2.0 * n + 1.0
 
@@ -350,25 +456,25 @@ def _mie_scalar(m, x, n_pole, e_field):
         asy1 = c1n[:-1] * (a[:-1] * a[1:].conjugate() + b[:-1] * b[1:].conjugate()).real
         asy2 = c2n[:-1] * (a[:-1] * b[:-1].conjugate()).real
         g = 4 * np.sum(asy1 + asy2) / qsca / x**2
-        
+
     else:
         cn = 2.0 * n_pole + 1
         c1n = n_pole * (n_pole + 2) / (n_pole + 1)
         if e_field:
-            qext = 2 * cn * a[-1].real / x**2
-            qsca = 2 * cn * np.abs(a[-1]) ** 2 / x**2
+            qext = 2 * cn * a[n_pole - 1].real / x**2
+            qsca = 2 * cn * np.abs(a[n_pole - 1]) ** 2 / x**2
             qback = qsca / 2
-            g = 4 * c1n * (a[-2] * a[-1].conjugate()).real / qsca / x**2
+            g = 4 * c1n * (a[n_pole - 2] * a[n_pole - 1].conjugate()).real / qsca / x**2
         else:
-            qext = 2 * cn * b[-1].real / x**2
-            qsca = 2 * cn * np.abs(b[-1]) ** 2 / x**2
+            qext = 2 * cn * b[n_pole - 1].real / x**2
+            qsca = 2 * cn * np.abs(b[n_pole - 1]) ** 2 / x**2
             qback = qsca / 2
-            g = 4 * c1n * (b[-2] * b[-1].conjugate()).real / qsca / x**2
+            g = 4 * c1n * (b[n_pole - 2] * b[n_pole - 1].conjugate()).real / qsca / x**2
 
     return qext, qsca, qback, g
 
 
-def mie(m, x, n_pole=0, field='Electric'):
+def mie(m, x, n_pole=0, field="Electric"):
     """
     Computes scattering and extinction efficiencies for a spherical particle using Mie theory.
 
@@ -376,44 +482,46 @@ def mie(m, x, n_pole=0, field='Electric'):
     and size parameter.
 
     Args:
-        m (complex or array-like): 
-            Complex refractive index of the sphere, defined as m = n - ik, 
-            where n is the real part (phase velocity) and k is the 
+        m (complex or array-like):
+            Complex refractive index of the sphere, defined as m = n - ik,
+            where n is the real part (phase velocity) and k is the
             imaginary part (absorption). Can be a scalar or an array.
-        x (float or array-like): 
+        x (float or array-like):
             Size parameter of the sphere, defined as x = π d / λ,
-            where d is the diameter of the sphere and λ is the 
+            where d is the diameter of the sphere and λ is the
             wavelength in the surrounding medium. Can be a scalar or an array.
-        n_pole (int): 
+        n_pole (int):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
             - If non-zero, computes contributions from the specified multipole order.
-
+        field (str):
+            If "Electric" (default) If n_pole>0, then True value returns the electric
+            multipole contribution otherwise the Magnetic field contribution
     Returns:
         tuple:
-            qext (float or array-like): 
-                Extinction efficiency, representing the total attenuation of light 
+            qext (float or array-like):
+                Extinction efficiency, representing the total attenuation of light
                 (scattering plus absorption) by the particle.
-            qsca (float or array-like): 
-                Scattering efficiency, representing the fraction of incident light 
+            qsca (float or array-like):
+                Scattering efficiency, representing the fraction of incident light
                 scattered by the particle.
-            qback (float or array-like): 
-                Backscattering efficiency, describing the fraction of incident light 
+            qback (float or array-like):
+                Backscattering efficiency, describing the fraction of incident light
                 scattered in the exact backward direction (theta = 180 degrees).
-            g (float or array-like): 
-                Asymmetry parameter, representing the average cosine of the scattering 
+            g (float or array-like):
+                Asymmetry parameter, representing the average cosine of the scattering
                 angle over all angles.
 
     Notes:
         - Ensure m and x have compatible dimensions if passed as arrays.
-        - For accurate results, n_pole should be within the range of significant 
+        - For accurate results, n_pole should be within the range of significant
           multipole contributions, typically n ~ x + 4*x**(1/3).
-        - This implementation assumes spherical, homogeneous particles in a 
+        - This implementation assumes spherical, homogeneous particles in a
           non-absorbing medium.
 
     Examples:
         Compute efficiencies for a sphere with fixed parameters:
-        
+
         >>> mie(1.5 - 0.01j, 2.0, 0)
         (qext: 1.81, qsca: 1.72, qback: 0.27, g: 0.63)
 
@@ -435,15 +543,15 @@ def mie(m, x, n_pole=0, field='Electric'):
         mlen = len(m)
     except TypeError:
         pass
-    
+
     xlen = 0
     try:
         xlen = len(x)
     except TypeError:
         pass
 
-    if mlen==0 and xlen==0:
-        return _mie_scalar(m, x, n_pole, field=='Electric')
+    if mlen == 0 and xlen == 0:
+        return _mie_scalar(m, x, n_pole, field == "Electric")
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
         raise RuntimeError("m and x arrays to mie must be same length")
@@ -456,20 +564,19 @@ def mie(m, x, n_pole=0, field='Electric'):
 
     mm = m
     xx = x
-    e_field = field=='Electric'
+    e_field = field == "Electric"
     for i in range(thelen):
         if mlen > 0:
             mm = m[i]
 
         if xlen > 0:
             xx = x[i]
-
         qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole, e_field)
 
     return qext, qsca, qback, g
 
 
-def normalization_factor(m, x, norm_int, n_pole=0, field='Electric'):
+def normalization_factor(m, x, norm_int):
     """
     Figure out scattering function normalization.
 
@@ -497,7 +604,7 @@ def normalization_factor(m, x, norm_int, n_pole=0, field='Electric'):
 
     else:
         # calculate qsca and qext
-        qext, qsca, _, _ = _mie_scalar(m, x, n_pole, field=='Electric')
+        qext, qsca, _, _ = _mie_scalar(m, x, 0, True)
 
         # albedo Normalization
         if norm_int == 0:
@@ -583,11 +690,12 @@ def _mie_S1_S2(m, x, mu, norm_int, n_pole, e_field):
         mu: array of angles, cos(theta), to calculate scattering amplitudes
         norm_int: integer describing type of normalization
         n_pole: return n_pole term from series (default=0 means include all terms)
+        e_field: If True then Electric field (does not currently work)
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = mie_An_Bn(m, x, n_pole)
+    a, b = _mie_An_Bn(m, x, n_pole)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -609,7 +717,7 @@ def _mie_S1_S2(m, x, mu, norm_int, n_pole, e_field):
     return [S1, S2]
 
 
-def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0, field='Electric'):
+def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0, field="Electric"):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -626,20 +734,21 @@ def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0, field='Electric'):
         mu: cos(theta) or array of angles [cos(theta_i)]
         norm: (optional) string describing scattering function normalization
         n_pole: return n_pole term from series (default=0 means include all terms)
+        field: Electric of Magnetic field.  Only used if n_pole > 0
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
     norm_int = norm_string_to_integer(norm)
 
-    normalization = normalization_factor(m, x, norm_int, n_pole, field=='Electric')
+    normalization = normalization_factor(m, x, norm_int)
 
     if np.isscalar(mu):
         mu_array = np.array([mu], dtype=float)
-        s1, s2 = _mie_S1_S2(m, x, mu_array, norm_int, n_pole, field=='Electric')
-        return s1[0]/normalization, s2[0]/normalization
+        s1, s2 = _mie_S1_S2(m, x, mu_array, norm_int, n_pole, field == "Electric")
+        return s1[0] / normalization, s2[0] / normalization
 
-    s1, s2 = _mie_S1_S2(m, x, mu, norm_int, n_pole, field=='Electric')
+    s1, s2 = _mie_S1_S2(m, x, mu, norm_int, n_pole, field == "Electric")
     s1 /= normalization
     s2 /= normalization
     return s1, s2
