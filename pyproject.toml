@@ -49,6 +49,7 @@ target-version = ["py38", "py39", "py310", "py311", "py312"]
 markers = ["notebooks: tests related to Jupyter notebooks"]
 
 [tool.flake8]
+max-line-length = 100
 ignore = ["W503", "D212", "N802", "N803", "N806", "E501"]
 per-file-ignores = [
     "__init__.py:F401,F403",
@@ -62,7 +63,6 @@ exclude = [
     "__pycache__",
     "docs"
 ]
-max-line-length = 99
 docstring-convention = "google"
 
 [tool.ruff]
