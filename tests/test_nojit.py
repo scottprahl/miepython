@@ -10,52 +10,88 @@ import unittest
 import numpy as np
 import miepython.miepython_nojit as miepython
 
-# the low level tests use functions that should not be exported.  These work
-# but now that the higher level tests pass, these are skipped
+from miepython.miepython_nojit import _mie_An_Bn, _D_calc
 
-# class low_level(unittest.TestCase):
-#
-#     def test_01_log_derivatives(self):
-#         m = 1.0
-#         x = 1.0
-#         nstop = 10
-#         dn = miepython._D_calc(m, x, nstop)
-#         self.assertAlmostEqual(dn[9].real, 9.95228198, delta=0.00001)
-#
-#         x = 62
-#         m = 1.28 - 1.37j
-#         nstop = 50
-#         dn = _D_calc(m, x, nstop)
-#         self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
-#         self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
-#
-#     def test_02_an_bn(self):
-#         m = 4.0/3.0
-#         x = 50
-#         a, b = miepython.mie_An_Bn(m, x)
-# #        print(a)
-#     #        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
-#     #        self.assertAlmostEqual(a[1].imag, -0.4990314856310943073, delta=0.00000001)
-#     #        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-#     #        self.assertAlmostEqual(b[1].imag, -0.067160541299, delta=0.00001)
-#
-#         m = 1.5-1.1j
-#         x = 2
-#         a, b = miepython.mie_An_Bn(m, x)
-#         self.assertAlmostEqual(a[0].real, 0.555091767665, delta=0.00001)
-#         self.assertAlmostEqual(a[0].imag, 0.158587776121, delta=0.00001)
-#         self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
-#         self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
-#         self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
-#         self.assertAlmostEqual(b[1].imag, -0.067160541299, delta=0.00001)
-#
-#         m = 1.1-25j
-#         x = 2
-#         a, b = miepython.mie_An_Bn(m, x)
-#         self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
-#         self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
-#         self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
-#         self.assertAlmostEqual(b[1].imag, -0.236805417045, delta=0.0001)
+
+class private_D_calc(unittest.TestCase):
+    def test_01_log_derivatives(self):
+        x = 62
+        m = 1.28 - 1.37j
+        nstop = 50
+        dn = _D_calc(m, x, nstop)
+        self.assertAlmostEqual(dn[10].real, 0.004087, delta=0.00001)
+        self.assertAlmostEqual(dn[10].imag, 1.0002620, delta=0.00001)
+
+
+class private_An_and_Bn(unittest.TestCase):
+
+    def test_02_an_bn(self):
+        m = 4.0 / 3.0
+        x = 50
+        a, b = _mie_An_Bn(m, x, 0)
+        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
+        self.assertAlmostEqual(a[0].imag, 0.4990314856310943073, delta=0.00000001)
+
+    def test_03_an_bn(self):
+        m = 1.5 - 1.1j
+        x = 2
+        a, b = _mie_An_Bn(m, x, 0)
+        self.assertAlmostEqual(a[0].real, 0.555091767665, delta=0.00001)
+        self.assertAlmostEqual(a[0].imag, 0.158587776121, delta=0.00001)
+        self.assertAlmostEqual(a[1].real, 0.386759705234, delta=0.00001)
+        self.assertAlmostEqual(a[1].imag, 0.076275273072, delta=0.00001)
+        self.assertAlmostEqual(b[1].real, 0.093412567968, delta=0.00001)
+        self.assertAlmostEqual(b[1].imag, -0.067160541299, delta=0.00001)
+
+    def test_04_an_bn(self):
+        m = 1.1 - 25j
+        x = 2
+        a, b = _mie_An_Bn(m, x, 0)
+        self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
+        self.assertAlmostEqual(a[1].imag, 0.465627763266, delta=0.0001)
+        self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
+        self.assertAlmostEqual(b[1].imag, -0.236805417045, delta=0.0001)
+
+
+class Coefficients(unittest.TestCase):
+    def test_bohren_table_4_1(self):
+        a = np.zeros(6, dtype=complex)
+        b = np.zeros(6, dtype=complex)
+        a[1] = 5.1631e-1 - 4.9973e-1j
+        a[2] = 3.4192e-1 - 4.7435e-1j
+        a[3] = 4.8467e-2 - 2.1475e-1j
+        a[4] = 1.0346e-3 - 3.2148e-2j
+        a[5] = 9.0375e-6 - 3.0062e-3j
+
+        b[1] = 7.3767e-1 - 4.3990e-1j
+        b[2] = 4.0079e-1 - 4.9006e-1j
+        b[3] = 9.3553e-3 - 9.6269e-2j
+        b[4] = 6.8810e-5 - 8.2949e-3j
+        b[5] = 2.8309e-7 - 5.3204e-4j
+
+        m = 1.33 - 1e-8j
+        x = 3
+
+        for n in range(1, 6):
+            aa, bb = miepython.mie_coefficients(m, x, n)
+            self.assertAlmostEqual(aa.real, a[n].real, delta=1e-5)
+            self.assertAlmostEqual(aa.imag, -a[n].imag, delta=1e-5)
+            self.assertAlmostEqual(bb.real, b[n].real, delta=1e-5)
+            self.assertAlmostEqual(bb.imag, -b[n].imag, delta=1e-5)
+
+    def test_lowan_array(self):
+        # From Lowan "Tables of Scattering Functions for Spherical Particles"
+        m = 8.9 - 0.69j
+        x = np.array([0.385, 0.390, 0.395])
+        a1 = np.array([0.0024 + 0.0410j, 0.0027 + 0.0428j, 0.0030 + 0.0447j])
+        b1 = np.array([0.0258 - 0.0359j, 0.0231 - 0.0361j, 0.0208 - 0.0361j])
+        aa, bb = miepython.mie_coefficients(m, x, 1)
+
+        for n in range(3):
+            self.assertAlmostEqual(aa[n].real, a1[n].real, delta=1e-3)
+            self.assertAlmostEqual(aa[n].imag, a1[n].imag, delta=1e-3)
+            self.assertAlmostEqual(bb[n].real, b1[n].real, delta=1e-3)
+            self.assertAlmostEqual(bb[n].imag, b1[n].imag, delta=1e-3)
 
 
 class NonAbsorbing(unittest.TestCase):
@@ -263,37 +299,33 @@ class Absorbing(unittest.TestCase):
 
 class PerfectlyReflecting(unittest.TestCase):
 
-    def test_11_wiscombe_perfectly_reflecting(self):
+    def test_11_wiscombe_perfectly_conducting(self):
 
+        m = -10000j
         # MIEV0 Test Case 0
-        m = 0
         x = 0.001
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 3.3333e-12, delta=1e-13)
 
         # MIEV0 Test Case 1
-        m = 0
         x = 0.099
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 0.000321, delta=1e-4)
         self.assertAlmostEqual(g, -0.397357, delta=1e-3)
 
         # MIEV0 Test Case 2
-        m = 0
         x = 0.101
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 0.000348, delta=1e-6)
         self.assertAlmostEqual(g, -0.397262, delta=1e-6)
 
         # MIEV0 Test Case 3
-        m = 0
         x = 100
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.008102, delta=1e-6)
         self.assertAlmostEqual(g, 0.500926, delta=1e-6)
 
         # MIEV0 Test Case 4
-        m = 0
         x = 10000
         qext, qsca, qback, g = miepython.mie(m, x)
         self.assertAlmostEqual(qsca, 2.000289, delta=1e-6)
