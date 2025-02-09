@@ -21,7 +21,8 @@ rstcheck:
 	-rstcheck docs/index.rst
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
-lintcheck:
+lint:
+	-pylint miepython/bessel.py
 	-pylint miepython/miepython.py
 	-pylint miepython/miepython_nojit.py
 	-pylint miepython/__init__.py
