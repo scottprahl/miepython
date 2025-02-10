@@ -53,9 +53,17 @@ rcheck:
 	make test
 
 test:
-	python -m pytest tests/test_nojit.py
-	python -m pytest tests/test_jit.py
-	python -m pytest tests/test_all_examples.py
+	-pytest -v --notebooks tests/test_all_notebooks.py
+	-pytest -v tests/test_bessel.py
+	-pytest -v tests/test_nojit_D.py
+	-pytest -v tests/test_nojit_abcd.py
+	-pytest -v tests/test_nojit.py
+
+	-pytest -v tests/test_jit_D.py
+	-pytest -v tests/test_jit_abcd.py
+	-pytest -v tests/test_jit.py
+
+	-pytest -v tests/test_all_examples.py
 
 clean:
 	rm -rf dist
