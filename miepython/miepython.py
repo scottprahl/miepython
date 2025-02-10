@@ -3,7 +3,6 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-arguments
-
 """
 Mie scattering calculations for perfect spheres JITTED!.
 
@@ -51,10 +50,12 @@ __all__ = (
     "mie_S1_S2",
     "mie_phase_matrix",
     "mie_coefficients",
+    "an_bn",
+    "cn_dn",
     "mie_cdf",
     "mie_mu_with_uniform_cdf",
     "generate_mie_costheta",
-)
+    )
 
 
 @njit((complex128, int64), cache=True)
@@ -140,21 +141,22 @@ def _D_calc(m, x, N):
     n = m.real
     kappa = np.abs(m.imag)
     D = np.zeros(N, dtype=np.complex128)
+    mx = np.complex128(m * x)  # ensure complex
 
     if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        _D_downwards(m * x, N, D)
+        _D_downwards(mx, N, D)
     else:
-        _D_upwards(m * x, N, D)
-    return D
+        _D_upwards(mx, N, D)
+    return D[1:]
 
 
 @njit((complex128, float64, int64), cache=True)
-def _mie_An_Bn(m, x, n_pole):
+def an_bn(m, x, n_pole):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
     When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's
-    formula. The length of the arrays is chosen so that the error when the series 
+    formula. The length of the arrays is chosen so that the error when the series
     is summed is around 1e-6.
 
     If n_pole>0, then the array sizes will be n_pole+1. This is useful when
@@ -174,6 +176,9 @@ def _mie_An_Bn(m, x, n_pole):
         a, b: arrays of Mie coefficents An and Bn
     """
     # ensure imaginary part of refractive index is negative
+    if np.imag(m) > 0:
+        m = np.conj(m)
+
     if n_pole == 0:
         nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
     else:
@@ -182,34 +187,28 @@ def _mie_An_Bn(m, x, n_pole):
     a = np.zeros(nstop, dtype=np.complex128)
     b = np.zeros(nstop, dtype=np.complex128)
 
-    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
-        return a, b
-
-    if x == 0:
-        return a, b
-
-    # initialize psi and xi values for recursion calculations (nm1 => n - 1)
-    psi_nm1 = np.sin(x)
-    xi_nm1 = complex(psi_nm1, np.cos(x))
+    psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
     psi_n = psi_nm1 / x - np.cos(x)
+    xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
-    if m.real > 0:
-        D = _D_calc(m, x, nstop)
+    if m.real > 0.0:
+        D = _D_calc(m, x, nstop + 1)
 
-        for n in range(1, nstop + 1):
-            temp = D[n] / m + n / x
+        for n in range(1, nstop):
+            temp = D[n - 1] / m + n / x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            temp = D[n] * m + n / x
+            temp = D[n - 1] * m + n / x
             b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
+            psi = (2 * n + 1) * psi_n / x - psi_nm1
             xi = (2 * n + 1) * xi_n / x - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
-            psi_n = xi_n.real
+            psi_n = psi
 
-    else:  # prefectly conducting case
-        for n in range(1, nstop + 1):
+    else:
+        for n in range(1, nstop):
             a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
             b[n - 1] = psi_n / xi_n
             xi = (2 * n + 1) * xi_n / x - xi_nm1
@@ -218,7 +217,74 @@ def _mie_An_Bn(m, x, n_pole):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
-    return a, b
+    if n_pole != 0:
+        a = a[:-1]
+        b = b[:-1]
+
+    return np.conjugate(a), np.conjugate(b)
+
+
+@njit((complex128, float64, int64), fastmath=True)
+def cn_dn(m, x, n_pole):
+    """
+    Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
+
+    Args:
+        m (complex): Refractive index of the sphere relative to the surrounding medium.
+        x (float): Size parameter of the sphere (2πr/λ).
+        n_pole (int): Number of terms to calculate (n_pole).
+
+    Returns:
+        (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
+    """
+    # ensure imaginary part of refractive index is negative
+    m = np.where(np.imag(m) > 0, np.conj(m), m)
+    mx = m * x
+
+    if n_pole == 0:
+        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    else:
+        nstop = n_pole + 1
+
+    c = np.zeros(nstop, dtype=np.complex128)
+    d = np.zeros(nstop, dtype=np.complex128)
+
+    # no need to calculate anything when sphere is perfectly conducting
+    if m.real > 0.0 and not np.isinf(m.real) or not np.isinf(m.imag):
+        psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
+        psi_n = psi_nm1 / x - np.cos(x)
+
+        psi_nm1_mx = np.sin(mx)  # nm1 = n-1 = 0
+        psi_n_mx = psi_nm1_mx / mx - np.cos(mx)
+
+        xi_nm1 = complex(psi_nm1, np.cos(x))
+        xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
+
+        Dmx = _D_calc(np.complex128(m), x, nstop + 1)
+        Dx = _D_calc(np.complex128(1), x, nstop + 1)
+
+        for n in range(1, nstop + 1):
+            common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
+
+            c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
+            d[n - 1] = common / ((Dmx[n - 1] / m + n / x) * xi_n - xi_nm1)
+
+            psi = (2 * n + 1) * psi_n / x - psi_nm1
+            psi_nm1 = psi_n
+            psi_n = psi
+
+            psi_mx = (2 * n + 1) * psi_n_mx / mx - psi_nm1_mx
+            psi_nm1_mx = psi_n_mx
+            psi_n_mx = psi_mx
+
+            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi_nm1 = xi_n
+            xi_n = xi
+
+    if n_pole != 0:
+        c = c[:-1]
+        d = d[:-1]
+    return np.conjugate(c), np.conjugate(d)
 
 
 def mie_coefficients(m, x, n_pole=0):
@@ -283,7 +349,7 @@ def mie_coefficients(m, x, n_pole=0):
         raise RuntimeError("m and x arrays to mie must be same length")
 
     if mlen == 0 and xlen == 0:
-        a, b = _mie_An_Bn(m, x, n_pole)
+        a, b = an_bn(m, x, n_pole)
         if n_pole == 0:
             return a, b
         return a[n_pole - 1], b[n_pole - 1]
@@ -306,7 +372,7 @@ def mie_coefficients(m, x, n_pole=0):
         if xlen > 0:
             xx = x[i]
 
-        an, bn = _mie_An_Bn(mm, xx, n_pole)
+        an, bn = an_bn(mm, xx, n_pole)
         a[i] = an[n_pole - 1]
         b[i] = bn[n_pole - 1]
 
@@ -436,7 +502,7 @@ def _mie_scalar(m, x, n_pole, e_field):
     if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
         return _small_mie(m, x)
 
-    a, b = _mie_An_Bn(m, x, n_pole)
+    a, b = an_bn(m, x, n_pole)
 
     if n_pole == 0:
         n = np.arange(1, len(a) + 1)
@@ -539,19 +605,15 @@ def mie(m, x, n_pole=0, field="Electric"):
         m = np.where(np.imag(m) > 0, np.conj(m), m)
 
     mlen = 0
-    try:
+    if hasattr(m, "__len__"):
         mlen = len(m)
-    except TypeError:
-        pass
 
     xlen = 0
-    try:
+    if hasattr(x, "__len__"):
         xlen = len(x)
-    except TypeError:
-        pass
 
     if mlen == 0 and xlen == 0:
-        return _mie_scalar(m, x, n_pole, field == "Electric")
+        return _mie_scalar(m, x, n_pole, True)
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
         raise RuntimeError("m and x arrays to mie must be same length")
@@ -564,14 +626,13 @@ def mie(m, x, n_pole=0, field="Electric"):
 
     mm = m
     xx = x
-    e_field = field == "Electric"
     for i in range(thelen):
         if mlen > 0:
             mm = m[i]
 
         if xlen > 0:
             xx = x[i]
-        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole, e_field)
+        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole, True)
 
     return qext, qsca, qback, g
 
@@ -674,8 +735,8 @@ def norm_string_to_integer(s):
     return ii
 
 
-@njit((complex128, float64, float64[:], int64, int64, bool_), cache=True)
-def _mie_S1_S2(m, x, mu, norm_int, n_pole, e_field):
+@njit((complex128, float64, float64[:], int64), cache=True)
+def _mie_S1_S2(m, x, mu, n_pole):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -695,7 +756,7 @@ def _mie_S1_S2(m, x, mu, norm_int, n_pole, e_field):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = _mie_An_Bn(m, x, n_pole)
+    a, b = an_bn(m, x, 0)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -745,13 +806,17 @@ def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0, field="Electric"):
 
     if np.isscalar(mu):
         mu_array = np.array([mu], dtype=float)
-        s1, s2 = _mie_S1_S2(m, x, mu_array, norm_int, n_pole, field == "Electric")
-        return s1[0] / normalization, s2[0] / normalization
+        S1, S2 = _mie_S1_S2(m, x, mu_array, n_pole)
+    else:
+        S1, S2 = _mie_S1_S2(m, x, mu, n_pole)
 
-    s1, s2 = _mie_S1_S2(m, x, mu, norm_int, n_pole, field == "Electric")
-    s1 /= normalization
-    s2 /= normalization
-    return s1, s2
+    S1 = np.conjugate(S1 / normalization)
+    S2 = np.conjugate(S2 / normalization)
+
+    if np.isscalar(mu):
+        return S1[0], S2[0]
+
+    return S1, S2
 
 
 def mie_phase_matrix(m, x, mu, norm="albedo"):
@@ -1064,3 +1129,161 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
     Ipar = ipar.astype("float")
     Iper = iper.astype("float")
     return Ipar, Iper
+
+
+#
+# @njit
+# def spherical_bessel_jn_array(n, z):
+#     """
+#     Compute the spherical Bessel function of the first kind for array inputs.
+#     Args:
+#         n (np.ndarray): Array of orders of the spherical Bessel function.
+#         z (float): Argument of the function.
+#     Returns:
+#         np.ndarray: Values of j_n(z) for each order in n.
+#     """
+#     if z == 0:
+#         result = np.zeros_like(n, dtype=np.float64)
+#         result[n == 0] = 1.0  # j_0(0) = 1; all other j_n(0) = 0
+#         return result
+#
+#     return np.sqrt(np.pi / (2 * z)) * np.sin(z - n * np.pi / 2)
+#
+#
+# @njit
+# def spherical_bessel_yn_array(n, z):
+#     """
+#     Compute the spherical Bessel function of the second kind for array inputs.
+#     Args:
+#         n (np.ndarray): Array of orders of the spherical Bessel function.
+#         z (float): Argument of the function.
+#     Returns:
+#         np.ndarray: Values of y_n(z) for each order in n.
+#     """
+#     if z == 0:
+#         result = np.full_like(n, -np.inf, dtype=np.float64)
+#         result[n != 0] = 0.0
+#         return result
+#
+#     return np.sqrt(np.pi / (2 * z)) * np.cos(z - n * np.pi / 2)
+#
+#
+# @njit((float64, float64, complex128, float64, float64[3], complex128[:,4]), cache=True)
+# def E_field_spherical(d_sphere, lambda0, n_sphere, n_env, sph_point, abcd):
+#     m = n_sphere / n_env
+#     lam = lambda0 / n_env
+#     k = 2 * np.pi / lam
+#
+#     r, theta, phi = sph_point
+#     an, bn, cn, dn = abcd
+#
+#     n = np.arange(1, len(an) + 1)
+#
+#     # Compute spherical Hankel functions h_n^(1)
+#     h_n = spherical_bessel_jn_array(n, k*r) + 1j * spherical_bessel_yn_array(n, k*r)
+#
+#     # Compute angular terms
+#     Pn_theta = np.cos(theta) ** n
+#     dPn_dtheta = -n * np.sin(theta) * np.cos(theta) ** (n - 1)
+#
+#     # Compute vector spherical harmonics components
+#     if r > d_sphere/2:
+#         E_r = np.sum((2 * n + 1) * (an + bn) * h_n * Pn_theta)
+#         E_theta = np.sum((2 * n + 1) * (an - bn) * h_n * dPn_dtheta)
+#     else:
+#         E_r = np.sum((2 * n + 1) * (cn + dn) * h_n * Pn_theta)
+#         E_theta = np.sum((2 * n + 1) * (cn - dn) * h_n * dPn_dtheta)
+#
+#     return np.array([E_r, E_theta, 0.0])
+#
+#
+# @njit((float64, float64, complex128, float64, float64[3], complex128[:,4]), cache=True)
+# def E_field(d_sphere, lambda0, n_sphere, n_env, xyz_point, abcd):
+#
+#     r = np.sqrt(xyz_point[0]**2 + xyz_point[1]**2 + xyz_point[2]**2)
+#     theta = np.arccos(xyz_point[2] / r) if r != 0 else 0
+#     phi = np.arctan2(xyz_point[1], xyz_point[0])
+#
+#     sph_point = np.array([r, theta, phi], dtype=float64)
+#     E_spherical = scattered_E_field_spherical(d_sphere, lambda0, n_sphere, n_env, sph_point, abcd):
+#
+#     E_r, E_theta, E_phi = E_spherical
+#     Ex = E_r * np.sin(theta) * np.cos(phi) + E_theta * np.cos(theta) * np.cos(phi)
+#     Ey = E_r * np.sin(theta) * np.sin(phi) + E_theta * np.cos(theta) * np.sin(phi)
+#     Ez = E_r * np.cos(theta) - E_theta * np.sin(theta)
+#
+#     return np.array([Ex, Ey, Ez])
+#
+#
+# def plot_density(d, lambda0, n_sphere, n_env=1, nx=3, grid_size=100, projection="XZ"):
+#     """
+#     Create a 2D density plot of the electric field magnitude in a specified plane.
+#
+#     Args:
+#         d (float): Diameter of the sphere.
+#         lambda0 (float): Vacuum wavelength.
+#         n_sphere (float): Refractive index of the sphere.
+#         n_env (float): Refractive index of the surrounding environment.
+#         grid_size (int): Number of points along each axis in the grid.
+#         projection (str): Plane of projection ('XZ', 'YZ', or 'XY').
+#
+#     Returns:
+#         None
+#     """
+#     m = n_sphere / n_env
+#     lam = lambda0 / n_env
+#     x = 2 * np.pi * (d / 2) / lam
+#     k = 2 * np.pi / lam
+#
+#     an, bn = an_bn(m, x, 0)
+#
+#     ext = int(nx) * lam
+#     extent = (-ext, ext, -ext, ext)
+#     coords = np.linspace(-ext, ext, grid_size)
+#     field_magnitude = np.zeros((grid_size, grid_size), dtype=np.float64)
+#
+#     rotation = -90
+#     if projection == "XZ":
+#         X, Z = np.meshgrid(coords, coords)
+#         Y = np.zeros_like(X)
+#         xlabel, ylabel = "z", "x"
+#     elif projection == "YZ":
+#         Y, Z = np.meshgrid(coords, coords)
+#         X = np.zeros_like(Y)
+#         xlabel, ylabel = "z", "y"
+#     elif projection == "XY":
+#         X, Y = np.meshgrid(coords, coords)
+#         Z = np.zeros_like(X)
+#         xlabel, ylabel = "x", "y"
+#     else:
+#         raise ValueError("Invalid projection. Choose from 'XZ', 'YZ', or 'XY'.")
+#
+#     positions = zip(X.ravel(), Y.ravel(), Z.ravel())
+#     radius = d / 2
+#     for idx, (x_pos, y_pos, z_pos) in enumerate(positions):
+#         r = np.sqrt(x_pos**2 + y_pos**2 + z_pos**2)
+#         if r >= radius:  # Skip points inside the sphere
+#             i, j = divmod(idx, grid_size)
+#             Ex, Ey, Ez = scattered_E_field_cartesian(an, bn, k, x_pos, y_pos, z_pos)
+#             field_magnitude[i, j] = np.sqrt(np.abs(Ex) ** 2 + np.abs(Ey) ** 2 + np.abs(Ez) ** 2)
+#
+#     if rotation != 0:
+#         field_magnitude = np.rot90(field_magnitude, k=rotation // 90)
+#
+#     ticks = np.linspace(-ext, ext, 2 * int(nx) + 1)
+#     tick_labels = [f"{int(t)} λ" if t != 0 else "0" for t in ticks]
+#
+#     plt.figure(figsize=(8, 6))
+#     plt.imshow(field_magnitude, extent=extent, origin="lower", cmap="viridis", aspect="auto")
+#     plt.colorbar(label="Electric Field Magnitude")
+#
+#     # Draw a circle representing the sphere
+#     circle = plt.Circle((0, 0), radius / lam, color="white", fill=False, linewidth=2)
+#     plt.gca().add_artist(circle)
+#
+#     plt.title(f"2D Density Plot of Electric Field in the {projection} Plane")
+#     plt.xlabel(xlabel)
+#     plt.ylabel(ylabel)
+#     plt.xticks(ticks=ticks, labels=tick_labels)
+#     plt.yticks(ticks=ticks, labels=tick_labels)
+#     plt.show()

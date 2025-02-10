@@ -38,6 +38,8 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
+from scipy.special import spherical_jn, spherical_yn, sph_harm
+from scipy.special import lpmv
 
 __all__ = (
     "ez_mie",
@@ -52,6 +54,9 @@ __all__ = (
     "mie_cdf",
     "mie_mu_with_uniform_cdf",
     "generate_mie_costheta",
+    "efield",
+    "an_bn",
+    "cn_dn",
 )
 
 
@@ -134,29 +139,38 @@ def _D_calc(m, x, N):
     n = m.real
     kappa = np.abs(m.imag)
     D = np.zeros(N, dtype=np.complex128)
+    mx = np.complex128(m * x)  # ensure complex
 
     if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        _D_downwards(m * x, N, D)
+        _D_downwards(mx, N, D)
     else:
-        _D_upwards(m * x, N, D)
-    return D
+        _D_upwards(mx, N, D)
+    return D[1:]
 
 
-def _mie_An_Bn(m, x, n_pole=0):
+def an_bn(m, x, n_pole=0):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
-    This estimates the size of the arrays based on Wiscombe's formula. The length
-    of the arrays is chosen so that the error when the series are summed is
-    around 1e-6.
+    When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's
+    formula. The length of the arrays is chosen so that the error when the series
+    is summed is around 1e-6.
+
+    If n_pole>0, then the array sizes will be n_pole+1. This is useful when
+    trying to isolate the behavior of a particular multipole.
+
+    To support resonance calculations, one can specify the number of terms
+    to be calculated.  In general, using too few or too many terms increases the
+    error rate.  So if you specify the number of terms be aware that you are
+    playing with fire.
 
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        n_pole: order of multipole. 0 => use all multipoles
+        n_pole: the number of An and Bn terms (0 does autosizing)
 
     Returns:
-        An, Bn: arrays of Mie coefficents
+        a, b: arrays of Mie coefficents An and Bn
     """
     # ensure imaginary part of refractive index is negative
     m = np.where(np.imag(m) > 0, np.conj(m), m)
@@ -166,11 +180,11 @@ def _mie_An_Bn(m, x, n_pole=0):
     else:
         nstop = n_pole + 1
 
-    a = np.zeros(nstop - 1, dtype=np.complex128)
-    b = np.zeros(nstop - 1, dtype=np.complex128)
+    a = np.zeros(nstop, dtype=np.complex128)
+    b = np.zeros(nstop, dtype=np.complex128)
 
     psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-    psi_n = psi_nm1 / x - np.cos(x)  # n = 1
+    psi_n = psi_nm1 / x - np.cos(x)
     xi_nm1 = complex(psi_nm1, np.cos(x))
     xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
 
@@ -178,15 +192,16 @@ def _mie_An_Bn(m, x, n_pole=0):
         D = _D_calc(m, x, nstop + 1)
 
         for n in range(1, nstop):
-            temp = D[n] / m + n / x
+            temp = D[n - 1] / m + n / x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            temp = D[n] * m + n / x
+            temp = D[n - 1] * m + n / x
             b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
+            psi = (2 * n + 1) * psi_n / x - psi_nm1
             xi = (2 * n + 1) * xi_n / x - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
-            psi_n = xi_n.real
+            psi_n = psi
 
     else:
         for n in range(1, nstop):
@@ -198,7 +213,74 @@ def _mie_An_Bn(m, x, n_pole=0):
             psi_nm1 = psi_n
             psi_n = xi_n.real
 
-    return a, b
+    if n_pole != 0:
+        a = a[:-1]
+        b = b[:-1]
+
+    return np.conjugate(a), np.conjugate(b)
+
+
+def cn_dn(m, x, n_pole=0):
+    """
+    Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
+
+    Args:
+        m (complex): Refractive index of the sphere relative to the surrounding medium.
+        x (float): Size parameter of the sphere (2πr/λ).
+        n_pole (int): Number of terms to calculate (n_pole).
+
+    Returns:
+        (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
+    """
+    # ensure imaginary part of refractive index is negative
+    m = np.where(np.imag(m) > 0, np.conj(m), m)
+    mx = m * x
+
+    if n_pole == 0:
+        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+    else:
+        nstop = n_pole + 1
+
+    c = np.zeros(nstop, dtype=np.complex128)
+    d = np.zeros(nstop, dtype=np.complex128)
+
+    # no need to calculate anything when sphere is perfectly conducting
+    if m.real > 0.0 and not np.isinf(m.real) or not np.isinf(m.imag):
+        psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
+        psi_n = psi_nm1 / x - np.cos(x)
+
+        psi_nm1_mx = np.sin(mx)  # nm1 = n-1 = 0
+        psi_n_mx = psi_nm1_mx / mx - np.cos(mx)
+
+        xi_nm1 = complex(psi_nm1, np.cos(x))
+        xi_n = complex(psi_n, np.cos(x) / x + np.sin(x))
+
+        Dmx = _D_calc(np.complex128(m), x, nstop + 1)
+        Dx = _D_calc(np.complex128(1), x, nstop + 1)
+
+        for n in range(1, nstop + 1):
+            common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
+
+            c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
+            d[n - 1] = common / ((Dmx[n - 1] / m + n / x) * xi_n - xi_nm1)
+
+            psi = (2 * n + 1) * psi_n / x - psi_nm1
+            psi_nm1 = psi_n
+            psi_n = psi
+
+            psi_mx = (2 * n + 1) * psi_n_mx / mx - psi_nm1_mx
+            psi_nm1_mx = psi_n_mx
+            psi_n_mx = psi_mx
+
+            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi_nm1 = xi_n
+            xi_n = xi
+
+    if n_pole != 0:
+        c = c[:-1]
+        d = d[:-1]
+    return np.conjugate(c), np.conjugate(d)
+
 
 def mie_coefficients(m, x, n_pole=0):
     """
@@ -262,7 +344,7 @@ def mie_coefficients(m, x, n_pole=0):
         raise RuntimeError("m and x arrays to mie must be same length")
 
     if mlen == 0 and xlen == 0:
-        a, b = _mie_An_Bn(m, x, n_pole)
+        a, b = an_bn(m, x, n_pole)
         if n_pole == 0:
             return a, b
         return a[n_pole - 1], b[n_pole - 1]
@@ -285,11 +367,12 @@ def mie_coefficients(m, x, n_pole=0):
         if xlen > 0:
             xx = x[i]
 
-        an, bn = _mie_An_Bn(mm, xx, n_pole)
+        an, bn = an_bn(mm, xx, n_pole)
         a[i] = an[n_pole - 1]
         b[i] = bn[n_pole - 1]
 
     return a, b
+
 
 def _small_conducting_mie(_m, x):
     """
@@ -308,8 +391,11 @@ def _small_conducting_mie(_m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2)) / complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
-    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0) / complex(1 + 0.5 * x**2, -(x**3) / 3.0)
+    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2))
+    ahat1 /= complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
+
+    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0)
+    bhat1 /= complex(1 + 0.5 * x**2, -(x**3) / 3.0)
     ahat2 = complex(0.0, x**2 / 30.0)
     bhat2 = complex(0.0, -(x**2) / 45.0)
 
@@ -353,8 +439,10 @@ def _small_mie(m, x):
     D -= (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0
     D += 2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
     ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x**4 / 1400) / D
+
     bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
     bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
+
     ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
     ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
 
@@ -375,7 +463,7 @@ def _small_mie(m, x):
     return qext, qsca, qback, g
 
 
-def _mie_scalar(m, x, n_pole=0, field="Electric"):
+def _mie_scalar(m, x, n_pole=0, e_field=True):
     """
     Calculate the efficiencies for a sphere when both m and x are scalars.
 
@@ -383,7 +471,7 @@ def _mie_scalar(m, x, n_pole=0, field="Electric"):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         n_pole: a non-zero value returns the contribution by the n_pole multipole
-        field: Electric or Magnetic Field
+        field: Electric (True) or Magnetic Field otherwise
 
     Returns:
         qext: the total extinction efficiency
@@ -406,11 +494,10 @@ def _mie_scalar(m, x, n_pole=0, field="Electric"):
     if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
         return _small_mie(m, x)
 
-    a, b = _mie_An_Bn(m, x, n_pole)
+    a, b = an_bn(m, x, n_pole)
 
     if n_pole == 0:
-        nmax = len(a)
-        n = np.arange(1, nmax + 1)
+        n = np.arange(1, len(a) + 1)
         cn = 2.0 * n + 1.0
 
         qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
@@ -431,7 +518,7 @@ def _mie_scalar(m, x, n_pole=0, field="Electric"):
     else:
         cn = 2.0 * n_pole + 1
         c1n = n_pole * (n_pole + 2) / (n_pole + 1)
-        if field=="Electric":
+        if e_field:
             qext = 2 * cn * a[n_pole - 1].real / x**2
             qsca = 2 * cn * np.abs(a[n_pole - 1]) ** 2 / x**2
             qback = qsca / 2
@@ -465,9 +552,9 @@ def mie(m, x, n_pole=0, field="Electric"):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
             - If non-zero, computes contributions from the specified multipole order.
-        field (string):
-            "Electric" or "Magnetic".  Only used if n_pole>0
-
+        field (str):
+            If "Electric" (default) If n_pole>0, then True value returns the electric
+            multipole contribution otherwise the Magnetic field contribution
     Returns:
         tuple:
             qext (float or array-like):
@@ -540,7 +627,7 @@ def mie(m, x, n_pole=0, field="Electric"):
 
         qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole)
 
-    return [qext, qsca, qback, g]
+    return qext, qsca, qback, g
 
 
 def normalization_factor(m, x, norm_str):
@@ -614,7 +701,7 @@ def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = _mie_An_Bn(m, x)
+    a, b = an_bn(m, x)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -636,10 +723,10 @@ def mie_S1_S2(m, x, mu, norm="albedo", n_pole=0):
 
     normalization = normalization_factor(m, x, norm)
 
-    S1 /= normalization
-    S2 /= normalization
+    S1 = np.conjugate(S1 / normalization)
+    S2 = np.conjugate(S2 / normalization)
 
-    return [S1, S2]
+    return S1, S2
 
 
 def mie_phase_matrix(m, x, mu, norm="albedo", n_pole=0):
@@ -954,3 +1041,154 @@ def ez_intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
     Ipar = ipar.astype("float")
     Iper = iper.astype("float")
     return Ipar, Iper
+
+
+def dPnm_dcos(n, m, mu):
+    """
+    Compute the derivative of the associated Legendre polynomial P_n^m(mu).
+
+    This is the derivative relative to the argument, i.e. with respect to mu = cos(theta).
+
+    Args:
+        n (int): Degree of the polynomial.
+        m (int): Order of the polynomial.
+        mu (float): cos(theta), where -1 <= mu <= 1.
+
+    Returns:
+        float: Derivative of P_n^m(mu) with respect to mu.
+    """
+    if abs(mu) == 1:
+        # Handle singularities at mu = ±1
+        return 0.0
+    Pnm = lpmv(m, n, mu)  # P_n^m(mu)
+    if n == 0:
+        return 0.0
+    Pn_minus_1_m = lpmv(m, n - 1, mu)  # P_{n-1}^m(mu)
+    return (n * mu * Pnm - (n + m) * Pn_minus_1_m) / (1 - mu**2)
+
+
+def dYnm_dtheta(n, m, theta, phi):
+    """
+    Compute the derivative of spherical harmonics with respect to theta.
+
+    Args:
+        n (int): Degree of the spherical harmonic.
+        m (int): Order of the spherical harmonic.
+        theta (float): Polar angle (0 <= theta <= pi).
+        phi (float): Azimuthal angle (0 <= phi <= 2*pi).
+
+    Returns:
+        complex: Derivative of Y_n^m with respect to theta.
+    """
+    mu = np.cos(theta)
+    dPnm = dPnm_dcos(n, m, mu)  # Derivative of P_n^m with respect to cos(theta)
+    return -np.sin(theta) * dPnm * np.exp(1j * m * phi)
+
+
+def dYnm_dphi(n, m, theta, phi):
+    """
+    Compute the derivative of spherical harmonics with respect to phi.
+
+    Args:
+        n (int): Degree of the spherical harmonic.
+        m (int): Order of the spherical harmonic.
+        theta (float): Polar angle (0 <= theta <= pi).
+        phi (float): Azimuthal angle (0 <= phi <= 2*pi).
+
+    Returns:
+        complex: Derivative of Y_n^m with respect to phi.
+    """
+    Ynm = sph_harm(m, n, phi, theta)
+    return 1j * m * Ynm
+
+
+def efield_inside(abcd, kr, theta, phi):
+    """
+    Calculate the electric field inside a sphere given c_n and d_n.
+
+    Args:
+        abcd (tuple): (a_n, b_n, c_n, d_n) coefficients.
+        kr (float): Radial position inside the sphere in size parameter units (k*r).
+        theta (float): Polar angle (0 <= theta <= pi).
+        phi (float): Azimuthal angle (0 <= phi <= 2*pi).
+
+    Returns:
+        tuple: Electric field components (E_r, E_theta, E_phi).
+    """
+    _, _, c_n, d_n = abcd
+    E_r = 0
+    E_theta = 0
+    E_phi = 0
+
+    for n in range(1, len(c_n) + 1):
+        psi_n_kr = spherical_jn(n, kr)
+        P_n_theta = sph_harm(0, n, phi, theta)
+        dP_n_theta = dYnm_dtheta(n, 0, theta, phi)
+        dP_n_phi = dYnm_dphi(n, 0, theta, phi)
+
+        E_r += c_n[n - 1] * psi_n_kr * P_n_theta
+        E_theta += d_n[n - 1] * psi_n_kr * dP_n_theta
+        E_phi += d_n[n - 1] * psi_n_kr * dP_n_phi
+
+    return np.real(E_r), np.real(E_theta), np.real(E_phi)
+
+
+def efield_outside(abcd, kr, theta, phi):
+    """
+    Calculate the electric field outside a sphere given a_n and b_n.
+
+    Args:
+        abcd (tuple): (a_n, b_n, c_n, d_n) coefficients.
+        kr (float): Radial position outside the sphere in size parameter units (k*r).
+        theta (float): Polar angle (0 <= theta <= pi).
+        phi (float): Azimuthal angle (0 <= phi <= 2*pi).
+
+    Returns:
+        tuple: Electric field components (E_r, E_theta, E_phi).
+    """
+    a_n, b_n, _, _ = abcd
+    E_r = 0
+    E_theta = 0
+    E_phi = 0
+
+    for n in range(1, len(a_n) + 1):
+        psi_n_kr = spherical_jn(n, kr)
+        chi_n_kr = spherical_yn(n, kr)
+        xi_n_kr = psi_n_kr + 1j * chi_n_kr
+
+        P_n_theta = sph_harm(0, n, phi, theta)
+        dP_n_theta = dYnm_dtheta(n, 0, theta, phi)
+        dP_n_phi = dYnm_dphi(n, 0, theta, phi)
+
+        E_r += (a_n[n - 1] + b_n[n - 1]) * xi_n_kr * P_n_theta
+        E_theta += b_n[n - 1] * xi_n_kr * dP_n_theta
+        E_phi += b_n[n - 1] * xi_n_kr * dP_n_phi
+
+    return np.real(E_r), np.real(E_theta), np.real(E_phi)
+
+
+def efield(d_sphere, n_sph, n_env, lambda0, abcd, r, theta, phi):
+    """
+    Calculate the electric field inside or outside a sphere.
+
+    Args:
+        d_sphere (float): Diameter of the sphere.
+        n_sph (float): Refractive index of the sphere.
+        n_env (float): Refractive index of the surrounding medium.
+        lambda0 (float): Wavelength in vacuum.
+        abcd (tuple): (a_n, b_n, c_n, d_n) coefficients.
+        r (float): Radial position.
+        theta (float): Polar angle (0 <= theta <= pi).
+        phi (float): Azimuthal angle (0 <= phi <= 2*pi).
+
+    Returns:
+        tuple: Electric field components (E_r, E_theta, E_phi).
+    """
+    if r <= d_sphere / 2:
+        k = 2 * np.pi * n_env / lambda0
+        kr = k * r
+        return efield_inside(abcd, kr, theta, phi)
+
+    k = 2 * np.pi * n_env / lambda0
+    kr = k * r
+    return efield_outside(abcd, kr, theta, phi)
