@@ -43,11 +43,9 @@ The scattering matrix
 
 """
 
-__version__ = "2.5.3"
+__version__ = "2.6.0"
 __author__ = "Scott Prahl"
 __email__ = "scott.prahl@oit.edu"
-__copyright__ = "2017-23, Scott Prahl"
+__copyright__ = "2017-25, Scott Prahl"
 __license__ = "MIT"
 __url__ = "https://github.com/scottprahl/miepython.git"
-
-from .miepython import *
