@@ -1,14 +1,25 @@
 Changelog
 =========
 
-2.6.0 (unreleased)
---------------------
-*   add version and year to CITATION.cff
-*   remove 'v' from version numbers
-*   add github script and workflow to auto-update CITATION.cff
-*   add conda badge to readme
-*   clean up README.rst a bit
-*   stop example script from saving a PNG
+2.6.0 (2/10/2025)
+-------------------
+*   breaking api changes
+*   make api more natural: mie.efficiencies() instead of miepython.mie()
+*   new function to calculate mie coefficients inside sphere
+*   new function to calculate E-fields near sphere
+
+2.5.5 (12/01/2025)
+-------------------
+*   add support for specific spherical modes
+*   only branch is now 'main'
+
+2.5.4 (05/07/2024)
+-------------------
+*   add auto-dating in CITATION
+*   add python 3.12
+*   add ruff, pylint config
+*   simplify mie_cdf and fix notebook
+*   set 3.7 as earliest python version
 
 v2.5.3 (8/5/2023)
 -------------------
