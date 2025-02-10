@@ -471,7 +471,7 @@ def _mie_scalar(m, x, n_pole=0, e_field=True):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         n_pole: a non-zero value returns the contribution by the n_pole multipole
-        field: Electric (True) or Magnetic Field otherwise
+        e_field: Electric (True) or Magnetic Field otherwise
 
     Returns:
         qext: the total extinction efficiency
