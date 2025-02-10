@@ -50,12 +50,17 @@ markers = ["notebooks: tests related to Jupyter notebooks"]
 
 [tool.flake8]
 max-line-length = 100
-ignore = ["W503", "D212", "N802", "N803", "N806", "E501"]
+ignore = ["D200", "D212", "N802", "N803", "N806", "E501", "W503"]
 per-file-ignores = [
     "__init__.py:F401,F403",
     "setup.py:D100",
+    "tests/test_bessel.py:D100,D101,D102,D103,F405",
     "tests/test_jit.py:D100,D101,D102",
+    "tests/test_jit_D.py:D100,D101,D102",
+    "tests/test_jit_abcd.py:D100,D101,D102",
     "tests/test_nojit.py:D100,D101,D102",
+    "tests/test_nojit_D.py:D100,D101,D102",
+    "tests/test_nojit_abcd.py:D100,D101,D102",
     "tests/conftest.py:D100,D101,D102,D103"
 ]
 exclude = [
@@ -71,8 +76,16 @@ exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "W"]
-ignore = ["D212", "F403"]
-per-file-ignores = { "tests/test_jit.py" = ["D102"], "tests/test_nojit.py" = ["D102"] }
+ignore = ["D200", "D212", "F403"]
 pydocstyle.convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/test_bessel.py" = ["D100", "D101", "D102", "D103", "F405"]
+"tests/test_jit.py" = ["D100", "D101", "D102", "D103"]
+"tests/test_jit_D.py" = ["D100", "D101", "D102", "D103", "F405"]
+"tests/test_jit_abcd.py" = ["D100", "D101", "D102", "D103", "F405"]
+"tests/test_nojit.py" = ["D100", "D101", "D102", "D103"]
+"tests/test_nojit_D.py" = ["D100", "D101", "D102", "D103", "F405"]
+"tests/test_nojit_abcd.py" = ["D100", "D101", "D102", "D103", "F405"]
 
 
