@@ -8,7 +8,7 @@ The resulting graph is as a function of wavelength.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython
+import miepython.miepython as mie
 
 # from https://refractiveindex.info/?shelf = main&book = Au&page = Johnson
 # wavelength in microns
@@ -179,7 +179,7 @@ m = ref_n - 1.0j * ref_k
 x = 2 * np.pi * radius / ref_lam
 cross_section_area = np.pi * radius**2
 mu_a = 4 * np.pi * ref_k / ref_lam  # nm
-qext, qsca, qback, g = miepython.mie(m, x)
+qext, qsca, qback, g = mie.mie(m, x)
 
 sca_cross_section = qsca * cross_section_area
 abs_cross_section = (qext - qsca) * cross_section_area

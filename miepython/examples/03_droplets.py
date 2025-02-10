@@ -8,7 +8,7 @@ The plot shows the cross section as a function of wavelength.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython
+import miepython.miepython as mie
 
 num = 100
 radius = 0.5  # in microns
@@ -23,7 +23,7 @@ m2 += 2.095951857e-2 / (1.0 - 2.625439472e-2 / lambda0**2)
 m2 += 1.125228406e-1 / (1.0 - 1.073842352e1 / lambda0**2)
 m = np.sqrt(m2)
 
-qext, qsca, qback, g = miepython.mie(m, x)
+qext, qsca, qback, g = mie.mie(m, x)
 
 plt.plot(lambda0 * 1000, qsca)
 plt.title("Water Droplets (1 µm diameter)")

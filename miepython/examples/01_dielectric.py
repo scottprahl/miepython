@@ -9,16 +9,16 @@ spheres.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython
+import miepython.miepython as mie
 
 x = np.linspace(0.1, 100, 300)
 
 # mie() will automatically try to do the right thing
 
-qext, qsca, qback, g = miepython.mie(1.5, x)
+qext, qsca, qback, g = mie.mie(1.5, x)
 plt.plot(x, qext, color="red", label="1.5")
 
-qext, qsca, qback, g = miepython.mie(1.5 - 0.1j, x)
+qext, qsca, qback, g = mie.mie(1.5 - 0.1j, x)
 plt.plot(x, qext, color="blue", label="1.5-0.1j")
 
 plt.title("Comparison of extinction for absorbing and non-absorbing spheres")
