@@ -52,6 +52,7 @@ __all__ = (
     "mie_coefficients",
     "an_bn",
     "cn_dn",
+    "abcd",
     )
 
 
@@ -282,6 +283,13 @@ def cn_dn(m, x, n_pole):
         c = c[:-1]
         d = d[:-1]
     return np.conjugate(c), np.conjugate(d)
+
+
+def abcd(m, x, n_pole=0):
+    """Calculate inner and outer sphere coefficients."""
+    a, b = an_bn(m, x, n_pole)
+    c, d = cn_dn(m, x, n_pole)
+    return [a, b, c, d]
 
 
 def mie_coefficients(m, x, n_pole=0):

@@ -38,7 +38,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from scipy.special import spherical_jn, spherical_yn, sph_harm
+from scipy.special import spherical_jn, spherical_yn, sph_harm_y
 from scipy.special import lpmv
 
 __all__ = (
@@ -57,6 +57,7 @@ __all__ = (
     "efield",
     "an_bn",
     "cn_dn",
+    "abcd",
 )
 
 
@@ -280,6 +281,13 @@ def cn_dn(m, x, n_pole=0):
         c = c[:-1]
         d = d[:-1]
     return np.conjugate(c), np.conjugate(d)
+
+
+def abcd(m, x, n_pole=0):
+    """Calculate inner and outer sphere coefficients."""
+    a, b = an_bn(m, x, n_pole)
+    c, d = cn_dn(m, x, n_pole)
+    return [a, b, c, d]
 
 
 def mie_coefficients(m, x, n_pole=0):
@@ -986,7 +994,7 @@ def dYnm_dphi(n, m, theta, phi):
     Returns:
         complex: Derivative of Y_n^m with respect to phi.
     """
-    Ynm = sph_harm(m, n, phi, theta)
+    Ynm = sph_harm_y(m, n, phi, theta)
     return 1j * m * Ynm
 
 
@@ -1010,7 +1018,7 @@ def efield_inside(abcd, kr, theta, phi):
 
     for n in range(1, len(c_n) + 1):
         psi_n_kr = spherical_jn(n, kr)
-        P_n_theta = sph_harm(0, n, phi, theta)
+        P_n_theta = sph_harm_y(0, n, phi, theta)
         dP_n_theta = dYnm_dtheta(n, 0, theta, phi)
         dP_n_phi = dYnm_dphi(n, 0, theta, phi)
 
@@ -1044,7 +1052,7 @@ def efield_outside(abcd, kr, theta, phi):
         chi_n_kr = spherical_yn(n, kr)
         xi_n_kr = psi_n_kr + 1j * chi_n_kr
 
-        P_n_theta = sph_harm(0, n, phi, theta)
+        P_n_theta = sph_harm_y(0, n, phi, theta)
         dP_n_theta = dYnm_dtheta(n, 0, theta, phi)
         dP_n_phi = dYnm_dphi(n, 0, theta, phi)
 
