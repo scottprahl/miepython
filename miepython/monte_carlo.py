@@ -7,13 +7,14 @@
 Monte Carlo and Mie scattering.
 """
 import numpy as np
-import miepython.miepython as mie
+import miepython as mie
 
 __all__ = (
     "cdf",
     "mu_with_uniform_cdf",
     "generate_mie_costheta",
-    )
+)
+
 
 def cdf(m, x, num):
     """
