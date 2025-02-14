@@ -8,7 +8,7 @@ The resulting graph is as a function of wavelength.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython.miepython as mie
+import miepython as mie
 
 # from https://refractiveindex.info/?shelf = main&book = Au&page = Johnson
 # wavelength in microns

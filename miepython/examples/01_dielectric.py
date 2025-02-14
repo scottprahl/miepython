@@ -9,7 +9,7 @@ spheres.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython.miepython as mie
+import miepython as mie
 
 x = np.linspace(0.1, 100, 300)
 

@@ -8,7 +8,7 @@ This graph shows scattering as a function of wavelength.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython.miepython as mie
+import miepython as mie
 
 radius = 2  # in microns
 lambda0 = np.linspace(0.2, 1.2, 200)  # also in microns

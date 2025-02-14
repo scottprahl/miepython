@@ -8,7 +8,7 @@ The plot shows the cross section as a function of wavelength.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import miepython.miepython as mie
+import miepython as mie
 
 num = 100
 radius = 0.5  # in microns
