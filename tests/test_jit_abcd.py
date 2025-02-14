@@ -8,11 +8,10 @@
 
 import unittest
 import numpy as np
-
 from scipy.special import spherical_jn, spherical_yn, jv, yv
 
+import miepython as mie
 from miepython.bessel import *
-import miepython.miepython as mie
 
 
 def cs_scalar(z, N=5):

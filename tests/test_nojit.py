@@ -7,9 +7,12 @@
 # pylint: disable=line-too-long
 # pylint: disable=consider-using-f-string
 
+import os
 import unittest
 import numpy as np
-import miepython.miepython_nojit as mie
+
+os.environ["MIEPYTHON_USE_JIT"] = "0"  # Set to "0" to disable JIT
+import miepython as mie
 
 
 def cs_scalar(z, N=5):

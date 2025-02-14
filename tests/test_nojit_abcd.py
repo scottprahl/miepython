@@ -6,12 +6,14 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=line-too-long
 
+import os
 import unittest
 import numpy as np
-import miepython.miepython_nojit as mie
-
 from scipy.special import spherical_jn, spherical_yn, jv, yv
 from miepython.bessel import *
+
+os.environ["MIEPYTHON_USE_JIT"] = "0"  # Set to "0" to disable JIT
+import miepython as mie
 
 
 def cs_scalar(z, N=5):

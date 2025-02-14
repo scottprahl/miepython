@@ -9,7 +9,7 @@
 import unittest
 import numpy as np
 
-from miepython.miepython_nojit import _D_calc
+from miepython.mie_nojit import _D_calc
 from miepython.bessel import *
 
 

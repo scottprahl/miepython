@@ -8,7 +8,7 @@
 
 import unittest
 import numpy as np
-import miepython.miepython as mie
+import miepython as mie
 
 
 class NonAbsorbing(unittest.TestCase):
