@@ -1,6 +1,13 @@
 API for `miepython` package
-===========================
+============================
 
-.. automodapi:: miepython.miepython
+.. automodapi:: miepython.main
 
-.. automodapi:: miepython.miepython_nojit
+.. automodapi:: miepython.mie_nojit
+
+.. automodapi:: miepython.mie_jit
+
+.. automodapi:: miepython.monte_carlo
+
+.. automodapi:: miepython.bessel
+
