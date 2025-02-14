@@ -1,4 +1,5 @@
 """This updates the zenodo citation."""
+
 import json
 import requests
 import yaml
