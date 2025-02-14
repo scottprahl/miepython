@@ -45,7 +45,9 @@ theory is used, following `the procedure described by Wiscombe
 <http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
 been validated against his results. 
 
-This code provides functions for calculating the extinction efficiency, scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set of angles can be given to calculate the scattering for a sphere at each of those
+This code provides functions for calculating the extinction efficiency,
+scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set
+of angles can be given to calculate the scattering for a sphere at each of those
 angles.
 
 Full documentation at <https://miepython.readthedocs.io>
@@ -58,7 +60,6 @@ When comparing different Mie scattering codes, make sure that you're aware of th
 #. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
 
 #. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.  As of version 2.3, this can be changed.
-
 
 Installation
 ---------------
@@ -78,11 +79,11 @@ An example
 
 The following code::
 
-    import miepython
+    import miepython as mie
     
     m = 1.5-1j
     x = 1
-    qext, qsca, qback, g = miepython.mie(m,x)
+    qext, qsca, qback, g = mie.mie(m,x)
 
     print("The extinction efficiency  is %.3f" % qext)
     print("The scattering efficiency  is %.3f" % qsca)

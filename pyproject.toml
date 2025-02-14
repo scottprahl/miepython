@@ -76,7 +76,7 @@ exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "W"]
-ignore = ["D200", "D212", "F403"]
+ignore = ["D200", "D212", "E402", "F403"]
 pydocstyle.convention = "google"
 
 [tool.ruff.lint.per-file-ignores]

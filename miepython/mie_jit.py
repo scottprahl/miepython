@@ -3,7 +3,7 @@ Low-level Mie calculations that use numba.
 """
 
 import numpy as np
-from numba import njit, complex128, float64, int64, bool_
+from numba import njit, complex128, float64, int64
 
 __all__ = (
     "_an_bn",

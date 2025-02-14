@@ -70,6 +70,9 @@ __all__ = (
     "an_bn",
     "cn_dn",
     "mie_S1_S2",
+    "_an_bn",
+    "_cn_dn",
+    "_mie_S1_S2",
 )
 
 __version__ = "3.0.0"

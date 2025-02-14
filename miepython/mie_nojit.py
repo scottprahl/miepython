@@ -3,8 +3,6 @@ Low-level Mie calculations that do not use numba.
 """
 
 import numpy as np
-from scipy.special import spherical_jn, spherical_yn, sph_harm_y
-from scipy.special import lpmv
 
 __all__ = (
     "_an_bn",
