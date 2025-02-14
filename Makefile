@@ -53,7 +53,6 @@ rcheck:
 	make test
 
 test:
-	-pytest -v --notebooks tests/test_all_notebooks.py
 	-pytest -v tests/test_bessel.py
 	-pytest -v tests/test_nojit_D.py
 	-pytest -v tests/test_nojit_abcd.py
@@ -64,6 +63,7 @@ test:
 	-pytest -v tests/test_jit.py
 
 	-pytest -v tests/test_all_examples.py
+	-pytest -v --notebooks tests/test_all_notebooks.py
 
 clean:
 	rm -rf dist
