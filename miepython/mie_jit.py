@@ -8,7 +8,7 @@ from numba import njit, complex128, float64, int64
 __all__ = (
     "_an_bn",
     "_cn_dn",
-    "_mie_S1_S2",
+    "_S1_S2",
 )
 
 
@@ -238,7 +238,7 @@ def _cn_dn(m, x, n_pole):
 
 
 @njit((complex128, float64, float64[:], int64), cache=True)
-def _mie_S1_S2(m, x, mu, n_pole):
+def _S1_S2(m, x, mu, n_pole):
     """
     Calculate the scattering amplitude functions for spheres.
 

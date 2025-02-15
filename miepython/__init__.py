@@ -12,19 +12,19 @@ scattering asymmetry for a sphere with complex index of refraction m,
 diameter d, and wavelength lambda can be found by::
 
     import miepython as mie
-    qext, qsca, qback, g = mie.ez_mie(m, d, lambda0)
+    qext, qsca, qback, g = mie.efficiencies(m, d, lambda0)
 
 The normalized scattering values for angles mu=cos(theta) are::
 
-    Ipar, Iper = mie.ez_intensities(m, d, lambda0, mu)
+    Ipar, Iper = mie.intensities(m, d, lambda0, mu)
 
 If the size parameter is known, then use::
 
-    mie.mie(m, x)
+    mie.efficiencies_mx(m, x)
 
 Mie scattering amplitudes S1 and S2 (complex numbers):
 
-    mie.mie_S1_S2(m, x, mu)
+    mie.S1_S2(m, x, mu)
 
 Normalized Mie scattering intensities for angles mu=cos(theta)::
 
@@ -40,7 +40,7 @@ Mie scattering intensities normalized to one when integrated over all angles::
 
 The scattering matrix
 
-    mie.mie_phase_matrix(m, x, mu)
+    mie.phase_matrix(m, x, mu)
 
 """
 
@@ -49,30 +49,30 @@ import os
 USE_JIT = os.environ.get("MIEPYTHON_USE_JIT", "1").lower() == "1"
 
 if USE_JIT:
-    from .mie_jit import _an_bn, _cn_dn, _mie_S1_S2
+    from .mie_jit import _an_bn, _cn_dn, _S1_S2
 
 else:
-    from .mie_nojit import _an_bn, _cn_dn, _mie_S1_S2
+    from .mie_nojit import _an_bn, _cn_dn, _S1_S2
 
-from .main import ez_mie, ez_intensities, i_par, i_per, i_unpolarized
-from .main import mie, mie_S1_S2, mie_phase_matrix, mie_coefficients, an_bn, cn_dn
+from .main import efficiencies, intensities, i_par, i_per, i_unpolarized
+from .main import efficiencies_mx, S1_S2, phase_matrix, coefficients, an_bn, cn_dn
 
 # The only functions exposed to the user
 __all__ = (
-    "ez_mie",
-    "ez_intensities",
+    "intensities",
     "i_par",
     "i_per",
     "i_unpolarized",
-    "mie",
-    "mie_phase_matrix",
-    "mie_coefficients",
+    "phase_matrix",
+    "coefficients",
+    "efficiencies",
+    "efficiencies_mx",
     "an_bn",
     "cn_dn",
-    "mie_S1_S2",
+    "S1_S2",
     "_an_bn",
     "_cn_dn",
-    "_mie_S1_S2",
+    "_S1_S2",
 )
 
 __version__ = "3.0.0"

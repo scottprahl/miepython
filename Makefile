@@ -23,8 +23,10 @@ rstcheck:
 
 lint:
 	-pylint miepython/bessel.py
-	-pylint miepython/miepython.py
-	-pylint miepython/miepython_nojit.py
+	-pylint miepython/mie_jit.py
+	-pylint miepython/mie_nojit.py
+	-pylint miepython/main.py
+	-pylint miepython/monte_carlo.py
 	-pylint miepython/__init__.py
 	-pylint tests/test_all_examples.py
 	-pylint tests/test_all_notebooks.py
@@ -33,8 +35,11 @@ lint:
 	-pylint docs/conf.py
 
 doccheck:
-	-ruff check miepython/miepython.py
-	-ruff check miepython/miepython_nojit.py
+	-ruff check miepython/bessel.py
+	-ruff check miepython/mie_jit.py
+	-ruff check miepython/mie_nojit.py
+	-ruff check miepython/main.py
+	-ruff check miepython/monte_carlo.py
 	-ruff check miepython/__init__.py
 	-ruff check tests/test_all_examples.py
 	-ruff check tests/test_all_notebooks.py
@@ -66,9 +71,10 @@ test:
 	-pytest -v --notebooks tests/test_all_notebooks.py
 
 clean:
-	rm -rf dist
+	rm -rf .ruff_cache
 	rm -rf miepython.egg-info
 	rm -rf miepython/__pycache__
+	rm -rf miepython/.ipynb_checkpoints
 	rm -rf miepython/examples/__pycache__
 	rm -rf docs/.DS_Store
 	rm -rf docs/api

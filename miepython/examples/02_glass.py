@@ -20,7 +20,7 @@ m2 += 0.231792344 / (1 - 0.0200179144 / lambda0**2)
 m2 += 1.01046945 / (1 - 103.560653 / lambda0**2)
 m = np.sqrt(m2)
 
-qext, qsca, qback, g = mie.mie(m, x)
+qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 plt.plot(lambda0 * 1000, qsca)
 
 plt.title("BK7 glass spheres 4 micron diameter")

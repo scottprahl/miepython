@@ -179,7 +179,7 @@ m = ref_n - 1.0j * ref_k
 x = 2 * np.pi * radius / ref_lam
 cross_section_area = np.pi * radius**2
 mu_a = 4 * np.pi * ref_k / ref_lam  # nm
-qext, qsca, qback, g = mie.mie(m, x)
+qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
 sca_cross_section = qsca * cross_section_area
 abs_cross_section = (qext - qsca) * cross_section_area

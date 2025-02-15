@@ -264,7 +264,7 @@ class Test1(unittest.TestCase):
             ab, bb, qsca_b = bohren_ab(m, x)
             ap, bp, qsca_p = pyscatt_ab(m, x)
             at, bt, _, _ = basic_abcd(m, x, 4)
-            qext, qsca, qback, g = mie.mie(m, x)
+            qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
             print("m=%s, x=%.4f" % (cs(m), x))
             print("Qsca %.5f %.5f" % (qsca, qsca_b))
@@ -306,7 +306,7 @@ class Test1(unittest.TestCase):
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
-        qext, qsca, qback, g = mie.mie(m, x)
+        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_lowan, qsca, qsca_b, qsca_p))
@@ -445,7 +445,7 @@ class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
 
         m = 1.33 - 1e-8j
         x = 3
-        a, b = mie.mie_coefficients(m, x)
+        a, b = mie.coefficients(m, x)
 
         print("a m=%s, x=%.4f" % (cs(m, 8), x))
         print(cs(a))
@@ -469,7 +469,7 @@ class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
         ab, bb, qsca_b = bohren_ab(m, x)
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.mie(m, x)
+        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_wisc, qsca, qsca_b, qsca_p))
@@ -504,7 +504,7 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         ab, bb, qsca_b = bohren_ab(m, x)
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.mie(m, x)
+        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_wisc, qsca, qsca_b, qsca_p))
@@ -541,7 +541,7 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
             ab, bb, qsca_b = bohren_ab(m, x)
             ap, bp, qsca_p = pyscatt_ab(m, x)
             at, bt, _, _ = basic_abcd(m, x, len(a))
-            qext, qsca, qback, g = mie.mie(m, x)
+            qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
             print("m=%s, x=%.4f" % (cs(m), x))
             print("Qsca %.5f %.5f" % (qsca, qsca_b))
@@ -583,7 +583,7 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
-        qext, qsca, qback, g = mie.mie(m, x)
+        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_lowan, qsca, qsca_b, qsca_p))
@@ -622,7 +622,7 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         ab, bb, qsca_b = bohren_ab(m, x)
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.mie(m, x)
+        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qext %.5f %.5f" % (qext_vdh, qext))
@@ -738,48 +738,84 @@ class TestAnBnCnDnLengths(unittest.TestCase):
     Unit tests for Mie coefficients cn and dn.
     """
 
-    def test_lengths(self):
+    def test_lengths_all(self):
         """
         Test that the lengths of the returned arrays match the expected lengths.
         """
         test_cases = [
             (1.5, 2.5, 0),
             (1.33 - 0.05j, 1.0, 0),
+        ]
+
+        for m, x, n_pole in test_cases:
+            a, b = mie.an_bn(m, x, n_pole)
+            c, d = mie.cn_dn(m, x, n_pole)
+
+            expected = int(x + 4.05 * x**0.33333 + 2.0) + 1
+
+            self.assertEqual(len(a), expected, "Length mismatch for a_n with n_pole=0")
+            self.assertEqual(len(b), expected, "Length mismatch for b_n with n_pole=0")
+            self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
+            self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
+
+        for m, x, n_pole in test_cases:
+            a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
+
+            expected = int(x + 4.05 * x**0.33333 + 2.0) + 1
+
+            self.assertEqual(len(a), expected, "Length mismatch for a_n with n_pole=0")
+            self.assertEqual(len(b), expected, "Length mismatch for b_n with n_pole=0")
+            self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
+            self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
+
+    def test_lengths_npole_scalar(self):
+        """
+        Test that scalars returned when we pass scalars
+        """
+        test_cases = [
             (1.5, 2.5, 1),
             (2.0 - 0.2j, 5.0, 2),
         ]
 
         for m, x, n_pole in test_cases:
-            # Compute coefficients
-            a_n, b_n = mie.an_bn(m, x, n_pole)
-            c_n, d_n = mie.cn_dn(m, x, n_pole)
+            a, b = mie.an_bn(m, x, n_pole)
+            c, d = mie.cn_dn(m, x, n_pole)
+            for var, name in zip([a, b, c, d], "abcd"):
+                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
 
-            # Determine expected length
-            if n_pole == 0:
-                expected_length = int(x + 4.05 * x**0.33333 + 2.0) + 1
+        for m, x, n_pole in test_cases:
+            a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
+            for var, name in zip([a, b, c, d], "abcd"):
+                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
 
-            else:
-                expected_length = n_pole
+    def test_lengths_npole_arrays(self):
+        """
+        Test that returned lengths match input arrays.
+        """
+        xarr = np.array([1, 2])
+        marr = np.array([2.0 - 0.2j, 2.0 - 0.1j])
+        test_cases = [
+            (marr, 2.5, 1),
+            (marr, 5.0, 2),
+            (2.0 - 0.2j, xarr, 3),
+            (marr, xarr, 3),
+        ]
 
-            # Assert lengths match expected
-            self.assertEqual(
-                len(c_n), expected_length, f"Length mismatch for c_n with n_pole={n_pole}"
-            )
-            self.assertEqual(
-                len(d_n), expected_length, f"Length mismatch for d_n with n_pole={n_pole}"
-            )
-            self.assertEqual(
-                len(a_n), expected_length, f"Length mismatch for a_n with n_pole={n_pole}"
-            )
-            self.assertEqual(
-                len(b_n), expected_length, f"Length mismatch for b_n with n_pole={n_pole}"
-            )
+        for m, x, n_pole in test_cases:
+            a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
+
+            expected = 2
+
+            self.assertEqual(len(a), expected, "Length wrong for a with n_pole=%d" % n_pole)
+            self.assertEqual(len(b), expected, "Length wrong for b with n_pole=%d" % n_pole)
+            self.assertEqual(len(c), expected, "Length wrong for c with n_pole=%d" % n_pole)
+            self.assertEqual(len(d), expected, "Length wrong for d with n_pole=%d" % n_pole)
 
 
 class TestBoundaryConditions(unittest.TestCase):
     def test_boundary_conditions(self):
         """
-        Test the calculated c_n and d_n coefficients using boundary conditions at the sphere surface.
+        Test the calculated c and d coefficients using boundary conditions at the sphere surface.
         """
         test_cases = [
             (1.5 - 0.1j, 1, 0),
@@ -787,25 +823,22 @@ class TestBoundaryConditions(unittest.TestCase):
             (1.5, 10, 0),
             (1.5, 2.5, 0),
             (1.33 - 0.05j, 1.0, 0),
-            (1.5, 2.5, 1),
-            (2.0 - 0.2j, 5.0, 2),
         ]
 
         # Define tolerance for boundary condition errors
-        tolerance = 2e-5
+        tolerance = 1e-5
 
         for m, x, n_pole in test_cases:
             # Compute Mie coefficients for scattered and internal fields
-            a_n, b_n = mie.an_bn(m, x, n_pole)
-            c_n, d_n = mie.cn_dn(m, x, n_pole)
+            a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
 
             print("--------------------------------------")
             print("a")
-            print("miepython", cs(a_n))
+            print("miepython", cs(a))
             print("c")
-            print("miepython", cs(c_n))
+            print("miepython", cs(c))
 
-            n = np.arange(1, len(a_n) + 1)
+            n = np.arange(1, len(a) + 1)
             m = np.conjugate(m)
             mx = m * x
 
@@ -816,41 +849,39 @@ class TestBoundaryConditions(unittest.TestCase):
             xi_n_x = riccati_bessel_h1(n, x)
             xi_n_prime_x = d_riccati_bessel_h1(n, x)
 
-            error1 = np.abs(psi_n_mx * c_n + m * xi_n_x * b_n - m * psi_n_x)
-            error2 = np.abs(psi_n_prime_mx * c_n + xi_n_prime_x * b_n - psi_n_prime_x)
-            error3 = np.abs(psi_n_mx * d_n + xi_n_x * a_n - psi_n_x)
-            error4 = np.abs(psi_n_prime_mx * d_n + m * xi_n_prime_x * a_n - m * psi_n_prime_x)
+            error1 = np.abs(psi_n_mx * c + m * xi_n_x * b - m * psi_n_x)
+            error2 = np.abs(psi_n_prime_mx * c + xi_n_prime_x * b - psi_n_prime_x)
+            error3 = np.abs(psi_n_mx * d + xi_n_x * a - psi_n_x)
+            error4 = np.abs(psi_n_prime_mx * d + m * xi_n_prime_x * a - m * psi_n_prime_x)
             print("**************************************************************")
             print("m=%s x=%.5f n=%d" % (cs(m), x, n_pole))
-            print("bohren 4.51a LHS:\n", cs(psi_n_mx * c_n), "=", cs(psi_n_mx), "*", cs(c_n))
+            print("bohren 4.51a LHS:\n", cs(psi_n_mx * c), "=", cs(psi_n_mx), "*", cs(c))
             print(
                 "bohren 4.51a LHS:\n",
-                cs(m * xi_n_x * b_n),
+                cs(m * xi_n_x * b),
                 "=",
                 cs(m),
                 "*",
                 cs(xi_n_x),
                 "*",
-                cs(b_n),
+                cs(b),
             )
             print("bohren 4.51a RHS:\n", cs(-m * psi_n_x), "=", cs(-m), "*", cs(psi_n_x))
-            print("bohren 4.51a BC1:\n", cs(psi_n_mx * c_n + m * xi_n_x * b_n - m * psi_n_x))
+            print("bohren 4.51a BC1:\n", cs(psi_n_mx * c + m * xi_n_x * b - m * psi_n_x))
             print()
-            print("bohren 4.51b LHS:\n", cs(psi_n_prime_mx * c_n + xi_n_prime_x * b_n))
+            print("bohren 4.51b LHS:\n", cs(psi_n_prime_mx * c + xi_n_prime_x * b))
             print("bohren 4.51b RHS:\n", cs(psi_n_prime_x))
-            print(
-                "bohren 4.51b BC1:\n", cs(psi_n_prime_mx * c_n + xi_n_prime_x * b_n - psi_n_prime_x)
-            )
+            print("bohren 4.51b BC1:\n", cs(psi_n_prime_mx * c + xi_n_prime_x * b - psi_n_prime_x))
             print()
-            print("bohren 4.51c LHS:\n", cs(psi_n_mx * d_n + xi_n_x * a_n))
+            print("bohren 4.51c LHS:\n", cs(psi_n_mx * d + xi_n_x * a))
             print("bohren 4.51c RHS:\n", cs(psi_n_x))
-            print("bohren 4.51c BC1:\n", cs(psi_n_mx * d_n + xi_n_x * a_n - psi_n_x))
+            print("bohren 4.51c BC1:\n", cs(psi_n_mx * d + xi_n_x * a - psi_n_x))
             print()
-            print("bohren 4.51d LHS:\n", cs(psi_n_prime_mx * d_n + m * xi_n_prime_x * a_n))
+            print("bohren 4.51d LHS:\n", cs(psi_n_prime_mx * d + m * xi_n_prime_x * a))
             print("bohren 4.51d RHS:\n", cs(m * psi_n_prime_x))
             print(
                 "bohren 4.51d BC1:\n",
-                cs(psi_n_prime_mx * d_n + m * xi_n_prime_x * a_n - m * psi_n_prime_x),
+                cs(psi_n_prime_mx * d + m * xi_n_prime_x * a - m * psi_n_prime_x),
             )
             print()
 
