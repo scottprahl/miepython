@@ -1,13 +1,32 @@
 API for `miepython` package
 ============================
 
-.. automodapi:: miepython.main
+.. automodule:: miepython
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. automodapi:: miepython.mie_nojit
+.. automodule:: miepython.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. automodapi:: miepython.mie_jit
+.. automodule:: miepython.mie_nojit
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. automodapi:: miepython.monte_carlo
+.. automodule:: miepython.mie_jit
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. automodapi:: miepython.bessel
+.. automodule:: miepython.monte_carlo
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
+.. automodule:: miepython.bessel
+   :members:
+   :undoc-members:
+   :show-inheritance:
