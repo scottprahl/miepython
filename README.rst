@@ -60,8 +60,8 @@ angles.
 
 Full documentation at <https://miepython.readthedocs.io>
 
-Version 3 changes
------------------
+Version 3 changes (in progress)
+--------------------------------
 
 This version contains major changes to the code base and **has API breaking changes**.
 If you don't need the new functionality for fields, then you can continue to use the
