@@ -1,43 +1,51 @@
-miepython
-=========
-
-by Scott Prahl
-
-.. image:: https://img.shields.io/pypi/v/miepython?color=68CA66
+.. |pypi| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: pypi
 
-.. image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
+.. |github| image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
    :target: https://github.com/scottprahl/miepython
    :alt: github
 
-.. image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
+.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
    :target: https://github.com/conda-forge/miepython-feedstock
    :alt: conda
 
-.. image:: https://zenodo.org/badge/99259684.svg
+.. |doi| image:: https://zenodo.org/badge/99259684.svg
    :target: https://zenodo.org/badge/latestdoi/99259684
    :alt: doi
 
 |
 
-.. image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
+.. |license| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
    :alt: License
 
-.. image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
+.. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
    :alt: Testing
 
-.. image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
+.. |docs| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
    :target: https://miepython.readthedocs.io
    :alt: Docs
 
-.. image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
+.. |downloads| image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: Downloads
 
-__________
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: code style: black
+
+miepython
+=========
+
+by Scott Prahl
+
+|pypi| |github| |conda| |doi|
+
+|license| |test| |docs| |downloads| |black|
+
+________
 
 ``miepython`` is a pure Python module to calculate light scattering for
 non-absorbing, partially-absorbing, or perfectly-conducting spheres. Mie
@@ -51,6 +59,19 @@ of angles can be given to calculate the scattering for a sphere at each of those
 angles.
 
 Full documentation at <https://miepython.readthedocs.io>
+
+Version 3 changes
+-----------------
+
+This version contains major changes to the code base and **has API breaking changes**.
+If you don't need the new functionality for fields, then you can continue to use the
+last version with the old API: 2.5.5
+
+Version 3.0 has many changes, but the major changes are:
+
+    * a complete overhaul of API
+    * added support to calculate Mie coefficients for fields inside sphere
+    * added support for calculating electric and magnetic fields
 
 Pay Attention!
 --------------
@@ -72,8 +93,6 @@ or ``conda``::
 
     conda install -c conda-forge miepython
 
-Or `run this code in the cloud using Google Collaboratory <https://colab.research.google.com/github/scottprahl/miepython/blob/master>`_ by selecting the Jupyter notebook that interests you.
-
 An example
 ----------
 
@@ -81,9 +100,11 @@ The following code::
 
     import miepython as mie
     
-    m = 1.5-1j
-    x = 1
-    qext, qsca, qback, g = mie.mie(m,x)
+    m = 1.5 - 1j      # refractive index of sphere
+    d = 100           # nm diameter of sphere
+    lambda0 = 314.15  # nm wavelength in vacuum
+
+    qext, qsca, qback, g = mie.efficiencies(m, d, lambda0)
 
     print("The extinction efficiency  is %.3f" % qext)
     print("The scattering efficiency  is %.3f" % qsca)
@@ -97,7 +118,7 @@ should produce::
     The backscatter efficiency is 0.573
     The scattering anisotropy  is 0.192
 
-There are a few short scripts in the github repository.
+There are a few short python scripts in the github repository.
 
 * `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_
  
