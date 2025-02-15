@@ -3,3 +3,4 @@ matplotlib
 numba
 scipy
 pytest
+miepython
