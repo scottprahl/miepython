@@ -184,7 +184,7 @@ qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 sca_cross_section = qsca * cross_section_area
 abs_cross_section = (qext - qsca) * cross_section_area
 
-plt.subplots(3, 1, figsize=(9, 9))
+plt.subplots(3, 1, figsize=(8, 8))
 plt.subplot(311)
 plt.plot(ref_lam * 1000, ref_n, "ob")
 plt.plot(ref_lam * 1000, -ref_k, "sr")
@@ -203,5 +203,5 @@ plt.xlabel("Wavelength (nm)")
 plt.ylabel("Cross Section (µm²)")
 plt.text(700, 0.01, "absorption", color="blue")
 plt.text(750, 0.1, "scattering", color="red")
-# plt.savefig("04_plot.png")
-# plt.show()
+#plt.savefig("04.svg")
+#plt.show()

@@ -121,13 +121,24 @@ should produce::
 There are a few short python scripts in the github repository.
 
 * `Extinction Efficiency of Absorbing and Non-Absorbing Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/01_dielectric.py>`_
+
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/01.svg
+   :alt: Absorbing and non-absorbing spheres
  
 * `Four Micron Glass Spheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/02_glass.py>`_ 
 
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/02.svg
+   :alt: Glass spheres with resonance spike
+
 * `One Micron Water Droplets <https://github.com/scottprahl/miepython/blob/master/miepython/examples/03_droplets.py>`_ 
+
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/03.svg
+   :alt: Water Droplets
 
 * `Gold Nanospheres <https://github.com/scottprahl/miepython/blob/master/miepython/examples/04_gold.py>`_ 
 
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/04.svg
+   :alt: Gold nanospheres
 
 License
 -------

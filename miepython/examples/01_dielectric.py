@@ -3,8 +3,7 @@
 """
 Plot the extinction efficiency as a function of particle size.
 
-This is a comparision of total extinction for non-absorbing and absorbing
-spheres.
+This is a comparision of total extinction for non-absorbing and absorbing spheres.
 """
 
 import numpy as np
@@ -13,7 +12,7 @@ import miepython as mie
 
 x = np.linspace(0.1, 100, 300)
 
-# mie() will automatically try to do the right thing
+plt.figure(figsize=(8,4.5))
 
 qext, qsca, qback, g = mie.efficiencies_mx(1.5, x)
 plt.plot(x, qext, color="red", label="1.5")
@@ -21,8 +20,9 @@ plt.plot(x, qext, color="red", label="1.5")
 qext, qsca, qback, g = mie.efficiencies_mx(1.5 - 0.1j, x)
 plt.plot(x, qext, color="blue", label="1.5-0.1j")
 
-plt.title("Comparison of extinction for absorbing and non-absorbing spheres")
-plt.xlabel("Size Parameter (-)")
-plt.ylabel("Qext")
+plt.title("Extinction by absorbing and non-absorbing spheres")
+plt.xlabel(r"Size Parameter $x=\pi d/\lambda$    [—]")
+plt.ylabel("Extinction Efficiency $Q_{ext}$    [—]")
 plt.legend()
-# plt.show()
+#plt.savefig("01.svg", format="svg")
+#plt.show()

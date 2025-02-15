@@ -10,10 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import miepython as mie
 
-num = 100
 radius = 0.5  # in microns
-lambda0 = np.linspace(0.2, 1.2, num)  # also in microns
-x = 2 * np.pi * radius / lambda0
+lambda0 = np.linspace(0.2, 1.2, 100)  # also in microns
+geometric_cross_section = np.pi * radius**2
 
 # from https://refractiveindex.info/?shelf=main&book=H2O&page=Daimon - 24.0C
 m2 = 1.0
@@ -23,10 +22,14 @@ m2 += 2.095951857e-2 / (1.0 - 2.625439472e-2 / lambda0**2)
 m2 += 1.125228406e-1 / (1.0 - 1.073842352e1 / lambda0**2)
 m = np.sqrt(m2)
 
-qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+plt.figure(figsize=(8,4.5))
 
-plt.plot(lambda0 * 1000, qsca)
+qext, qsca, qback, g = mie.efficiencies(m, 2*radius, lambda0)
+sigma_sca = qsca * geometric_cross_section
+
+plt.plot(lambda0 * 1000, sigma_sca)
 plt.title("Water Droplets (1 µm diameter)")
-plt.xlabel("Wavelength (nm)")
-plt.ylabel("Scattering Cross Section (µm²)")
-# plt.show()
+plt.xlabel("Wavelength    [nm]")
+plt.ylabel("Scattering Cross Section    [µm²]")
+#plt.savefig("03.svg", format="svg")
+#plt.show()
