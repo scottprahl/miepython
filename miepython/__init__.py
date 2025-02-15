@@ -54,8 +54,8 @@ if USE_JIT:
 else:
     from .mie_nojit import _an_bn, _cn_dn, _S1_S2
 
-from .main import efficiencies, intensities, i_par, i_per, i_unpolarized
-from .main import efficiencies_mx, S1_S2, phase_matrix, coefficients, an_bn, cn_dn
+from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
+from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients, an_bn, cn_dn
 
 # The only functions exposed to the user
 __all__ = (

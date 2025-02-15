@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.6.0 (2/10/2025)
+3.0.0 (2/10/2025)
 -------------------
 *   breaking api changes
 *   make api more natural: mie.efficiencies() instead of miepython.mie()

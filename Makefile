@@ -25,7 +25,7 @@ lint:
 	-pylint miepython/bessel.py
 	-pylint miepython/mie_jit.py
 	-pylint miepython/mie_nojit.py
-	-pylint miepython/main.py
+	-pylint miepython/core.py
 	-pylint miepython/monte_carlo.py
 	-pylint miepython/__init__.py
 	-pylint tests/test_all_examples.py
@@ -38,7 +38,7 @@ doccheck:
 	-ruff check miepython/bessel.py
 	-ruff check miepython/mie_jit.py
 	-ruff check miepython/mie_nojit.py
-	-ruff check miepython/main.py
+	-ruff check miepython/core.py
 	-ruff check miepython/monte_carlo.py
 	-ruff check miepython/__init__.py
 	-ruff check tests/test_all_examples.py
