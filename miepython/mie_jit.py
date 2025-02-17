@@ -82,15 +82,20 @@ def _D_upwards(z, N, D):
 @njit((complex128, float64, int64), cache=True)
 def _D_calc(m, x, N):
     """
-    Compute the logarithmic derivative using best method.
+    Compute the logarithmic derivative of ψ_n(z) using the best method.
+
+    D_n(z) = d[log ψ_n(z)] = ψ_n'(z)/ψ_n(z)
+
+    here ψ_n(z) is the Riccati-Bessel function of the first kind ψ_n(z)=z*j_n(z)
+    were j_n(z) is the spherical Bessel function of order n.
 
     Args:
-        m: the complex index of refraction of the sphere
+        m: the np.complex128 index of refraction of the sphere
         x: the size parameter of the sphere
         N: order of Ricatti-Bessel function
 
     Returns:
-        The values of the Ricatti-Bessel function for orders from 0 to N.
+        Array of logarithmic derivatives D_k(z) for k=1 to N.
     """
     n = m.real
     kappa = np.abs(m.imag)

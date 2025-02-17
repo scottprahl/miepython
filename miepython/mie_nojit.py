@@ -15,14 +15,18 @@ def _Lentz_Dn(z, N):
     """
     Compute the logarithmic derivative of the Ricatti-Bessel function.
 
+    D_n(z) = d[log psi_n(z)] = psi_n'(z)/psi_n(z)
+
+    This returns the logarithmic derivative of the Ricatti-Bessel function of order N
+    with argument z using the continued fraction technique of Lentz, Appl. Opt., 15,
+    668-671, (1976).
+
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
 
     Returns:
-        This returns the Ricatti-Bessel function of order N with argument z
-        using the continued fraction technique of Lentz, Appl. Opt., 15,
-        668-671, (1976).
+        logarithmic derivative Dn(z)
     """
     zinv = 2.0 / z
     alpha = (N + 0.5) * zinv
@@ -77,7 +81,12 @@ def _D_upwards(z, N, D):
 
 def _D_calc(m, x, N):
     """
-    Compute the logarithmic derivative using best method.
+    Compute the logarithmic derivative of ψ_n(z) using the best method.
+
+    D_n(z) = d[log ψ_n(z)] = ψ_n'(z)/ψ_n(z)
+
+    here ψ_n(z) is the Riccati-Bessel function of the first kind ψ_n(z)=z*j_n(z)
+    were j_n(z) is the spherical Bessel function of order n.
 
     Args:
         m: the np.complex128 index of refraction of the sphere
@@ -85,7 +94,7 @@ def _D_calc(m, x, N):
         N: order of Ricatti-Bessel function
 
     Returns:
-        The values of the Ricatti-Bessel function for orders from 0 to N.
+        Array of logarithmic derivatives D_k(z) for k=1 to N.
     """
     n = m.real
     kappa = np.abs(m.imag)
