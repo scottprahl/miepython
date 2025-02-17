@@ -2,9 +2,8 @@
 Module for Bessel and Riccati-Bessel functions.
 
 This module provides a collection of functions related to spherical Bessel functions,
-Hankel functions, Riccati-Bessel functions, and their derivatives. These functions
-are commonly used in physics, especially in problems involving wave propagation,
-scattering, and spherical geometries.
+Hankel functions, Riccati-Bessel functions, and their derivatives.  This supplements
+those provided by `scipy.special`
 
 Functions provided:
 
@@ -16,7 +15,7 @@ Functions provided:
 - Riccati-Bessel functions:
 
   - `riccati_bessel_jn`: Riccati-Bessel function of the first kind ψ_n(z).
-  - `riccati_bessel_h1`: Riccati-Bessel function of the third kind ξ_n(z).
+  - `riccati_bessel_h1`: Riccati-Bessel function of the second kind ξ_n(z).
   - `riccati_bessel_h2`: Riccati-Bessel function of the third kind ζ_n(z).
 
 - Derivatives of Bessel functions:
@@ -28,7 +27,7 @@ Functions provided:
 - Derivatives of Riccati-Bessel functions:
 
   - `d_riccati_bessel_jn`: Derivative of the Riccati-Bessel function of the first kind ψ_n'(z).
-  - `d_riccati_bessel_h1`: Derivative of the Riccati-Bessel function of the third kind ξ_n'(z).
+  - `d_riccati_bessel_h1`: Derivative of the Riccati-Bessel function of the second kind ξ_n'(z).
   - `d_riccati_bessel_h2`: Derivative of the Riccati-Bessel function of the third kind ζ_n'(z).
 """
 
@@ -65,25 +64,21 @@ def spherical_h2(n, z):
 
 def riccati_bessel_jn(n, z):
     """
-    Riccati-Bessel function of the first kind ψ_n(z)=z * j_n(z).
+    Riccati-Bessel function of the first kind ψ_n(z).
     """
     return z * spherical_jn(n, z)
 
 
 def riccati_bessel_h1(n, z):
     """
-    Riccati-Bessel function of the third kind.
-
-    This follows the Bohren and Huffman assumption that xi_n(z) = z * h_n^{(1)}(z)
+    Riccati-Bessel function of the second kind ξ_n(z).
     """
     return z * spherical_h1(n, z)
 
 
 def riccati_bessel_h2(n, z):
     """
-    Riccati-Bessel function of the third kind.
-
-    This follows the van de Hulst or Kerker's assumption that xi_n(z) = z * h_n^{(2)}(z)
+    Riccati-Bessel function of the third kind ζ_n(z).
     """
     return z * spherical_h2(n, z)
 
@@ -97,14 +92,14 @@ def d_spherical_jn(n, z):
 
 def d_spherical_h1(n, z):
     """
-    Derivative of the spherical Hankel function of the first kind.
+    Derivative of the spherical Hankel function of the first kind h_n^{(1)}'(z).
     """
     return 0.5 * (spherical_h1(n - 1, z) - spherical_h1(n, z) / z - spherical_h1(n + 1, z))
 
 
 def d_spherical_h2(n, z):
     """
-    Derivative of the spherical Hankel function of the second kind.
+    Derivative of the spherical Hankel function of the second kind h_n^{(2)}'(z).
     """
     return 0.5 * (spherical_h2(n - 1, z) - spherical_h2(n, z) / z - spherical_h2(n + 1, z))
 
@@ -118,17 +113,13 @@ def d_riccati_bessel_jn(n, z):
 
 def d_riccati_bessel_h1(n, z):
     """
-    Derivative of the Riccati-Bessel function of the third kind.
-
-    This follows the Bohren and Huffman assumption that xi_n(z) = z * h_n^{(1)}(z)
+    Derivative of the Riccati-Bessel function of the second kind ξ_n'(z).
     """
     return 0.5 * (z * spherical_h1(n - 1, z) + spherical_h1(n, z) - z * spherical_h1(n + 1, z))
 
 
 def d_riccati_bessel_h2(n, z):
     """
-    Derivative of the Riccati-Bessel function of the third kind.
-
-    This follows the van de Hulst or Kerker's assumption that xi_n(z) = z * h_n^{(2)}(z)
+    Derivative of the Riccati-Bessel function of the third kind ζ_n'(z).
     """
     return 0.5 * (z * spherical_h2(n - 1, z) + spherical_h2(n, z) - z * spherical_h2(n + 1, z))
