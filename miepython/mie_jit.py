@@ -6,6 +6,7 @@ import numpy as np
 from numba import njit, complex128, float64, int64
 
 __all__ = (
+    "_D_calc",
     "_an_bn",
     "_cn_dn",
     "_S1_S2",
@@ -53,8 +54,7 @@ def _D_downwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders
-           from 0 to N for an argument z using the downwards recurrence relations.
+        D: gets filled with ψ_k'(z)/ψ_k(z) for k=0 to N-1
     """
     last_D = _Lentz_Dn(z, N)
     for n in range(N, 0, -1):
@@ -70,8 +70,7 @@ def _D_upwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders
-           from 0 to N for an argument z using the upwards recurrence relations.
+        D: gets filled with ψ_k'(z)/ψ_k(z) for k=0 to N-1
     """
     exp = np.exp(-2j * z)
     D[1] = -1 / z + (1 - exp) / ((1 - exp) / z - 1j * (1 + exp))
@@ -89,17 +88,19 @@ def _D_calc(m, x, N):
     here ψ_n(z) is the Riccati-Bessel function of the first kind ψ_n(z)=z*j_n(z)
     were j_n(z) is the spherical Bessel function of order n.
 
+    The zero-based array, D[:], is shifted so that D[0] = D₁(z) = ψ₁'(z)/ψ₁(z)
+
     Args:
         m: the np.complex128 index of refraction of the sphere
         x: the size parameter of the sphere
         N: order of Ricatti-Bessel function
 
     Returns:
-        Array of logarithmic derivatives D_k(z) for k=1 to N.
+        Array of logarithmic derivatives D_k(z) for k=1 to N-1.
     """
     n = m.real
     kappa = np.abs(m.imag)
-    D = np.zeros(N, dtype=np.complex128)
+    D = np.zeros(N + 1, dtype=np.complex128)
     mx = np.complex128(m * x)  # ensure complex
 
     if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
