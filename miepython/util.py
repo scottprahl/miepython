@@ -1,3 +1,4 @@
+"""Functions to format complex numbers or arrays of complex numbers."""
 import numpy as np
 
 _all_ = ("cs_scalar", "cs_vector", "cs")
