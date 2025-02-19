@@ -746,7 +746,7 @@ class TestAnBnCnDnLengths(unittest.TestCase):
 
     def test_lengths_npole_scalar(self):
         """
-        Test that scalars returned when we pass scalars
+        Test that scalars returned when we pass scalars.
         """
         test_cases = [
             (1.5, 2.5, 1),

@@ -13,7 +13,6 @@ import numpy as np
 
 os.environ["MIEPYTHON_USE_JIT"] = "0"  # Set to "0" to disable JIT
 import miepython as mie
-from miepython.util import cs
 
 
 class NonAbsorbing(unittest.TestCase):
