@@ -13,15 +13,15 @@ Sign Conventions:
     "Vector Spherical Harmonics" webpage on Wikipedia as well as those described
     in the paper by Ladutenko (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
     In particular, the odd and even modes are consistent with these references.
-    
-    The even and odd magnetic modes of Bohren & Huffman are reversed from those 
-    used here. 
+
+    The even and odd magnetic modes of Bohren & Huffman are reversed from those
+    used here.
 
 Bessel Function Selection:
 
     The appropriate spherical Bessel function is chosen based on the spatial
     region where the field is evaluated:
-    
+
         - For points inside the sphere (r < d_sphere/2), the regular spherical
           Bessel functions (``spherical_jn``) are used.
         - For points outside the sphere (r >= d_sphere/2), the spherical Hankel
@@ -123,12 +123,12 @@ def M_odd(n, d_sphere, r, theta, phi, k):
     """
     Compute the nth odd magnetic vector spherical harmonic (m=1).
 
-    This function calculates the odd-parity magnetic vector spherical harmonic, 
-    denoted as M_{omn}(rho), for the given multipole order `n`. The proper 
-    Bessel function is chosen based on whether the calculation is performed 
+    This function calculates the odd-parity magnetic vector spherical harmonic,
+    denoted as M_{omn}(rho), for the given multipole order `n`. The proper
+    Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
-    The conventions used follow the "Vector Spherical Harmonics" Wikipedia 
+    The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
@@ -140,7 +140,7 @@ def M_odd(n, d_sphere, r, theta, phi, k):
         k (float): Wave number of the incident wave.
 
     Returns:
-        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar, 
+        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
         and azimuthal components of the odd magnetic vector spherical harmonic.
     """
     rho = k * r
@@ -148,7 +148,7 @@ def M_odd(n, d_sphere, r, theta, phi, k):
         factor = spherical_jn(n, rho)
     else:
         factor = spherical_h1(n, rho)
-    
+
     Mr = 0
     Mtheta = np.cos(phi) * mie_pi(n, theta) * factor
     Mphi = -np.sin(phi) * mie_tau(n, theta) * factor
@@ -159,12 +159,12 @@ def M_even(n, d_sphere, r, theta, phi, k):
     """
     Compute the nth even magnetic vector spherical harmonic (m=1).
 
-    This function calculates the even-parity magnetic vector spherical harmonic, 
-    denoted as M_{emn}(rho), for the given multipole order `n`. The proper 
-    Bessel function is chosen based on whether the calculation is performed 
+    This function calculates the even-parity magnetic vector spherical harmonic,
+    denoted as M_{emn}(rho), for the given multipole order `n`. The proper
+    Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
-    The conventions used follow the "Vector Spherical Harmonics" Wikipedia 
+    The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
@@ -176,7 +176,7 @@ def M_even(n, d_sphere, r, theta, phi, k):
         k (float): Wave number of the incident wave.
 
     Returns:
-        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar, 
+        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
         and azimuthal components of the even magnetic vector spherical harmonic.
     """
     rho = k * r
@@ -184,7 +184,7 @@ def M_even(n, d_sphere, r, theta, phi, k):
         factor = spherical_jn(n, rho)
     else:
         factor = spherical_h1(n, rho)
-    
+
     Mr = 0
     Mtheta = -np.sin(phi) * mie_pi(n, theta) * factor
     Mphi = -np.cos(phi) * mie_tau(n, theta) * factor
@@ -195,12 +195,12 @@ def N_odd(n, d_sphere, r, theta, phi, k):
     """
     Compute the nth odd electric vector spherical harmonic (m=1).
 
-    This function calculates the odd-parity electric vector spherical harmonic, 
-    denoted as N_{omn}(rho), for the given multipole order `n`. The proper 
-    Bessel function is chosen based on whether the calculation is performed 
+    This function calculates the odd-parity electric vector spherical harmonic,
+    denoted as N_{omn}(rho), for the given multipole order `n`. The proper
+    Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
-    The conventions used follow the "Vector Spherical Harmonics" Wikipedia 
+    The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
@@ -212,7 +212,7 @@ def N_odd(n, d_sphere, r, theta, phi, k):
         k (float): Wave number of the incident wave.
 
     Returns:
-        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar, 
+        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
         and azimuthal components of the odd electric vector spherical harmonic.
     """
     rho = k * r
@@ -234,12 +234,12 @@ def N_even(n, d_sphere, r, theta, phi, k):
     """
     Compute the nth even electric vector spherical harmonic (m=1).
 
-    This function calculates the even-parity electric vector spherical harmonic, 
-    denoted as N_{emn}(rho), for the given multipole order `n`. The proper 
-    Bessel function is chosen based on whether the calculation is performed 
+    This function calculates the even-parity electric vector spherical harmonic,
+    denoted as N_{emn}(rho), for the given multipole order `n`. The proper
+    Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
-    The conventions used follow the "Vector Spherical Harmonics" Wikipedia 
+    The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
@@ -251,7 +251,7 @@ def N_even(n, d_sphere, r, theta, phi, k):
         k (float): Wave number of the incident wave.
 
     Returns:
-        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar, 
+        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
         and azimuthal components of the even electric vector spherical harmonic.
     """
     rho = k * r
