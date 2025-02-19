@@ -13,29 +13,7 @@ import numpy as np
 
 os.environ["MIEPYTHON_USE_JIT"] = "0"  # Set to "0" to disable JIT
 import miepython as mie
-
-
-def cs_scalar(z, N=5):
-    """Convert complex number to string for printing."""
-    if z.imag < 0:
-        form = "(%% .%df - %%.%dfj)" % (N, N)
-    else:
-        form = "(%% .%df + %%.%dfj)" % (N, N)
-    return form % (z.real, abs(z.imag))
-
-
-def cs(z, N=5):
-    """Convert complex number to string for printing."""
-    if np.isscalar(z):
-        return cs_scalar(z, N)
-
-    s = ""
-    for zz in z:
-        if s != "":
-            s += ", "
-        s += cs_scalar(zz, N)
-
-    return s
+from miepython.util import cs
 
 
 class NonAbsorbing(unittest.TestCase):
