@@ -11,3 +11,8 @@ API for `miepython` package
 
 .. automodapi:: miepython.bessel
 
+.. automodapi:: miepython.vsh
+
+.. automodapi:: miepython.util
+
+
