@@ -40,7 +40,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
     mie.i_unpolarized(m, x, mu)
 """
 import numpy as np
-from miepython import _an_bn, _cn_dn, _S1_S2
+from miepython import _an_bn, _cn_dn, _S1_S2, _D_calc
 
 
 # not really needed but included for clarity
@@ -56,6 +56,7 @@ __all__ = (
     "coefficients",
     "an_bn",
     "cn_dn",
+    "_D_calc",
 )
 
 
@@ -138,6 +139,8 @@ def coefficients(m, x, n_pole=0, internal=False):
             must match the length of `m`.
         n_pole (int, optional): The specific multipole order to compute. Defaults to 0,
             which calculates all terms and returns the full arrays of coefficients.
+        internal (bool, optional): If True then returns Mie coefficients needed to
+            calculate fields inside the sphere.
 
     Returns:
         tuple:
