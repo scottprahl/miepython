@@ -22,12 +22,14 @@ rstcheck:
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
 lint:
+	-pylint miepython/__init__.py
 	-pylint miepython/bessel.py
 	-pylint miepython/mie_jit.py
 	-pylint miepython/mie_nojit.py
 	-pylint miepython/core.py
 	-pylint miepython/monte_carlo.py
-	-pylint miepython/__init__.py
+	-pylint miepython/util.py
+	-pylint miepython/vsh.py
 	-pylint tests/test_all_examples.py
 	-pylint tests/test_all_notebooks.py
 	-pylint tests/test_jit.py
@@ -35,16 +37,24 @@ lint:
 	-pylint docs/conf.py
 
 doccheck:
+	-ruff check miepython/__init__.py
 	-ruff check miepython/bessel.py
+	-ruff check miepython/core.py
 	-ruff check miepython/mie_jit.py
 	-ruff check miepython/mie_nojit.py
-	-ruff check miepython/core.py
 	-ruff check miepython/monte_carlo.py
-	-ruff check miepython/__init__.py
+	-ruff check miepython/util.py
+	-ruff check miepython/vsh.py
 	-ruff check tests/test_all_examples.py
-	-ruff check tests/test_all_notebooks.py
+	-ruff check tests/test_bessel.py
 	-ruff check tests/test_jit.py
+	-ruff check tests/test_jit_D.py
+	-ruff check tests/test_jit_abcd.py
 	-ruff check tests/test_nojit.py
+	-ruff check tests/test_nojit_D.py
+	-ruff check tests/test_nojit_abcd.py
+	-ruff check tests/test_vsh_basic.py
+	-ruff check tests/test_all_notebooks.py
 
 rcheck:
 	make notecheck
@@ -66,6 +76,7 @@ test:
 	-pytest -v tests/test_jit_D.py
 	-pytest -v tests/test_jit_abcd.py
 	-pytest -v tests/test_jit.py
+	-pytest -v tests/test_vsh_basic.py
 
 	-pytest -v tests/test_all_examples.py
 	-pytest -v --notebooks tests/test_all_notebooks.py
