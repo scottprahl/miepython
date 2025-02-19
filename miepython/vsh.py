@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 """
 Vector Spherical Harmonics for Mie Scattering.
 
