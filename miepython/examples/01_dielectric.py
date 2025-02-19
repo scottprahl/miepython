@@ -12,7 +12,7 @@ import miepython as mie
 
 x = np.linspace(0.1, 100, 300)
 
-plt.figure(figsize=(8,4.5))
+plt.figure(figsize=(8, 4.5))
 
 qext, qsca, qback, g = mie.efficiencies_mx(1.5, x)
 plt.plot(x, qext, color="red", label="1.5")
@@ -24,5 +24,5 @@ plt.title("Extinction by absorbing and non-absorbing spheres")
 plt.xlabel(r"Size Parameter $x=\pi d/\lambda$    [—]")
 plt.ylabel("Extinction Efficiency $Q_{ext}$    [—]")
 plt.legend()
-#plt.savefig("01.svg", format="svg")
-#plt.show()
+# plt.savefig("01.svg", format="svg")
+# plt.show()
