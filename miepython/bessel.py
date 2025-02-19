@@ -12,17 +12,18 @@ Functions provided:
   - `spherical_h1`: Spherical Hankel function of the first kind h_n^{(1)}(z).
   - `spherical_h2`: Spherical Hankel function of the second kind h_n^{(2)}(z).
 
+- Derivatives of Bessel functions:
+
+  - `d_spherical_jn`: Derivative of the spherical Bessel function j_n'(z).
+  - `d_spherical_h1`: Derivative of the spherical Hankel function of first kind h_n^{(1)}'(z).
+  - `d_spherical_h2`: Derivative of the spherical Hankel function of second kind h_n^{(2)}'(z).
+
 - Riccati-Bessel functions:
 
   - `riccati_bessel_jn`: Riccati-Bessel function of the first kind ψ_n(z).
   - `riccati_bessel_h1`: Riccati-Bessel function of the second kind ξ_n(z).
   - `riccati_bessel_h2`: Riccati-Bessel function of the third kind ζ_n(z).
 
-- Derivatives of Bessel functions:
-
-  - `d_spherical_jn`: Derivative of the spherical Bessel function j_n'(z).
-  - `d_spherical_h1`: Derivative of the spherical Hankel function of first kind h_n^{(1)}'(z).
-  - `d_spherical_h2`: Derivative of the spherical Hankel function of second kind h_n^{(2)}'(z).
 
 - Derivatives of Riccati-Bessel functions:
 
