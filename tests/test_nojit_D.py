@@ -11,33 +11,7 @@ import numpy as np
 
 from miepython.mie_nojit import _D_calc
 from miepython.bessel import *
-
-
-def cs_scalar(z, N=5):
-    """Convert complex number to string for printing."""
-    if z.imag < 0:
-        form = "(%% .%df - %%.%dfj)" % (N, N)
-    else:
-        form = "(%% .%df + %%.%dfj)" % (N, N)
-    return form % (z.real, abs(z.imag))
-
-
-def cs(z, N=5):
-    """Convert complex number to string for printing."""
-    if np.isscalar(z):
-        return cs_scalar(z, N)
-
-    s = ""
-    terms = 0
-    for zz in z:
-        if s != "":
-            s += ", "
-        s += cs_scalar(zz, N)
-        terms += 1
-        if terms >= 4:
-            break
-
-    return s
+from miepython.util import cs
 
 
 def pymiescatt_D(m, x):
