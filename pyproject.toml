@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "miepython"
-version = "2.5.5"
+version = "3.0.0"
 description = "Mie scattering of a plane wave by a sphere"
 requires-python = ">=3.8"
 readme = { file = "README.rst", content-type = "text/x-rst" }
@@ -38,37 +38,24 @@ classifiers = [
 dependencies = [
     "numpy",
     "matplotlib",
-    "numba"
+    "numba",
+    "scipy",
 ]
 
 [tool.black]
-line-length = 100
+line-length = 110
 target-version = ["py38", "py39", "py310", "py311", "py312"]
 
 [tool.pytest.ini_options]
 markers = ["notebooks: tests related to Jupyter notebooks"]
 
-[tool.flake8]
-max-line-length = 100
-ignore = ["D200", "D212", "N802", "N803", "N806", "E501", "W503"]
-per-file-ignores = [
-    "__init__.py:F401,F403",
-    "setup.py:D100",
-    "tests/test_bessel.py:D100,D101,D102,D103,F405",
-    "tests/test_jit.py:D100,D101,D102",
-    "tests/test_jit_D.py:D100,D101,D102",
-    "tests/test_jit_abcd.py:D100,D101,D102",
-    "tests/test_nojit.py:D100,D101,D102",
-    "tests/test_nojit_D.py:D100,D101,D102",
-    "tests/test_nojit_abcd.py:D100,D101,D102",
-    "tests/conftest.py:D100,D101,D102,D103"
+[tool.pylint]
+disable = [
+    "C0103", "C0209", "C0302", "C0413",
+    "R0902", "R0904", "R0912", "R0913", "R0914", "R0915", "R1702",
+    "W0511"
 ]
-exclude = [
-    ".git",
-    "__pycache__",
-    "docs"
-]
-docstring-convention = "google"
+max-line-length = 110
 
 [tool.ruff]
 line-length = 150
