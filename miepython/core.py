@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=too-many-return-statements
-# pylint: disable=invalid-name
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-arguments
 """
 Mie scattering calculations for perfect spheres.
 
@@ -228,10 +223,7 @@ def _small_conducting_mie(_m, x):
     bhat2 = complex(0.0, -(x**2) / 45.0)
 
     qsca = x**4 * (
-        6 * np.abs(ahat1) ** 2
-        + 6 * np.abs(bhat1) ** 2
-        + 10 * np.abs(ahat2) ** 2
-        + 10 * np.abs(bhat2) ** 2
+        6 * np.abs(ahat1) ** 2 + 6 * np.abs(bhat1) ** 2 + 10 * np.abs(ahat2) ** 2 + 10 * np.abs(bhat2) ** 2
     )
     qext = qsca
     g = ahat1.imag * (ahat2.imag + bhat1.imag)

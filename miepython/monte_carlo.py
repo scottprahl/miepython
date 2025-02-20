@@ -1,11 +1,7 @@
-# pylint: disable=unused-argument
-# pylint: disable=too-many-return-statements
-# pylint: disable=invalid-name
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-arguments
 """
 Monte Carlo and Mie scattering.
 """
+
 import numpy as np
 import miepython as mie
 

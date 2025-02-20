@@ -1,4 +1,5 @@
 """Setup for miepython module."""
+
 import re
 import os.path
 from setuptools import setup
