@@ -53,7 +53,7 @@ Additional Utility Functions:
 """
 
 import numpy as np
-from scipy.special import spherical_jn, lpmv
+from scipy.special import spherical_jn, lpmv, factorial2
 from miepython.bessel import spherical_h1, d_riccati_bessel_h1
 from miepython.core import _D_calc
 
@@ -216,9 +216,13 @@ def N_odd(n, d_sphere, r, theta, phi, k):
     """
     rho = k * r
     if r < d_sphere / 2:
-        factor1 = spherical_jn(n, rho)
-        factor2 = factor1 * _D_calc(1, rho, n)[-1]
-        factor1 /= rho
+        if rho < 0.01:
+            factor2 = (n+1)/factorial2(2*n+1)*rho**(n-1)
+            factor1 = rho**(n-1)/factorial2(2*n+1)
+        else:
+            factor1 = spherical_jn(n, rho)
+            factor2 = factor1 * _D_calc(1, rho, n)[-1]
+            factor1 /= rho
     else:
         factor1 = spherical_h1(n, rho) / rho
         factor2 = d_riccati_bessel_h1(n, rho) / rho
@@ -255,9 +259,13 @@ def N_even(n, d_sphere, r, theta, phi, k):
     """
     rho = k * r
     if r < d_sphere / 2:
-        factor1 = spherical_jn(n, rho)
-        factor2 = factor1 * _D_calc(1, rho, n)[-1]
-        factor1 /= rho
+        if rho < 0.01:
+            factor2 = (n+1)/factorial2(2*n+1)*rho**(n-1)
+            factor1 = rho**(n-1)/factorial2(2*n+1)
+        else:
+            factor1 = spherical_jn(n, rho)
+            factor2 = factor1 * _D_calc(1, rho, n)[-1]
+            factor1 /= rho
     else:
         factor1 = spherical_h1(n, rho) / rho
         factor2 = d_riccati_bessel_h1(n, rho) / rho
