@@ -118,6 +118,25 @@ def mie_tau(n, theta, deg=False):
     return ((n + 1) * x * lpmv(1, n, x) - n * lpmv(1, n + 1, x)) / np.sqrt(1 - x * x)
 
 
+def M_base(n, rho, inside):
+    """
+    Compute the non-angular part of magnetic vector spherical harmonic (m=1).
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        rho (float): radius * k
+        inside (bool): True if rho is inside sphere
+
+    Returns:
+        factor
+    """
+    if inside:
+        factor = spherical_jn(n, rho)
+    else:
+        factor = spherical_h1(n, rho)
+    return factor
+
+
 def M_odd(n, d_sphere, r, theta, phi, k):
     """
     Compute the nth odd magnetic vector spherical harmonic (m=1).
@@ -142,12 +161,7 @@ def M_odd(n, d_sphere, r, theta, phi, k):
         tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
         and azimuthal components of the odd magnetic vector spherical harmonic.
     """
-    rho = k * r
-    if r < d_sphere / 2:
-        factor = spherical_jn(n, rho)
-    else:
-        factor = spherical_h1(n, rho)
-
+    factor = M_base(n, r * k, r < d_sphere / 2)
     Mr = 0
     Mtheta = np.cos(phi) * mie_pi(n, theta) * factor
     Mphi = -np.sin(phi) * mie_tau(n, theta) * factor
@@ -178,16 +192,41 @@ def M_even(n, d_sphere, r, theta, phi, k):
         tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
         and azimuthal components of the even magnetic vector spherical harmonic.
     """
-    rho = k * r
-    if r < d_sphere / 2:
-        factor = spherical_jn(n, rho)
-    else:
-        factor = spherical_h1(n, rho)
-
+    factor = M_base(n, r * k, r < d_sphere / 2)
     Mr = 0
     Mtheta = -np.sin(phi) * mie_pi(n, theta) * factor
     Mphi = -np.cos(phi) * mie_tau(n, theta) * factor
     return (Mr, Mtheta, Mphi)
+
+
+def N_base(n, rho, inside):
+    """
+    Compute non-angular component of the electric vector spherical harmonic (m=1).
+
+    The conventions used follow the "Vector Spherical Harmonics" Wikipedia
+    page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        rho (float): radius * k
+        inside (bool): True if rho is inside sphere
+
+    Returns:
+        factor1, factor2
+    """
+    if inside:
+        if rho < 0.01:
+            factor2 = (n + 1) / factorial2(2 * n + 1) * rho ** (n - 1)
+            factor1 = rho ** (n - 1) / factorial2(2 * n + 1)
+        else:
+            factor1 = spherical_jn(n, rho)
+            factor2 = factor1 * _D_calc(1, rho, n)[-1]
+            factor1 /= rho
+    else:
+        factor1 = spherical_h1(n, rho) / rho
+        factor2 = d_riccati_bessel_h1(n, rho) / rho
+
+    return factor1, factor2
 
 
 def N_odd(n, d_sphere, r, theta, phi, k):
@@ -214,19 +253,7 @@ def N_odd(n, d_sphere, r, theta, phi, k):
         tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
         and azimuthal components of the odd electric vector spherical harmonic.
     """
-    rho = k * r
-    if r < d_sphere / 2:
-        if rho < 0.01:
-            factor2 = (n+1)/factorial2(2*n+1)*rho**(n-1)
-            factor1 = rho**(n-1)/factorial2(2*n+1)
-        else:
-            factor1 = spherical_jn(n, rho)
-            factor2 = factor1 * _D_calc(1, rho, n)[-1]
-            factor1 /= rho
-    else:
-        factor1 = spherical_h1(n, rho) / rho
-        factor2 = d_riccati_bessel_h1(n, rho) / rho
-
+    factor1, factor2 = N_base(n, r * k, r < d_sphere / 2)
     Nr = np.sin(phi) * n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
     Ntheta = np.sin(phi) * mie_tau(n, theta) * factor2
     Nphi = np.cos(phi) * mie_pi(n, theta) * factor2
@@ -257,19 +284,7 @@ def N_even(n, d_sphere, r, theta, phi, k):
         tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
         and azimuthal components of the even electric vector spherical harmonic.
     """
-    rho = k * r
-    if r < d_sphere / 2:
-        if rho < 0.01:
-            factor2 = (n+1)/factorial2(2*n+1)*rho**(n-1)
-            factor1 = rho**(n-1)/factorial2(2*n+1)
-        else:
-            factor1 = spherical_jn(n, rho)
-            factor2 = factor1 * _D_calc(1, rho, n)[-1]
-            factor1 /= rho
-    else:
-        factor1 = spherical_h1(n, rho) / rho
-        factor2 = d_riccati_bessel_h1(n, rho) / rho
-
+    factor1, factor2 = N_base(n, r * k, r < d_sphere / 2)
     Nr = np.cos(phi) * n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
     Ntheta = np.cos(phi) * mie_tau(n, theta) * factor2
     Nphi = -np.sin(phi) * mie_pi(n, theta) * factor2
