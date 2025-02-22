@@ -8,6 +8,7 @@ __all__ = (
     "_D_calc",
     "_an_bn",
     "_cn_dn",
+    "_pi_tau",
     "_S1_S2",
 )
 
@@ -243,6 +244,40 @@ def _cn_dn(m, x, n_pole):
     return np.conjugate(c), np.conjugate(d)
 
 
+def _pi_tau(mu, pi, tau):
+    """
+    Compute the Mie scattering functions π_n and τ_n for given cosine angles.
+
+    This function fills the pre-allocated arrays `pi` and `tau` with values
+    of the Mie scattering functions for a given `mu = cos𝜃`. The function
+    uses the recurrence relations for the associated Legendre polynomials
+    of the first kind P_n^1. The recurrence relations ensure numerical stability
+    and avoids calling scipi.special.lpmv(1, n, cos𝜃) for each n.
+
+    `pi` and `tau` are **zero-based** arrays and therefore
+
+    `pi[n-1]` = 𝜋_n(cos𝜃) = P_n^1(cos𝜃) / sin𝜃
+
+    `tau[n-1]` = 𝜏_n(cos𝜃) = d/d𝜃 P_n^1(cos𝜃)`.
+
+    Args:
+        mu (float): The cosine of the scattering angle, `cos(𝜃)`.
+        pi (numpy.ndarray): A pre-allocated array to store `pi_n` values.
+        tau (numpy.ndarray): A pre-allocated array to store `tau_n` values.
+
+    Returns:
+        nothing.  pi and tau are modified
+    """
+    n_terms = len(pi)
+    pi_nm2 = 0
+    pi[0] = 1
+    for n in range(1, n_terms):
+        tau[n - 1] = n * mu * pi[n - 1] - (n + 1) * pi_nm2
+        temp = pi[n - 1]
+        pi[n] = ((2 * n + 1) * mu * temp - (n + 1) * pi_nm2) / n
+        pi_nm2 = temp
+
+
 def _S1_S2(m, x, mu, n_pole):
     """
     Calculate the scattering amplitude functions for spheres.
@@ -250,41 +285,31 @@ def _S1_S2(m, x, mu, n_pole):
     The amplitude functions have been normalized so that when integrated
     over all 4*pi solid angles, the integral will be qext*pi*x**2.
 
-    The normalization is controlled by `norm` and should be one of
-    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
-    The normalization describes the integral of the scattering phase
-    function over all 4𝜋 steradians.
-
     The units are weird, sr**(-0.5)
 
     Args:
-        m: the np.complex128 index of refraction of the sphere
+        m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles as cos(theta) to calculate scattering amplitudes
-        norm: (optional) string describing scattering function normalization
+        mu: array of angles, cos(theta), to calculate scattering amplitudes
         n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
     a, b = _an_bn(m, x, 0)
+    N = len(a)
+    pi = np.zeros(N)
+    tau = np.zeros(N)
+    n = np.arange(1, N + 1)
+    scale = (2 * n + 1) / ((n + 1) * n)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
     S2 = np.zeros(nangles, dtype=np.complex128)
 
-    nstop = len(a)
     for k in range(nangles):
-        pi_nm2 = 0
-        pi_nm1 = 1
-        for n in range(1, nstop):
-            tau_nm1 = n * mu[k] * pi_nm1 - (n + 1) * pi_nm2
-            if n_pole in (0, n):
-                S1[k] += (2 * n + 1) * (pi_nm1 * a[n - 1] + tau_nm1 * b[n - 1]) / (n + 1) / n
-                S2[k] += (2 * n + 1) * (tau_nm1 * a[n - 1] + pi_nm1 * b[n - 1]) / (n + 1) / n
+        _pi_tau(mu[k], pi, tau)
+        S1[k] = np.sum(scale * (pi * a + tau * b))
+        S2[k] = np.sum(scale * (tau * a + pi * b))
 
-            temp = pi_nm1
-            pi_nm1 = ((2 * n + 1) * mu[k] * pi_nm1 - (n + 1) * pi_nm2) / n
-            pi_nm2 = temp
-
-    return np.conjugate(S1), np.conjugate(S2)
+    return [np.conjugate(S1), np.conjugate(S2)]
