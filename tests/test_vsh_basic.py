@@ -10,10 +10,10 @@ Currently, only the n=1 mode is tested.
 
 Tested Functions:
 -----------------
-- `M_odd(n, d_sphere, r, theta, phi, k)`: Computes the nth odd magnetic VSH.
-- `M_even(n, d_sphere, r, theta, phi, k)`: Computes the nth even magnetic VSH.
-- `N_odd(n, d_sphere, r, theta, phi, k)`: Computes the nth odd electric VSH.
-- `N_even(n, d_sphere, r, theta, phi, k)`: Computes the nth even electric VSH.
+- `M_odd(n, k, d_sphere, r, theta, phi)`: Computes the nth odd magnetic VSH.
+- `M_even(n, k, d_sphere, r, theta, phi)`: Computes the nth even magnetic VSH.
+- `N_odd(n, k, d_sphere, r, theta, phi)`: Computes the nth odd electric VSH.
+- `N_even(n, k, d_sphere, r, theta, phi)`: Computes the nth even electric VSH.
 
 Conventions:
 ------------
@@ -40,7 +40,7 @@ from miepython.bessel import spherical_h1, d_spherical_jn, d_spherical_h1
 from miepython.vsh import M_odd, M_even, N_odd, N_even
 
 
-def analytic_M1_odd(d_sphere, r, theta, phi, k):
+def analytic_M1_odd(k, d_sphere, r, theta, phi):
     """
     Calculate the first odd magnetic vector spherical harmonic.
 
@@ -49,6 +49,14 @@ def analytic_M1_odd(d_sphere, r, theta, phi, k):
     This matches the convention in wikipedia for vector spherical harmonics
     and that found in the paper by Ladutenko.  It differs from Bohren & Huffman
     which has the odd and even M modes switched.
+
+    Args:
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis)
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
+
     """
     rho = k * r
     if r < d_sphere / 2:
@@ -58,11 +66,18 @@ def analytic_M1_odd(d_sphere, r, theta, phi, k):
     return (0.0, -np.sin(phi) * zn, -np.cos(phi) * np.cos(theta) * zn)
 
 
-def analytic_M1_even(d_sphere, r, theta, phi, k):
+def analytic_M1_even(k, d_sphere, r, theta, phi):
     """
     Calculate the first even magnetic vector spherical harmonic.
 
     This is M_{emn}(rho) with n=1 and m=1
+
+    Args:
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis)
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
     """
     rho = k * r
     if r < d_sphere / 2:
@@ -72,11 +87,18 @@ def analytic_M1_even(d_sphere, r, theta, phi, k):
     return (0.0, np.cos(phi) * zn, -np.sin(phi) * np.cos(theta) * zn)
 
 
-def analytic_N1_odd(d_sphere, r, theta, phi, k):
+def analytic_N1_odd(k, d_sphere, r, theta, phi):
     """
     Calculate the first odd electric vector spherical harmonic.
 
     This is N_{omn}(rho) with n=1 and m=1
+
+    Args:
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis)
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
     """
     rho = k * r
     n = 1  # order of the spherical harmonic
@@ -93,11 +115,18 @@ def analytic_N1_odd(d_sphere, r, theta, phi, k):
     return (nr, nth, nph)
 
 
-def analytic_N1_even(d_sphere, r, theta, phi, k):
+def analytic_N1_even(k, d_sphere, r, theta, phi):
     """
     Calculate the first even electric vector spherical harmonic.
 
     This is N_{emn}(rho) with n=1 and m=1
+
+    Args:
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis)
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
     """
     n = 1  # order of the spherical harmonic
     rho = k * r
@@ -124,16 +153,17 @@ def test_vector_spherical_harmonics(r, theta, region):
     phi = np.pi / 6
     k = 2 * np.pi
     n = 1
+    m = 1.5
 
-    v_me = M_odd(n, d_sphere, r, theta, phi, k)
-    v_mo = M_even(n, d_sphere, r, theta, phi, k)
-    v_no = N_odd(n, d_sphere, r, theta, phi, k)
-    v_ne = N_even(n, d_sphere, r, theta, phi, k)
+    v_me = M_odd(n, m, k, d_sphere, r, theta, phi)
+    v_mo = M_even(n, m, k, d_sphere, r, theta, phi)
+    v_no = N_odd(n, m, k, d_sphere, r, theta, phi)
+    v_ne = N_even(n, m, k, d_sphere, r, theta, phi)
 
-    a_me = analytic_M1_even(d_sphere, r, theta, phi, k)
-    a_mo = analytic_M1_odd(d_sphere, r, theta, phi, k)
-    a_ne = analytic_N1_even(d_sphere, r, theta, phi, k)
-    a_no = analytic_N1_odd(d_sphere, r, theta, phi, k)
+    a_me = analytic_M1_even(m * k, d_sphere, r, theta, phi)
+    a_mo = analytic_M1_odd(m * k, d_sphere, r, theta, phi)
+    a_ne = analytic_N1_even(m * k, d_sphere, r, theta, phi)
+    a_no = analytic_N1_odd(m * k, d_sphere, r, theta, phi)
 
     np.testing.assert_allclose(
         v_me, a_me, rtol=1e-6, err_msg=f"Mismatch in M_even for {region}, theta={theta}"
@@ -146,4 +176,40 @@ def test_vector_spherical_harmonics(r, theta, region):
     )
     np.testing.assert_allclose(
         v_no, a_no, rtol=1e-6, err_msg=f"Mismatch in N_odd for {region}, theta={theta}"
+    )
+
+
+@pytest.mark.parametrize("m", [1.0, 1.5, 1.5 - 0.1j])
+def test_vector_spherical_harmonics(m):
+    """Test n=1, m=1 vector spherical harmonics."""
+    r = 0.3
+    lambda0 = 1
+    d_sphere = 1.0
+    theta = np.pi / 6
+    phi = np.pi / 6
+    k = 2 * np.pi / lambda0
+    n = 1
+    region = "inside sphere"
+
+    v_me = M_odd(n, m, k, d_sphere, r, theta, phi)
+    v_mo = M_even(n, m, k, d_sphere, r, theta, phi)
+    v_no = N_odd(n, m, k, d_sphere, r, theta, phi)
+    v_ne = N_even(n, m, k, d_sphere, r, theta, phi)
+
+    a_me = analytic_M1_even(m * k, d_sphere, r, theta, phi)
+    a_mo = analytic_M1_odd(m * k, d_sphere, r, theta, phi)
+    a_ne = analytic_N1_even(m * k, d_sphere, r, theta, phi)
+    a_no = analytic_N1_odd(m * k, d_sphere, r, theta, phi)
+
+    np.testing.assert_allclose(
+        v_me, a_me, rtol=1e-6, err_msg=f"Mismatch in M_even for m={m} {region}, theta={theta}"
+    )
+    np.testing.assert_allclose(
+        v_mo, a_mo, rtol=1e-6, err_msg=f"Mismatch in M_odd for m={m} {region}, theta={theta}"
+    )
+    np.testing.assert_allclose(
+        v_ne, a_ne, rtol=1e-6, err_msg=f"Mismatch in N_even for m={m} {region}, theta={theta}"
+    )
+    np.testing.assert_allclose(
+        v_no, a_no, rtol=1e-6, err_msg=f"Mismatch in N_odd for m={m} {region}, theta={theta}"
     )
