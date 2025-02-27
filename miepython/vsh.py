@@ -29,16 +29,16 @@ Bessel Function Selection:
 
 Functions:
 
-    M_odd(n, d_sphere, r, theta, phi, k)
+    M_odd(n, k, d_sphere, r, theta, phi)
         Compute the nth odd magnetic vector spherical harmonic (m=1).
 
-    M_even(n, d_sphere, r, theta, phi, k)
+    M_even(n, k, d_sphere, r, theta, phi)
         Compute the nth even magnetic vector spherical harmonic (m=1).
 
-    N_odd(n, d_sphere, r, theta, phi, k)
+    N_odd(n, k, d_sphere, r, theta, phi)
         Compute the nth odd electric vector spherical harmonic (m=1).
 
-    N_even(n, d_sphere, r, theta, phi, k)
+    N_even(n, k, d_sphere, r, theta, phi)
         Compute the nth even electric vector spherical harmonic (m=1).
 
 Additional Utility Functions:
@@ -57,7 +57,18 @@ from scipy.special import spherical_jn, lpmv, factorial2
 from miepython.bessel import spherical_h1, d_riccati_bessel_h1
 from miepython.core import _D_calc
 
-__all__ = ("mie_tau", "mie_pi", "M_even", "M_odd", "N_even", "N_odd")
+__all__ = (
+    "mie_tau",
+    "mie_pi",
+    "M_even",
+    "M_odd",
+    "N_even",
+    "N_odd",
+    "M_even_array",
+    "M_odd_array",
+    "N_even_array",
+    "N_odd_array",
+)
 
 
 def mie_pi(n, theta, deg=False):
@@ -118,26 +129,31 @@ def mie_tau(n, theta, deg=False):
     return ((n + 1) * x * lpmv(1, n, x) - n * lpmv(1, n + 1, x)) / np.sqrt(1 - x * x)
 
 
-def M_base(n, rho, inside):
+def M_base(n, rho, theta, inside):
     """
-    Compute the non-angular part of magnetic vector spherical harmonic (m=1).
+    Compute the non-phi part of magnetic vector spherical harmonic (m=1).
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        rho (float): radius * k
+        rho (float): radius * k * m
+        theta (float): Polar angle in radians (angle from z-axis).
         inside (bool): True if rho is inside sphere
 
     Returns:
-        factor
+        M_r, M_theta, M_phi without phi dependence
     """
     if inside:
         factor = spherical_jn(n, rho)
     else:
         factor = spherical_h1(n, rho)
-    return factor
+
+    M_r = 0
+    M_theta = mie_pi(n, theta) * factor
+    M_phi = mie_tau(n, theta) * factor
+    return (M_r, M_theta, M_phi)
 
 
-def M_odd(n, d_sphere, r, theta, phi, k):
+def M_odd(n, m, k, d_sphere, r, theta, phi):
     """
     Compute the nth odd magnetic vector spherical harmonic (m=1).
 
@@ -151,24 +167,22 @@ def M_odd(n, d_sphere, r, theta, phi, k):
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        d_sphere (float): Diameter of the sphere.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
         k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
 
     Returns:
-        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
+        tuple: A tuple (M_r, M_theta, M_phi) representing the radial, polar,
         and azimuthal components of the odd magnetic vector spherical harmonic.
     """
-    factor = M_base(n, r * k, r < d_sphere / 2)
-    Mr = 0
-    Mtheta = np.cos(phi) * mie_pi(n, theta) * factor
-    Mphi = -np.sin(phi) * mie_tau(n, theta) * factor
-    return (Mr, Mtheta, Mphi)
+    inside = r < d_sphere / 2
+    M_r, M_theta, M_phi = M_base(n, m * r * k, theta, inside)
+    return (M_r, np.cos(phi) * M_theta, -np.sin(phi) * M_phi)
 
 
-def M_even(n, d_sphere, r, theta, phi, k):
+def M_even(n, m, k, d_sphere, r, theta, phi):
     """
     Compute the nth even magnetic vector spherical harmonic (m=1).
 
@@ -182,24 +196,88 @@ def M_even(n, d_sphere, r, theta, phi, k):
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        d_sphere (float): Diameter of the sphere.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
         k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
 
     Returns:
-        tuple: A tuple (Mr, Mtheta, Mphi) representing the radial, polar,
+        tuple: A tuple (M_r, M_theta, M_phi) representing the radial, polar,
         and azimuthal components of the even magnetic vector spherical harmonic.
     """
-    factor = M_base(n, r * k, r < d_sphere / 2)
-    Mr = 0
-    Mtheta = -np.sin(phi) * mie_pi(n, theta) * factor
-    Mphi = -np.cos(phi) * mie_tau(n, theta) * factor
-    return (Mr, Mtheta, Mphi)
+    inside = r < d_sphere / 2
+    M_r, M_theta, M_phi = M_base(n, m * r * k, theta, inside)
+    return (M_r, -np.sin(phi) * M_theta, -np.cos(phi) * M_phi)
 
 
-def N_base(n, rho, inside):
+def M_odd_array(n, m, k, d_sphere, r, theta, phi):
+    """
+    Generate the first n odd magnetic vector spherical harmonics (m=1).
+
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        k (float): Wavenumber of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
+
+    Returns:
+        tuple: (M_r, M_theta, M_phi) where each is an array
+    """
+    M_r = np.zeros(n, dtype=complex)
+    M_theta = np.zeros(n, dtype=complex)
+    M_phi = np.zeros(n, dtype=complex)
+    inside = r < d_sphere / 2
+
+    for i in range(n):
+        M_r[i], M_theta[i], M_phi[i] = M_base(i + 1, m * r * k, theta, inside)
+
+    return (M_r, np.cos(phi) * M_theta, -np.sin(phi) * M_phi)
+
+
+def M_even_array(n, m, k, d_sphere, r, theta, phi):
+    """
+    Compute the nth even magnetic vector spherical harmonic (m=1).
+
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
+
+    Returns:
+        tuple: (M_r, M_theta, M_phi) where each is an array
+    """
+    M_r = np.zeros(n, dtype=complex)
+    M_theta = np.zeros(n, dtype=complex)
+    M_phi = np.zeros(n, dtype=complex)
+
+    inside = r < d_sphere / 2
+    for i in range(n):
+        M_r[i], M_theta[i], M_phi[i] = M_base(i + 1, m * r * k, theta, inside)
+
+    return (M_r, -np.sin(phi) * M_theta, -np.cos(phi) * M_phi)
+
+
+def N_base(n, m, kr, theta, inside):
     """
     Compute non-angular component of the electric vector spherical harmonic (m=1).
 
@@ -208,28 +286,34 @@ def N_base(n, rho, inside):
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        rho (float): radius * k
+        m (complex): complex index of refraction
+        kr (float): radius * k
+        theta (float): polar angle in radians
         inside (bool): True if rho is inside sphere
 
     Returns:
         factor1, factor2
     """
+    rho = m * kr
     if inside:
-        if rho < 0.01:
+        if abs(rho) < 0.01:
             factor2 = (n + 1) / factorial2(2 * n + 1) * rho ** (n - 1)
             factor1 = rho ** (n - 1) / factorial2(2 * n + 1)
         else:
             factor1 = spherical_jn(n, rho)
-            factor2 = factor1 * _D_calc(1, rho, n)[-1]
+            factor2 = factor1 * _D_calc(m, kr, n)[-1]
             factor1 /= rho
     else:
         factor1 = spherical_h1(n, rho) / rho
         factor2 = d_riccati_bessel_h1(n, rho) / rho
 
-    return factor1, factor2
+    N_r = n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
+    N_theta = mie_tau(n, theta) * factor2
+    N_phi = mie_pi(n, theta) * factor2
+    return (N_r, N_theta, N_phi)
 
 
-def N_odd(n, d_sphere, r, theta, phi, k):
+def N_odd(n, m, k, d_sphere, r, theta, phi):
     """
     Compute the nth odd electric vector spherical harmonic (m=1).
 
@@ -238,29 +322,34 @@ def N_odd(n, d_sphere, r, theta, phi, k):
     Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
     The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        d_sphere (float): Diameter of the sphere.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
         k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
 
     Returns:
-        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
+        tuple: A tuple (N_r, N_theta, N_phi) representing the radial, polar,
         and azimuthal components of the odd electric vector spherical harmonic.
     """
-    factor1, factor2 = N_base(n, r * k, r < d_sphere / 2)
-    Nr = np.sin(phi) * n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
-    Ntheta = np.sin(phi) * mie_tau(n, theta) * factor2
-    Nphi = np.cos(phi) * mie_pi(n, theta) * factor2
-    return (Nr, Ntheta, Nphi)
+    inside = r < d_sphere / 2
+    N_r, N_theta, N_phi = N_base(n, m, k * r, theta, inside)
+    return (np.sin(phi) * N_r, np.sin(phi) * N_theta, np.cos(phi) * N_phi)
 
 
-def N_even(n, d_sphere, r, theta, phi, k):
+def N_even(n, m, k, d_sphere, r, theta, phi):
     """
     Compute the nth even electric vector spherical harmonic (m=1).
 
@@ -269,23 +358,94 @@ def N_even(n, d_sphere, r, theta, phi, k):
     Bessel function is chosen based on whether the calculation is performed
     inside or outside the sphere.
 
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
     The conventions used follow the "Vector Spherical Harmonics" Wikipedia
     page and Ladutenko's paper (DOI: https://doi.org/10.1016/j.cpc.2017.01.017).
 
     Args:
         n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
-        d_sphere (float): Diameter of the sphere.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
         k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
 
     Returns:
-        tuple: A tuple (Nr, Ntheta, Nphi) representing the radial, polar,
+        tuple: A tuple (N_r, N_theta, N_phi) representing the radial, polar,
         and azimuthal components of the even electric vector spherical harmonic.
     """
-    factor1, factor2 = N_base(n, r * k, r < d_sphere / 2)
-    Nr = np.cos(phi) * n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
-    Ntheta = np.cos(phi) * mie_tau(n, theta) * factor2
-    Nphi = -np.sin(phi) * mie_pi(n, theta) * factor2
-    return (Nr, Ntheta, Nphi)
+    inside = r < d_sphere / 2
+    N_r, N_theta, N_phi = N_base(n, m, k * r, theta, inside)
+    return (np.cos(phi) * N_r, np.cos(phi) * N_theta, -np.sin(phi) * N_phi)
+
+
+def N_odd_array(n, m, k, d_sphere, r, theta, phi):
+    """
+    Generate first n odd electric vector spherical harmonics (m=1).
+
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis)
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
+
+    Returns:
+        tuple: (N_r, N_theta, N_phi) where each is an array
+    """
+    N_r = np.zeros(n, dtype=complex)
+    N_theta = np.zeros(n, dtype=complex)
+    N_phi = np.zeros(n, dtype=complex)
+
+    inside = r < d_sphere / 2
+    for i in range(n):
+        N_r[i], N_theta[i], N_phi[i] = N_base(n, m, k * r, theta, inside)
+
+    return (np.sin(phi) * N_r, np.sin(phi) * N_theta, np.cos(phi) * N_phi)
+
+
+def N_even_array(n, m, k, d_sphere, r, theta, phi):
+    """
+    Compute the nth even electric vector spherical harmonic (m=1).
+
+    The wavenumber k=2𝜋m/λ₀ where m is the index of refraction of the
+    sphere or medium at a distance r from the center of the sphere. λ₀
+    is the wavelength in a vacuum.
+
+    The units on d_sphere, r and are should be the same (e.g., microns)
+    and those on k should be the reciprocal (e.g. 1/microns)
+
+    Args:
+        n (int): Multipole order (1 for dipole, 2 for quadrupole, etc.).
+        k (float): Wave number of the incident wave.
+        d_sphere (float): Diameter of the sphere.
+        r (float): Radial distance from center of sphere.
+        theta (float): Polar angle in radians (angle from z-axis).
+        phi (float): Azimuthal angle in radians. (angle from x-axis).
+
+    Returns:
+        tuple: (N_r, N_theta, N_phi) where each is an array
+    """
+    N_r = np.zeros(n, dtype=complex)
+    N_theta = np.zeros(n, dtype=complex)
+    N_phi = np.zeros(n, dtype=complex)
+
+    inside = r < d_sphere / 2
+    for i in range(n):
+        N_r[i], N_theta[i], N_phi[i] = N_base(n, m, k * r, theta, inside)
+
+    return (np.cos(phi) * N_r, np.cos(phi) * N_theta, -np.sin(phi) * N_phi)
