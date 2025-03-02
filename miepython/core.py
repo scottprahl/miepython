@@ -53,6 +53,7 @@ __all__ = (
     "an_bn",
     "cn_dn",
     "_D_calc",
+    "normalization_factor",
 )
 
 
