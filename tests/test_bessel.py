@@ -1,5 +1,7 @@
 import unittest
+import numpy as np
 from miepython.bessel import *
+from scipy.special import spherical_jn
 
 
 class TestBesselFunctions(unittest.TestCase):
@@ -160,6 +162,27 @@ class TestBesselFunctions(unittest.TestCase):
             result = d_riccati_bessel_h2(n, self.z)
             self.assertAlmostEqual(result.real, expected[n].real, delta=self.tolerance)
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
+
+
+class TestAsymptotic(unittest.TestCase):
+    def setUp(self):
+        self.z = 1000
+        self.tolerance = 1e-5
+
+#     def test_spherical_jn(self):
+#         for n in range(1, 4):
+#             expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
+#             result = spherical_jn(n, self.z)
+#             self.assertAlmostEqual(result.real, expected.real, delta=self.tolerance)
+#             self.assertAlmostEqual(result.imag, expected.imag, delta=self.tolerance)
+
+    def test_spherical_h1(self):
+        expected = np.exp(1j * self.z) / (1j * self.z)
+        for n in range(1, 4):
+            expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
+            result = spherical_h1(n, self.z)
+            self.assertAlmostEqual(result.real, expected.real, delta=self.tolerance)
+            self.assertAlmostEqual(result.imag, expected.imag, delta=self.tolerance)
 
 
 if __name__ == "__main__":
