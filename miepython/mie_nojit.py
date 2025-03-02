@@ -143,6 +143,8 @@ def _an_bn(m, x, n_pole=0):
 
     a = np.zeros(nstop, dtype=np.complex128)
     b = np.zeros(nstop, dtype=np.complex128)
+    if x <= 0:
+        return a, b
 
     psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
     psi_n = psi_nm1 / x - np.cos(x)
@@ -205,6 +207,8 @@ def _cn_dn(m, x, n_pole):
 
     c = np.zeros(nstop, dtype=np.complex128)
     d = np.zeros(nstop, dtype=np.complex128)
+    if x <= 0:
+        return c, d
 
     # no need to calculate anything when sphere is perfectly conducting
     if m.real > 0.0 and not np.isinf(m.real) or not np.isinf(m.imag):
