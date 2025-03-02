@@ -1,7 +1,6 @@
 """Rayleigh approximation for scattering by small particles."""
 
 import numpy as np
-from miepython import normalization_factor
 
 __all__ = (
     "efficiencies_mx",
@@ -59,6 +58,53 @@ def efficiencies(m, d, lambda0, n_env=1.0):
     m_env = m / n_env
     x_env = np.pi * d / (lambda0 / n_env)
     return efficiencies_mx(m_env, x_env)
+
+
+def normalization_factor(m, x, norm_str):
+    """
+    Figure out scattering function normalization.
+
+    Args:
+        m: complex index of refraction of sphere
+        x: dimensionless sphere size
+        norm_str: string describing type of normalization
+
+    Returns:
+        scaling factor needed for scattering function
+    """
+    factor = None
+    norm = norm_str.lower()
+
+    if norm in ["bohren"]:
+        factor = 1 / 2
+
+    elif norm in ["wiscombe"]:
+        factor = 1
+
+    elif norm in ["qsca", "scattering_efficiency"]:
+        factor = x * np.sqrt(np.pi)
+
+    else:
+        qext, qsca, _, _ = efficiencies_mx(m, x)
+
+        if norm in ["a", "albedo"]:
+            factor = x * np.sqrt(np.pi * qext)
+
+        if norm in ["1", "one", "unity"]:
+            factor = x * np.sqrt(qsca * np.pi)
+
+        if norm in ["four_pi", "4pi"]:
+            factor = x * np.sqrt(qsca / 4)
+
+        if norm in ["qext", "extinction_efficiency"]:
+            factor = x * np.sqrt(qsca * np.pi / qext)
+
+    if factor is None:
+        raise ValueError(
+            "normalization must be one of 'albedo' (default), 'one'"
+            "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
+        )
+    return factor
 
 
 def S1_S2(m, x, mu, norm="albedo"):

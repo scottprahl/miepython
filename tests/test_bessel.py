@@ -169,12 +169,12 @@ class TestAsymptotic(unittest.TestCase):
         self.z = 1000
         self.tolerance = 1e-5
 
-#     def test_spherical_jn(self):
-#         for n in range(1, 4):
-#             expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
-#             result = spherical_jn(n, self.z)
-#             self.assertAlmostEqual(result.real, expected.real, delta=self.tolerance)
-#             self.assertAlmostEqual(result.imag, expected.imag, delta=self.tolerance)
+    #     def test_spherical_jn(self):
+    #         for n in range(1, 4):
+    #             expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
+    #             result = spherical_jn(n, self.z)
+    #             self.assertAlmostEqual(result.real, expected.real, delta=self.tolerance)
+    #             self.assertAlmostEqual(result.imag, expected.imag, delta=self.tolerance)
 
     def test_spherical_h1(self):
         expected = np.exp(1j * self.z) / (1j * self.z)

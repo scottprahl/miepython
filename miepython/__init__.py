@@ -54,7 +54,7 @@ if USE_JIT:
 else:
     from .mie_nojit import _an_bn, _cn_dn, _S1_S2, _D_calc, _pi_tau
 
-from .core import efficiencies, intensities, i_par, i_per, i_unpolarized, normalization_factor
+from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients, an_bn, cn_dn
 
 # The only functions exposed to the user
@@ -75,7 +75,6 @@ __all__ = (
     "_S1_S2",
     "_D_calc",
     "_pi_tau",
-    "normalization_factor",
 )
 
 __version__ = "3.0.0"
