@@ -88,7 +88,6 @@ def cs(z, N=5):
 
 def phasor_str_scalar(z, N=2):
     """Convert complex scalar to phasors for printing."""
-
     if N > 0:
         form = "%% %d.%df" % (N + 4, N)
     else:
@@ -103,7 +102,6 @@ def phasor_str_scalar(z, N=2):
 
 def phasor_str(z, N=2):
     """Convert complex numbers to phasor for printing."""
-
     if np.isscalar(z):
         return phasor_str_scalar(z, N)
 
