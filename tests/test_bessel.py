@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 from miepython.bessel import *
-from scipy.special import spherical_jn
 
 
 class TestBesselFunctions(unittest.TestCase):
