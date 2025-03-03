@@ -3,44 +3,11 @@ Electric and magnetic field calculations.
 """
 
 import numpy as np
-from miepython.vsh import M_even, M_odd, N_even, N_odd
-from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
-from miepython.util import cs
+from miepython.vsh import M_odd, N_even, M_odd_array, N_even_array
+from miepython.util import cartesian_to_spherical, spherical_vector_to_cartesian
 import miepython as mie
 
 __all__ = ("e_near", "e_plane", "e_far")
-
-import numpy as np
-
-
-def cartesian_to_spherical(x, y, z):
-    """Convert Cartesian coordinates (x, y, z) to spherical (r, theta, phi)."""
-    r = np.sqrt(x**2 + y**2 + z**2)
-    theta = np.arccos(z / r) if r != 0 else 0  # Polar angle (0 to pi)
-    phi = np.arctan2(y, x)  # Azimuthal angle (-pi to pi)
-    return r, theta, phi
-
-
-def spherical_to_cartesian(r, theta, phi):
-    """Convert spherical coordinates (r, theta, phi) to Cartesian (x, y, z)."""
-    x = r * np.sin(theta) * np.cos(phi)
-    y = r * np.sin(theta) * np.sin(phi)
-    z = r * np.cos(theta)
-    return x, y, z
-
-
-def spherical_vector_to_cartesian(E_r, E_theta, E_phi, r, theta, phi):
-    """Convert spherical components (E_r, E_theta, E_phi) to Cartesian (Ex, Ey, Ez)."""
-    sin_theta = np.sin(theta)
-    cos_theta = np.cos(theta)
-    sin_phi = np.sin(phi)
-    cos_phi = np.cos(phi)
-
-    Ex = E_r * sin_theta * cos_phi + E_theta * cos_theta * cos_phi - E_phi * sin_phi
-    Ey = E_r * sin_theta * sin_phi + E_theta * cos_theta * sin_phi + E_phi * cos_phi
-    Ez = E_r * cos_theta - E_theta * sin_theta
-
-    return Ex, Ey, Ez
 
 
 def e_far(lambda0, d_sphere, m_sphere, r, theta, phi):
@@ -149,7 +116,6 @@ def e_near(abcd, lambda0, d_sphere, m_index, r, theta, phi):
             E_r += scale[n - 1] * (1j * a[n - 1] * Nn[0] - b[n - 1] * Mn[0])
             th_part = scale[n - 1] * (1j * a[n - 1] * Nn[1] - b[n - 1] * Mn[1])
             E_theta += th_part
-            #            print(n, cs(Nn[1],-8), cs(Mn[1],-8), cs(th_part,-8), cs(E_theta,-8))
             E_phi += -scale[n - 1] * (1j * a[n - 1] * Nn[2] - b[n - 1] * Mn[2])
 
     return np.array([E_r, E_theta, E_phi])
@@ -157,10 +123,13 @@ def e_near(abcd, lambda0, d_sphere, m_index, r, theta, phi):
 
 def e_plane(x, y, z, N=100):
     """
-    Calculate a plane wave using vector spherical harmonics
+    Calculate a plane wave using vector spherical harmonics.
 
     Args:
-        x, y, z: position
+        x: position
+        y: position
+        z: position
+        N: number of points
 
     Returns:
         tuple: Electric field components (E_z, E_y, E_z).
