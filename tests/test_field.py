@@ -1,4 +1,5 @@
 """Test for electric field calculations."""
+
 import pytest
 import numpy as np
 import miepython as mie
