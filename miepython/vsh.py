@@ -422,7 +422,7 @@ def N_odd_array(n, lambda0, d_sphere, m_index, r, theta, phi):
     kr = 2 * np.pi * r / lambda0
     inside = r < d_sphere / 2
     for i in range(n):
-        N_r[i], N_theta[i], N_phi[i] = N_base(n, m_index, kr, theta, inside)
+        N_r[i], N_theta[i], N_phi[i] = N_base(i + 1, m_index, kr, theta, inside)
 
     return np.array([np.sin(phi) * N_r, np.sin(phi) * N_theta, np.cos(phi) * N_phi])
 
@@ -455,6 +455,6 @@ def N_even_array(n, lambda0, d_sphere, m_index, r, theta, phi):
     kr = 2 * np.pi * r / lambda0
     inside = r < d_sphere / 2
     for i in range(n):
-        N_r[i], N_theta[i], N_phi[i] = N_base(n, m_index, kr, theta, inside)
+        N_r[i], N_theta[i], N_phi[i] = N_base(i + 1, m_index, kr, theta, inside)
 
     return np.array([np.cos(phi) * N_r, np.cos(phi) * N_theta, -np.sin(phi) * N_phi])
