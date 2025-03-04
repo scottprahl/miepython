@@ -61,7 +61,7 @@ rcheck:
 	make rstcheck
 	make lintcheck
 	make doccheck
-	- flake8 .
+	ruff check .
 	pyroma -d .
 	check-manifest
 	make html
@@ -69,6 +69,8 @@ rcheck:
 
 test:
 	-pytest -v tests/test_bessel.py
+	-pytest -v tests/test_rayleigh.py
+
 	-pytest -v tests/test_nojit_D.py
 	-pytest -v tests/test_nojit_abcd.py
 	-pytest -v tests/test_nojit.py
@@ -77,6 +79,7 @@ test:
 	-pytest -v tests/test_jit_abcd.py
 	-pytest -v tests/test_jit.py
 	-pytest -v tests/test_vsh_basic.py
+	-pytest -v tests/test_field.py
 
 	-pytest -v tests/test_all_examples.py
 	-pytest -v --notebooks tests/test_all_notebooks.py
