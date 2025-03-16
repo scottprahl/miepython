@@ -7,11 +7,15 @@ API for `miepython` package
 
 .. automodapi:: miepython.mie_jit
 
-.. automodapi:: miepython.monte_carlo
+.. automodapi:: miepython.rayleigh
 
 .. automodapi:: miepython.bessel
 
 .. automodapi:: miepython.vsh
+
+.. automodapi:: miepython.field
+
+.. automodapi:: miepython.monte_carlo
 
 .. automodapi:: miepython.util
 
