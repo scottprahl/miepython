@@ -313,7 +313,11 @@ def _S1_S2(m, x, mu, n_pole):
 
     for k in range(nangles):
         _pi_tau(mu[k], pi, tau)
-        S1[k] = np.sum(scale * (pi * a + tau * b))
-        S2[k] = np.sum(scale * (tau * a + pi * b))
+        if n_pole == 0:
+            S1[k] = np.sum(scale * (pi * a + tau * b))
+            S2[k] = np.sum(scale * (tau * a + pi * b))
+        else:
+            S1[k] = scale[n_pole] * (pi[n_pole] * a[n_pole] + tau[n_pole] * b[n_pole])
+            S2[k] = scale[n_pole] * (tau[n_pole] * a[n_pole] + pi[n_pole] * b[n_pole])
 
     return [np.conjugate(S1), np.conjugate(S2)]
