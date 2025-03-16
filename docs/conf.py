@@ -49,7 +49,7 @@ napoleon_use_param = False
 napoleon_use_rtype = False
 
 # List of patterns, relative to source directory, of files to ignore
-exclude_patterns = ["_build", "**.ipynb_checkpoints", "adaptive_functioning.ipynb"]
+exclude_patterns = ["_build", "14_fields.ipynb", "1d-efield.ipynb", "Untitled*", "MnNn-calc.ipynb"]
 
 # I execute the notebooks manually in advance.
 nbsphinx_execute = "never"
