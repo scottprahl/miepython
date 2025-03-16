@@ -10,18 +10,13 @@ html:
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 	open docs/_build/index.html
 
-notecheck:
-	make clean
-	python -m pytest --verbose --notebooks tests/test_all_notebooks.py
-	rm -rf __pycache__
-
 rstcheck:
 	-rstcheck README.rst
 	-rstcheck CHANGELOG.rst
 	-rstcheck docs/index.rst
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
-lint:
+lintcheck:
 	-pylint miepython/__init__.py
 	-pylint miepython/bessel.py
 	-pylint miepython/mie_jit.py
@@ -53,19 +48,8 @@ doccheck:
 	-ruff check tests/test_nojit.py
 	-ruff check tests/test_nojit_D.py
 	-ruff check tests/test_nojit_abcd.py
-	-ruff check tests/test_vsh_basic.py
+	-ruff check tests/test_vsh.py
 	-ruff check tests/test_all_notebooks.py
-
-rcheck:
-	make notecheck
-	make rstcheck
-	make lintcheck
-	make doccheck
-	ruff check .
-	pyroma -d .
-	check-manifest
-	make html
-	make test
 
 test:
 	-pytest -v tests/test_bessel.py
@@ -82,10 +66,11 @@ test:
 	-pytest -v tests/test_field.py
 
 	-pytest -v tests/test_all_examples.py
-	-pytest -v --notebooks tests/test_all_notebooks.py
+	-pytest -v tests/test_all_notebooks.py
 
 clean:
 	rm -rf .ruff_cache
+	rm -rf __pycache__
 	rm -rf miepython.egg-info
 	rm -rf miepython/__pycache__
 	rm -rf miepython/.ipynb_checkpoints
@@ -101,8 +86,16 @@ clean:
 	rm -rf .pytest_cache
 	rm -rf build
 
-realclean:
+# release checks
+rcheck:
 	make clean
+	ruff check .
+	make rstcheck
+	make lintcheck
+	make doccheck
+	pyroma -d .
+	check-manifest
+	make html
+	make test
 
-.PHONY: clean html test realclean \
-        rcheck doccheck lintcheck rstcheck notecheck
+.PHONY: clean html test rcheck doccheck lintcheck rstcheck
