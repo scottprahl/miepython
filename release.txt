@@ -4,24 +4,24 @@ Releasing a new version
   make rcheck
 
 # update the version in miepython/__init__.py
-  git commit miepython/__init__.py -m 'update version' 
+  git commit miepython/__init__.py -m 'update version'
   git push
 
 # update CHANGELOG.rst
-  git shortlog v2.1.0..HEAD
+  git shortlog 3.0.0..HEAD
   git commit CHANGELOG.rst -m 'update recent changes'
   git push
 
 # create release tag on github
-  git tag v2.1.0
-  git push origin v2.1.0
+  git tag 3.0.0
+  git push origin 3.0.0
 
-# upload source to pypi
-  python -m build
-  python -m twine upload dist/*
-
-# update/check releases
+# manually publish release at
   open https://github.com/scottprahl/miepython
+
+# verify action success
   open https://pypi.org/project/miepython/
   open https://miepython.readthedocs.io
-  do something about conda-forge?
+
+# wait for feedstock update
+  open https://github.com/conda-forge/miepython-feedstock
