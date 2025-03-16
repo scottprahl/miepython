@@ -43,12 +43,13 @@ from miepython.vsh import M_odd, M_even, N_odd, N_even
 lambda0 = 500e-9  # wavelength in meters
 d_sphere = 1e-6  # sphere diameter in meters
 r_boundary = d_sphere / 2
-m_sphere = 1.5   # refractive index inside sphere
-m_env = 1.0      # refractive index of environment
+m_sphere = 1.5  # refractive index inside sphere
+m_env = 1.0  # refractive index of environment
 theta_test = np.pi / 4
 phi_test = np.pi / 4
 
 # Import the vector spherical harmonic functions
+
 
 def analytic_M1_odd(k, d_sphere, r, theta, phi):
     """
@@ -233,6 +234,7 @@ def test_vector_spherical_harmonics2(m_index):
     np.testing.assert_allclose(
         v_no, a_no, rtol=1e-6, err_msg=f"N_odd wrong when m={m_index} 𝜃={theta}° ɸ={phi}° {region}"
     )
+
 
 # @pytest.mark.parametrize("n", [1, 2, 3, 4, 5])
 # def test_boundary_conditions_M(n):
