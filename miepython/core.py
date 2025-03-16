@@ -12,17 +12,15 @@ scattering asymmetry for a sphere with complex index of refraction m,
 diameter d, and wavelength lambda can be found by::
 
     import miepython as mie
-    qext, qsca, qback, g = mie.ez_mie(m, d, lambda0)
+    qext, qsca, qback, g = mie.efficiencies(m, d, lambda0)
 
 The normalized scattering values for angles mu=cos(theta) are::
 
-    import miepython as mie
-    Ipar, Iper = mie.ez_intensities(m, d, lambda0, mu)
+    Ipar, Iper = mie.intensities(m, d, lambda0, mu)
 
 If the size parameter is known, then use::
 
-    import miepython as mie
-    mie.efficiencies(m, x)
+    mie.efficiencies_mx(m, x)
 
 Mie scattering amplitudes S1 and S2 (complex numbers):
 
