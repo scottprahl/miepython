@@ -1,5 +1,7 @@
 """
 Electric and magnetic field calculations.
+
+Only e_far has been verified to work.
 """
 
 import numpy as np
@@ -40,85 +42,85 @@ def e_far(lambda0, d_sphere, m_sphere, r, theta, phi):
     return np.array([E_r, E_theta, E_phi])
 
 
-def e_far_old(lambda0, d_sphere, m_sphere, r, theta, phi):
-    """
-    Calculate the electric field in the far field.
-
-    Args:
-        lambda0 (float): Wavelength the incident wave in vacuum.
-        d_sphere (float): Diameter of the sphere.
-        m_sphere (complex): Rrefractive index of the sphere
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Scattering angle (from z-axis) in radians.
-        phi (float): Azimuthal angle (from x-axis) in radians.
-        norm: type of normalization to use for scattering function
-
-    Returns:
-        tuple: Electric field components (E_r, E_theta, E_phi).
-    """
-    x = np.pi * d_sphere / lambda0
-    jkr = 1j * 2 * np.pi * r / lambda0
-    amp = np.exp(jkr) / (-jkr)
-    mu = np.cos(theta)
-
-    a, b = mie._an_bn(m_sphere, x, 0)
-    N = len(a)
-    pi = np.zeros(N)
-    tau = np.zeros(N)
-
-    n = np.arange(1, N + 1)
-    scale = (2 * n + 1) / ((n + 1) * n)
-
-    mie._pi_tau(mu, pi, tau)
-
-    E_r = complex(0)
-    E_theta = np.sum(scale * (tau * a + pi * b)) * amp * np.cos(phi)
-    E_phi = np.sum(scale * (pi * a + tau * b)) * amp * np.sin(phi)
-    return np.array([E_r, E_theta, E_phi])
-
-
-def e_near_old(abcd, lambda0, d_sphere, m_index, r, theta, phi):
-    """
-    Calculate the electric field in and around a sphere.
-
-    Args:
-        abcd (array): Mie coefficients [a, b, c, d]
-        lambda0 (float): Wavelength of the incident wave in vacuum.
-        d_sphere (float): Diameter of the sphere.
-        m_index (complex): refractive index at r
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
-
-    Returns:
-        tuple: Electric field components (E_r, E_theta, E_phi).
-    """
-    a, b, c, d = abcd
-    E_r = np.complex128(0)
-    E_theta = np.complex128(0)
-    E_phi = np.complex128(0)
-
-    N = len(a)
-    nn = np.arange(1, N + 1)
-    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
-
-    inside = r < d_sphere / 2
-
-    for n in nn:
-        Mn = M_odd(n, lambda0, d_sphere, m_index, r, theta, phi)
-        Nn = N_even(n, lambda0, d_sphere, m_index, r, theta, phi)
-
-        if inside:
-            E_r += scale[n - 1] * (c[n - 1] * Mn[0] - 1j * d[n - 1] * Nn[0])
-            E_theta += scale[n - 1] * (c[n - 1] * Mn[1] - 1j * d[n - 1] * Nn[1])
-            E_phi += scale[n - 1] * (c[n - 1] * Mn[2] - 1j * d[n - 1] * Nn[2])
-        else:
-            E_r += scale[n - 1] * (1j * a[n - 1] * Nn[0] - b[n - 1] * Mn[0])
-            th_part = scale[n - 1] * (1j * a[n - 1] * Nn[1] - b[n - 1] * Mn[1])
-            E_theta += th_part
-            E_phi += -scale[n - 1] * (1j * a[n - 1] * Nn[2] - b[n - 1] * Mn[2])
-
-    return np.array([E_r, E_theta, E_phi])
+# def e_far_old(lambda0, d_sphere, m_sphere, r, theta, phi):
+#     """
+#     Calculate the electric field in the far field.
+# 
+#     Args:
+#         lambda0 (float): Wavelength the incident wave in vacuum.
+#         d_sphere (float): Diameter of the sphere.
+#         m_sphere (complex): Rrefractive index of the sphere
+#         r (float): Radial distance at which the field is evaluated.
+#         theta (float): Scattering angle (from z-axis) in radians.
+#         phi (float): Azimuthal angle (from x-axis) in radians.
+#         norm: type of normalization to use for scattering function
+# 
+#     Returns:
+#         tuple: Electric field components (E_r, E_theta, E_phi).
+#     """
+#     x = np.pi * d_sphere / lambda0
+#     jkr = 1j * 2 * np.pi * r / lambda0
+#     amp = np.exp(jkr) / (-jkr)
+#     mu = np.cos(theta)
+# 
+#     a, b = mie._an_bn(m_sphere, x, 0)
+#     N = len(a)
+#     pi = np.zeros(N)
+#     tau = np.zeros(N)
+# 
+#     n = np.arange(1, N + 1)
+#     scale = (2 * n + 1) / ((n + 1) * n)
+# 
+#     mie._pi_tau(mu, pi, tau)
+# 
+#     E_r = complex(0)
+#     E_theta = np.sum(scale * (tau * a + pi * b)) * amp * np.cos(phi)
+#     E_phi = np.sum(scale * (pi * a + tau * b)) * amp * np.sin(phi)
+#     return np.array([E_r, E_theta, E_phi])
+# 
+# 
+# def e_near_old(abcd, lambda0, d_sphere, m_index, r, theta, phi):
+#     """
+#     Calculate the electric field in and around a sphere.
+# 
+#     Args:
+#         abcd (array): Mie coefficients [a, b, c, d]
+#         lambda0 (float): Wavelength of the incident wave in vacuum.
+#         d_sphere (float): Diameter of the sphere.
+#         m_index (complex): refractive index at r
+#         r (float): Radial distance at which the field is evaluated.
+#         theta (float): Polar angle in radians.
+#         phi (float): Azimuthal angle in radians.
+# 
+#     Returns:
+#         tuple: Electric field components (E_r, E_theta, E_phi).
+#     """
+#     a, b, c, d = abcd
+#     E_r = np.complex128(0)
+#     E_theta = np.complex128(0)
+#     E_phi = np.complex128(0)
+# 
+#     N = len(a)
+#     nn = np.arange(1, N + 1)
+#     scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
+# 
+#     inside = r < d_sphere / 2
+# 
+#     for n in nn:
+#         Mn = M_odd(n, lambda0, d_sphere, m_index, r, theta, phi)
+#         Nn = N_even(n, lambda0, d_sphere, m_index, r, theta, phi)
+# 
+#         if inside:
+#             E_r += scale[n - 1] * (c[n - 1] * Mn[0] - 1j * d[n - 1] * Nn[0])
+#             E_theta += scale[n - 1] * (c[n - 1] * Mn[1] - 1j * d[n - 1] * Nn[1])
+#             E_phi += scale[n - 1] * (c[n - 1] * Mn[2] - 1j * d[n - 1] * Nn[2])
+#         else:
+#             E_r += scale[n - 1] * (1j * a[n - 1] * Nn[0] - b[n - 1] * Mn[0])
+#             th_part = scale[n - 1] * (1j * a[n - 1] * Nn[1] - b[n - 1] * Mn[1])
+#             E_theta += th_part
+#             E_phi += -scale[n - 1] * (1j * a[n - 1] * Nn[2] - b[n - 1] * Mn[2])
+# 
+#     return np.array([E_r, E_theta, E_phi])
 
 
 def e_near(abcd, lambda0, d_sphere, m_index, r, theta, phi):
