@@ -78,7 +78,7 @@ test:
 	-pytest -v tests/test_jit_D.py
 	-pytest -v tests/test_jit_abcd.py
 	-pytest -v tests/test_jit.py
-	-pytest -v tests/test_vsh_basic.py
+	-pytest -v tests/test_vsh.py
 	-pytest -v tests/test_field.py
 
 	-pytest -v tests/test_all_examples.py
