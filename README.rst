@@ -46,39 +46,44 @@ by Scott Prahl
 ________
 
 ``miepython`` is a pure Python module to calculate light scattering for
-non-absorbing, partially-absorbing, or perfectly-conducting spheres. Mie
-theory is used, following `the procedure described by Wiscombe
-<http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
-been validated against his results. 
+non-absorbing, partially-absorbing, or perfectly-conducting spheres. 
 
 This code provides functions for calculating the extinction efficiency,
 scattering efficiency, backscattering, and scattering asymmetry. Moreover, a set
 of angles can be given to calculate the scattering for a sphere at each of those
 angles.
 
+Mie computations are done following `the procedure described by Wiscombe
+<http://opensky.ucar.edu/islandora/object/technotes:232>`_. This code has
+been validated against his results. 
+
 Full documentation at <https://miepython.readthedocs.io>
 
-Version 3 changes (in progress)
---------------------------------
+Version 3 changes
+-----------------
 
 This version contains major changes to the code base and **has API breaking changes**.
 If you don't need the new functionality for fields, then you can continue to use the
 last version with the old API: 2.5.5
 
-Version 3.0 has many changes, but the major changes are:
+Version 3.0 has many changes, but the major ones are:
 
     * a complete overhaul of API
     * added support to calculate Mie coefficients for fields inside sphere
-    * added support for calculating electric and magnetic fields
+    * future work will implement calculating electric and magnetic fields
 
 Pay Attention!
 --------------
 
-When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  ``miepython`` makes the following assumptions
+When comparing different Mie scattering codes, make sure that you're aware of the conventions used by each code.  ``miepython`` makes the following assumptions:
 
-#. the imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
+#. The imaginary part of the complex index of refraction for absorbing spheres is *negative*.  
+   Currently if you pass refractive indicies with a positive imaginary value, the refractive
+   index is silently converted to a negative value before calculation.
 
-#. the scattering phase function is normalized so it equals the *single scattering albedo* when integrated over 4π steradians.  As of version 2.3, this can be changed.
+#. The scattering phase function is normalized so it equals the *single scattering albedo* when 
+   integrated over 4π steradians.  The default normalization can now be changed.
+
 
 Installation
 ---------------
@@ -142,4 +147,3 @@ License
 -------
 
 ``miepython`` is licensed under the terms of the MIT license.
-
