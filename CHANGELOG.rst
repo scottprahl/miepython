@@ -1,16 +1,22 @@
 Changelog
 =========
 
-3.0.0 (2/10/2025)
+3.0.0 (3/16/2025)
 -------------------
 *   breaking api changes
-*   make api more natural: mie.efficiencies() instead of miepython.mie()
+*   api is more sane: mie.efficiencies() instead of miepython.ez_mie()
+*   use core.py to cleanly separate jit and non-jit code
 *   new function to calculate mie coefficients inside sphere
-*   new function to calculate E-fields near and far from sphere
-*   new Rayleigh module now
-*   new vsh module to calculate vector spherical harmonics
-*   new util module for printing complex numbers
-*   new bessel module for complete spherical bessel function support
+*   new function to calculate E-fields near and far from sphere (only works in far-field)
+*   new rayleigh.py
+*   new vsh.py to calculate vector spherical harmonics
+*   new util.py for printing complex numbers
+*   new bessel.py for complete spherical bessel function support
+*   put Monte Carlo routines into their own file
+*   use black for python formatting
+*   update all notebooks to use new api
+*   add more tests
+
 
 2.5.5 (12/01/2025)
 -------------------
