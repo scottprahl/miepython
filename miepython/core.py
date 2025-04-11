@@ -56,7 +56,7 @@ __all__ = (
 
 def an_bn(m, x, n_pole=0):
     """
-    Compute arrays of Mie coefficients A and B for a sphere.
+    Compute arrays Mie coefficients a_n and b_n for a sphere.
 
     When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's
     formula. The length of the arrays is chosen so that the error when the series
@@ -73,7 +73,7 @@ def an_bn(m, x, n_pole=0):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        n_pole: the number of An and Bn terms (0 does autosizing)
+        n_pole: the number of a_n and b_n terms (0 does autosizing)
 
     Returns:
         a, b: arrays of Mie coefficents An and Bn
@@ -97,7 +97,7 @@ def cn_dn(m, x, n_pole=0):
     Args:
         m (complex): Refractive index of the sphere relative to the surrounding medium.
         x (float): Size parameter of the sphere (2πr/λ).
-        n_pole (int): Number of terms to calculate (n_pole).
+        n_pole: the number of c_n and d_n terms (0 does autosizing)
 
     Returns:
         (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
@@ -594,27 +594,27 @@ def phase_matrix(m, x, mu, norm="albedo", n_pole=0):
 
 def i_per(m, x, mu, norm="albedo", n_pole=0):
     """
-    Return the scattered intensity in a plane normal to the incident light.
+    Compute the scattered intensity for perpendicular incident light.
+    
+    This function calculates the angular distribution of the scattered intensity from a sphere 
+    for incident light with its electric field vector perpendicular to the scattering plane 
+    (the plane defined by the incident direction and the scattered direction). 
+    This corresponds to the |S₁(θ)|² term in Mie theory.
 
-    This is the scattered intensity in a plane that is perpendicular to the
-    field of the incident plane wave. The intensity is normalized such
-    that the integral of the unpolarized intensity over 4π steradians
-    is equal to the single scattering albedo.
-
-    The normalization is controlled by `norm` and should be one of
-    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
-    The normalization describes the integral of the scattering phase
-    function over all 4𝜋 steradians.
+    The result is normalized according to the specified method. The normalization affects 
+    the total integrated intensity over 4π steradians. Accepted normalization options include:
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', 'wiscombe'].
 
     Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate intensities
-        norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means add all terms)
+        m (complex): Complex index of refraction of the sphere.
+        x (float): Size parameter of the sphere.
+        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
+        norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+            default is 0, which returns the sum of all terms.
 
     Returns:
-        The intensity at each angle in the array mu.  Units [1/sr]
+        np.ndarray: Scattered intensity values at each angle specified by `mu`. Units: [1/sr].
     """
     s1, _ = S1_S2(m, x, mu, norm, n_pole)
     intensity = np.abs(s1) ** 2
@@ -623,27 +623,27 @@ def i_per(m, x, mu, norm="albedo", n_pole=0):
 
 def i_par(m, x, mu, norm="albedo", n_pole=0):
     """
-    Return the scattered intensity in a plane parallel to the incident light.
+    Compute the scattered intensity for parallel incident light.
 
-    This is the scattered intensity in a plane that is parallel to the
-    field of the incident plane wave. The intensity is normalized such
-    that the integral of the unpolarized intensity over 4π steradians
-    is equal to the single scattering albedo.
+    This function calculates the angular distribution of the scattered intensity from a sphere 
+    for incident light with its electric field vector parallel to the scattering plane 
+    (the plane defined by the incident direction and the scattered direction). 
+    This corresponds to the |S₂(θ)|² term in Mie theory.
 
-    The normalization is controlled by `norm` and should be one of
-    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
-    The normalization describes the integral of the scattering phase
-    function over all 4𝜋 steradians.
+    The result is normalized according to the specified method. The normalization affects 
+    the total integrated intensity over 4π steradians. Accepted normalization options include:
+    ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', 'wiscombe'].
 
     Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter
-        mu: the cos(theta) of each direction desired
-        norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means add all terms)
+        m (complex): Complex index of refraction of the sphere.
+        x (float): Size parameter of the sphere.
+        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
+        norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+            default is 0, which returns the sum of all terms.
 
     Returns:
-        The intensity at each angle in the array mu.  Units [1/sr]
+        np.ndarray: Scattered intensity values at each angle specified by `mu`. Units: [1/sr].
     """
     _, s2 = S1_S2(m, x, mu, norm, n_pole)
     intensity = np.abs(s2) ** 2
@@ -653,26 +653,27 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
 def i_unpolarized(m, x, mu, norm="albedo", n_pole=0):
     """
     Return the unpolarized scattered intensity at specified angles.
+ 
+    The unpolarized scattering is the average of the scattered intensity for polarized
+    incidence parallel to and perpendicular to the plane of scattering.
+    
+    The unpolarized scattering may also be thought of as a time average of randomly
+    polarized incident light over some interval.
 
-    This is the average value for randomly polarized incident light.
-    The intensity is normalized such
-    that the integral of the unpolarized intensity over 4π steradians
-    is equal to the single scattering albedo.
-
-    The normalization is controlled by `norm` and should be one of
+    The normalization describes the integral of the scattered intensity
+    over all 4𝜋 steradians.  The normalization should be one of
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
-    The normalization describes the integral of the scattering phase
-    function over all 4𝜋 steradians.
 
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means add all terms)
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+            default is 0, which returns the sum of all terms.
 
     Returns:
-        The intensity at each angle in the array mu.  Units [1/sr]
+        The unpolarized intensity at each angle in the array mu.  Units [1/sr]
     """
     s1, s2 = S1_S2(m, x, mu, norm, n_pole)
     intensity = (np.abs(s1) ** 2 + np.abs(s2) ** 2) / 2
@@ -704,14 +705,13 @@ def intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
     """
     Return the scattered intensities from a sphere.
 
-    These are the scattered intensities in a plane that is parallel (ipar) and
-    perpendicular (iper) to the field of the incident plane wave.
+    These are the scattered intensities resulting from light hitting the sphere with
+    polarization parallel to or perpendicular to the plane of scattering (defined
+    by the incident direction and the scattered direction).
 
     The scattered intensity is normalized such that the integral of the
     unpolarized intensity over 4𝜋 steradians is equal to the single scattering
     albedo.  The scattered intensity has units of inverse steradians [1/sr].
-
-    The unpolarized scattering is the average of the two scattered intensities.
 
     The normalization is controlled by `norm` and should be one of
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
@@ -725,7 +725,8 @@ def intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
         norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means include all terms)
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+            default is 0, which returns the sum of all terms.
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
