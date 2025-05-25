@@ -8,4 +8,4 @@ doi: 10.5281/zenodo.7949264
 message: If you use this software, please cite it as below.
 title: 'miepython: Pure python calculation of Mie scattering'
 url: https://doi.org/10.5281/zenodo.7949403
-version: 3.0.1
+version: 3.0.2
