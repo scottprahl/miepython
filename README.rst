@@ -48,11 +48,16 @@ miepython
 Overview
 --------
 
-``miepython`` provides fast, accurate Mie scattering calculations for spherical particles. Whether you're studying atmospheric aerosols, nanoparticles, or any spherical scatterer, this library handles:
+``miepython`` is a pure‑Python implementation of Mie theory for spherical
+scatterers, validated against Wiscombe's reference results.  The library is
+lightweight, extensively tested, and—thanks to an *optional* Numba backend—can
+process nearly a **million particles per second**.
 
 - **Non-absorbing spheres** (dielectric particles)
 - **Partially-absorbing spheres** (lossy dielectrics)  
 - **Perfectly-conducting spheres** (metallic particles)
+
+Full documentation at <https://miepython.readthedocs.io>
 
 Key Features
 ~~~~~~~~~~~~
