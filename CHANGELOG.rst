@@ -1,6 +1,18 @@
 Changelog
 =========
 
+3.0.1 (5/25/2025)
+-------------------
+*   fix JIT regression (thanks @avgeiss)
+*   clarify polarization in docstrings
+*   improve README.rst
+*   fix git branches
+*   rename mie.mie_scalar to mie.single_sphere
+*   rename small_mie_sphere to small_sphere
+*   rename small_conducting_mie to small_conducting_sphere
+*   rationalize importing of jit and non-jit code
+*   add test_jit_speed.py and test_nojit_speed.py
+
 3.0.0 (3/16/2025)
 -------------------
 *   breaking api changes
