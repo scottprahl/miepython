@@ -55,7 +55,7 @@ Additional Utility Functions:
 import numpy as np
 from scipy.special import spherical_jn, lpmv, factorial2
 from miepython.bessel import spherical_h1, d_riccati_bessel_h1
-from miepython.core import _D_calc
+import miepython as mie
 
 __all__ = (
     "mie_tau",
@@ -311,7 +311,7 @@ def N_base(n, m_index, kr, theta, inside):
             factor1 = rho ** (n - 1) / factorial2(2 * n + 1)
         else:
             factor1 = spherical_jn(n, rho)
-            factor2 = factor1 * _D_calc(m_index, kr, n)[-1]
+            factor2 = factor1 * mie._D_calc(m_index, kr, n)[-1]
             factor1 /= rho
     else:
         factor1 = spherical_h1(n, rho) / rho
