@@ -279,16 +279,15 @@ S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
 
 .. code-block:: bibtex
 
-```
-@software{prahl_miepython_2025,
-  author  = {Prahl, Scott},
-  title   = {{miepython}: A Python library for Mie scattering calculations},
-  url     = {https://github.com/scottprahl/miepython},
-  doi     = {10.5281/zenodo.7949263},
-  year    = {2025},
-  version = {latest}
-}
-```
+    @software{prahl_miepython_2025,
+      author  = {Prahl, Scott},
+      title   = {{miepython}: A Python library for Mie scattering calculations},
+      url     = {https://github.com/scottprahl/miepython},
+      doi     = {10.5281/zenodo.7949263},
+      year    = {2025},
+      version = {latest}
+    }
+
 
 License
 -------
