@@ -5,11 +5,14 @@ Low-level Mie calculations that do not use numba.
 import numpy as np
 
 __all__ = (
-    "_D_calc",
-    "_an_bn",
-    "_cn_dn",
-    "_pi_tau",
-    "_S1_S2",
+    "_D_calc_py",
+    "_an_bn_py",
+    "_cn_dn_py",
+    "_pi_tau_py",
+    "_S1_S2_py",
+    "_single_sphere_py",
+    "_small_conducting_sphere_py",
+    "_small_sphere_py",
 )
 
 
@@ -81,7 +84,7 @@ def _D_upwards(z, N, D):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
 
 
-def _D_calc(m, x, N):
+def _D_calc_py(m, x, N):
     """
     Compute the logarithmic derivative of ψ_n(z) using the best method.
 
@@ -112,7 +115,7 @@ def _D_calc(m, x, N):
     return D[1:]
 
 
-def _an_bn(m, x, n_pole=0):
+def _an_bn_py(m, x, n_pole=0):
     """
     Compute arrays of Mie coefficients A and B for a sphere.
 
@@ -136,6 +139,9 @@ def _an_bn(m, x, n_pole=0):
     Returns:
         a, b: arrays of Mie coefficents An and Bn
     """
+    if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
+        m = np.conj(m)
+
     if n_pole == 0:
         nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
     else:
@@ -152,7 +158,7 @@ def _an_bn(m, x, n_pole=0):
     xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
 
     if m.real > 0.0:
-        D = _D_calc(m, x, nstop + 1)
+        D = _D_calc_py(m, x, nstop + 1)
 
         for n in range(1, nstop):
             temp = D[n - 1] / m + n / x
@@ -183,7 +189,7 @@ def _an_bn(m, x, n_pole=0):
     return np.conjugate(a), np.conjugate(b)
 
 
-def _cn_dn(m, x, n_pole):
+def _cn_dn_py(m, x, n_pole):
     """
     Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
 
@@ -196,8 +202,8 @@ def _cn_dn(m, x, n_pole):
         (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
     """
     # ensure imaginary part of refractive index is negative
-    if m.imag < 0:
-        m = np.complex128(m)
+    if m.imag > 0:
+        m = np.conj(m)
     mx = m * x
 
     if n_pole == 0:
@@ -221,8 +227,8 @@ def _cn_dn(m, x, n_pole):
         xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
         xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
 
-        Dmx = _D_calc(np.complex128(m), x, nstop + 1)
-        Dx = _D_calc(np.complex128(1), x, nstop + 1)
+        Dmx = _D_calc_py(np.complex128(m), x, nstop + 1)
+        Dx = _D_calc_py(np.complex128(1), x, nstop + 1)
 
         for n in range(1, nstop + 1):
             common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
@@ -248,7 +254,7 @@ def _cn_dn(m, x, n_pole):
     return np.conjugate(c), np.conjugate(d)
 
 
-def _pi_tau(mu, pi, tau):
+def _pi_tau_py(mu, pi, tau):
     """
     Compute the Mie scattering functions π_n and τ_n for given cosine angles.
 
@@ -282,7 +288,7 @@ def _pi_tau(mu, pi, tau):
         pi_nm2 = temp
 
 
-def _S1_S2(m, x, mu, n_pole):
+def _S1_S2_py(m, x, mu, n_pole):
     """
     Calculate the scattering amplitude functions for spheres.
 
@@ -300,7 +306,7 @@ def _S1_S2(m, x, mu, n_pole):
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
     """
-    a, b = _an_bn(m, x, 0)
+    a, b = _an_bn_py(m, x, 0)
     N = len(a)
     pi = np.zeros(N)
     tau = np.zeros(N)
@@ -312,7 +318,7 @@ def _S1_S2(m, x, mu, n_pole):
     S2 = np.zeros(nangles, dtype=np.complex128)
 
     for k in range(nangles):
-        _pi_tau(mu[k], pi, tau)
+        _pi_tau_py(mu[k], pi, tau)
         if n_pole == 0:
             S1[k] = np.sum(scale * (pi * a + tau * b))
             S2[k] = np.sum(scale * (tau * a + pi * b))
@@ -320,4 +326,154 @@ def _S1_S2(m, x, mu, n_pole):
             S1[k] = scale[n_pole] * (pi[n_pole] * a[n_pole] + tau[n_pole] * b[n_pole])
             S2[k] = scale[n_pole] * (tau[n_pole] * a[n_pole] + pi[n_pole] * b[n_pole])
 
-    return [np.conjugate(S1), np.conjugate(S2)]
+    return np.conjugate(S1), np.conjugate(S2)
+
+
+def _small_conducting_sphere_py(_m, x):
+    """
+    Calculate the efficiencies for a small conducting spheres.
+
+    Typically used for small conducting spheres where x < 0.1 and
+    m.real == 0
+
+    Args:
+        _m: the complex index of refraction of the sphere (unused)
+        x: the size parameter of the sphere
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
+    """
+    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2))
+    ahat1 /= complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
+
+    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0)
+    bhat1 /= complex(1 + 0.5 * x**2, -(x**3) / 3.0)
+    ahat2 = complex(0.0, x**2 / 30.0)
+    bhat2 = complex(0.0, -(x**2) / 45.0)
+
+    qsca = x**4 * (
+        6 * np.abs(ahat1) ** 2 + 6 * np.abs(bhat1) ** 2 + 10 * np.abs(ahat2) ** 2 + 10 * np.abs(bhat2) ** 2
+    )
+    qext = qsca
+    g = ahat1.imag * (ahat2.imag + bhat1.imag)
+    g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)
+    g += ahat1.real * bhat1.real
+    g *= 6 * x**4 / qsca
+
+    qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2)) ** 2
+
+    return qext, qsca, qback, g
+
+
+def _small_sphere_py(m, x):
+    """
+    Calculate the efficiencies for a small sphere.
+
+    Typically used for small spheres where x<0.1
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
+    """
+    m2 = m * m
+    x2 = x * x
+
+    D = m2 + 2 + (1 - 0.7 * m2) * x2
+    D -= (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0
+    D += 2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
+    ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x**4 / 1400) / D
+
+    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
+    bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
+
+    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
+    ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
+
+    T = np.abs(ahat1) ** 2 + np.abs(bhat1) ** 2 + 5 / 3 * np.abs(ahat2) ** 2
+    temp = ahat2 + bhat1
+    g = (ahat1 * temp.conjugate()).real / T
+
+    qsca = 6 * x**4 * T
+
+    if m.imag == 0:
+        qext = qsca
+    else:
+        qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
+
+    sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
+    qback = 4 * np.abs(sback) ** 2 / x2
+
+    return qext, qsca, qback, g
+
+
+def _single_sphere_py(m, x, n_pole):
+    """
+    Calculate the efficiencies for a sphere when both m and x are scalars.
+
+    Args:
+        m: the complex index of refraction of the sphere
+        x: the size parameter of the sphere
+        n_pole: a non-zero value returns the contribution by the n_pole multipole
+        e_field: Electric (True) or Magnetic Field otherwise
+
+    Returns:
+        qext: the total extinction efficiency
+        qsca: the scattering efficiency
+        qback: the backscatter efficiency
+        g: the average cosine of the scattering phase function
+    """
+    # case when sphere matches its environment
+    if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
+        return 0, 0, 0, 0
+
+    # small conducting spheres --- see Wiscombe
+    if m.real == 0 and x < 0.1 and n_pole == 0:
+        return _small_conducting_sphere_py(m, x)
+
+    if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
+        return _small_sphere_py(m, x)
+
+    # sometimes m=0 is used to signal perfectly conducting sphere
+    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
+        m = 1 - 10000j
+
+    a, b = _an_bn_py(m, x, n_pole)
+
+    if n_pole == 0:
+        n = np.arange(1, len(a) + 1)
+        cn = 2.0 * n + 1.0
+
+        qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+
+        if m.imag == 0:
+            qsca = qext
+        else:
+            qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
+
+        qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
+
+        c1n = n * (n + 2) / (n + 1)
+        c2n = cn / n / (n + 1)
+        asy1 = c1n[:-1] * (a[:-1] * a[1:].conjugate() + b[:-1] * b[1:].conjugate()).real
+        asy2 = c2n[:-1] * (a[:-1] * b[:-1].conjugate()).real
+        g = 4 * np.sum(asy1 + asy2) / qsca / x**2
+
+    else:
+        cn = 2.0 * n_pole + 1
+        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x**2
+        qext = 2 * cn * (a[-1].real + b[-1].real) / x**2
+        qsca = qext
+        if m.imag < 0:
+            qsca = 2 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x**2
+        g = None
+
+    return qext, qsca, qback, g

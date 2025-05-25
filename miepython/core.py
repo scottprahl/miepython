@@ -34,7 +34,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 """
 
 import numpy as np
-from miepython import _an_bn, _cn_dn, _S1_S2, _D_calc
+from miepython import an_bn, cn_dn, single_sphere, _S1_S2
 
 
 # not really needed but included for clarity
@@ -48,70 +48,7 @@ __all__ = (
     "S1_S2",
     "phase_matrix",
     "coefficients",
-    "an_bn",
-    "cn_dn",
-    "_D_calc",
 )
-
-
-def an_bn(m, x, n_pole=0):
-    """
-    Compute arrays Mie coefficients a_n and b_n for a sphere.
-
-    When n_pole=0, the routine estimates the size of the arrays based on Wiscombe's
-    formula. The length of the arrays is chosen so that the error when the series
-    is summed is around 1e-6.
-
-    If n_pole>0, then the array sizes will be n_pole+1. This is useful when
-    trying to isolate the behavior of a particular multipole.
-
-    To support resonance calculations, one can specify the number of terms
-    to be calculated.  In general, using too few or too many terms increases the
-    error rate.  So if you specify the number of terms be aware that you are
-    playing with fire.
-
-    Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-        n_pole: the number of a_n and b_n terms (0 does autosizing)
-
-    Returns:
-        a, b: arrays of Mie coefficents An and Bn
-    """
-    if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
-        m = np.conj(m)
-
-    a, b = _an_bn(np.complex128(m), np.float64(x), np.int64(n_pole))
-
-    if n_pole > 0:
-        a = a[-1]
-        b = b[-1]
-
-    return a, b
-
-
-def cn_dn(m, x, n_pole=0):
-    """
-    Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
-
-    Args:
-        m (complex): Refractive index of the sphere relative to the surrounding medium.
-        x (float): Size parameter of the sphere (2πr/λ).
-        n_pole: the number of c_n and d_n terms (0 does autosizing)
-
-    Returns:
-        (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
-    """
-    if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
-        m = np.conj(m)
-
-    c, d = _cn_dn(np.complex128(m), np.float64(x), np.int64(n_pole))
-
-    if n_pole > 0:
-        c = c[-1]
-        d = d[-1]
-
-    return c, d
 
 
 def coefficients(m, x, n_pole=0, internal=False):
@@ -169,19 +106,21 @@ def coefficients(m, x, n_pole=0, internal=False):
         a, b = an_bn(m, x, n_pole)
         if internal:
             c, d = cn_dn(m, x, n_pole)
+
     else:
         if xlen > 0 and mlen > 0 and xlen != mlen:
             raise RuntimeError("m and x arrays must be same length")
 
         if n_pole == 0:
-            raise RuntimeError("when m or x is an array and n_pole must be >0")
+            raise RuntimeError("when m or x is an array then n_pole must be >0")
 
         thelen = max(xlen, mlen)
-        a = np.zeros(thelen, dtype=np.complex128)
-        b = np.zeros(thelen, dtype=np.complex128)
+
+        a = [None] * thelen
+        b = [None] * thelen
         if internal:
-            c = np.zeros(thelen, dtype=np.complex128)
-            d = np.zeros(thelen, dtype=np.complex128)
+            c = [None] * thelen
+            d = [None] * thelen
 
         for i in range(thelen):
             mm = m[i] if mlen > 0 else m
@@ -192,163 +131,8 @@ def coefficients(m, x, n_pole=0, internal=False):
                 c[i], d[i] = cn_dn(mm, xx, n_pole)
 
     if internal:
-        return a, b, c, d
-    return a, b
-
-
-def _small_conducting_mie(_m, x):
-    """
-    Calculate the efficiencies for a small conducting spheres.
-
-    Typically used for small conducting spheres where x < 0.1 and
-    m.real == 0
-
-    Args:
-        _m: the complex index of refraction of the sphere (unused)
-        x: the size parameter of the sphere
-
-    Returns:
-        qext: the total extinction efficiency
-        qsca: the scattering efficiency
-        qback: the backscatter efficiency
-        g: the average cosine of the scattering phase function
-    """
-    ahat1 = complex(0, 2.0 / 3.0 * (1 - 0.2 * x**2))
-    ahat1 /= complex(1 - 0.5 * x**2, 2.0 / 3.0 * x**3)
-
-    bhat1 = complex(0.0, (x**2 - 10.0) / 30.0)
-    bhat1 /= complex(1 + 0.5 * x**2, -(x**3) / 3.0)
-    ahat2 = complex(0.0, x**2 / 30.0)
-    bhat2 = complex(0.0, -(x**2) / 45.0)
-
-    qsca = x**4 * (
-        6 * np.abs(ahat1) ** 2 + 6 * np.abs(bhat1) ** 2 + 10 * np.abs(ahat2) ** 2 + 10 * np.abs(bhat2) ** 2
-    )
-    qext = qsca
-    g = ahat1.imag * (ahat2.imag + bhat1.imag)
-    g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)
-    g += ahat1.real * bhat1.real
-    g *= 6 * x**4 / qsca
-
-    qback = 9 * x**4 * np.abs(ahat1 - bhat1 - 5 / 3 * (ahat2 - bhat2)) ** 2
-
-    return qext, qsca, qback, g
-
-
-def _small_mie(m, x):
-    """
-    Calculate the efficiencies for a small sphere.
-
-    Typically used for small spheres where x<0.1
-
-    Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-
-    Returns:
-        qext: the total extinction efficiency
-        qsca: the scattering efficiency
-        qback: the backscatter efficiency
-        g: the average cosine of the scattering phase function
-    """
-    m2 = m * m
-    x2 = x * x
-
-    D = m2 + 2 + (1 - 0.7 * m2) * x2
-    D -= (8 * m**4 - 385 * m2 + 350) * x**4 / 1400.0
-    D += 2j * (m2 - 1) * x**3 * (1 - 0.1 * x2) / 3
-    ahat1 = 2j * (m2 - 1) / 3 * (1 - 0.1 * x2 + (4 * m2 + 5) * x**4 / 1400) / D
-
-    bhat1 = 1j * x2 * (m2 - 1) / 45 * (1 + (2 * m2 - 5) / 70 * x2)
-    bhat1 /= 1 - (2 * m2 - 5) / 30 * x2
-
-    ahat2 = 1j * x2 * (m2 - 1) / 15 * (1 - x2 / 14)
-    ahat2 /= 2 * m2 + 3 - (2 * m2 - 7) / 14 * x2
-
-    T = np.abs(ahat1) ** 2 + np.abs(bhat1) ** 2 + 5 / 3 * np.abs(ahat2) ** 2
-    temp = ahat2 + bhat1
-    g = (ahat1 * temp.conjugate()).real / T
-
-    qsca = 6 * x**4 * T
-
-    if m.imag == 0:
-        qext = qsca
-    else:
-        qext = 6 * x * (ahat1 + bhat1 + 5 * ahat2 / 3).real
-
-    sback = 1.5 * x**3 * (ahat1 - bhat1 - 5 * ahat2 / 3)
-    qback = 4 * np.abs(sback) ** 2 / x2
-
-    return qext, qsca, qback, g
-
-
-def _mie_scalar(m, x, n_pole=0, e_field=True):
-    """
-    Calculate the efficiencies for a sphere when both m and x are scalars.
-
-    Args:
-        m: the complex index of refraction of the sphere
-        x: the size parameter of the sphere
-        n_pole: a non-zero value returns the contribution by the n_pole multipole
-        e_field: Electric (True) or Magnetic Field otherwise
-
-    Returns:
-        qext: the total extinction efficiency
-        qsca: the scattering efficiency
-        qback: the backscatter efficiency
-        g: the average cosine of the scattering phase function
-    """
-    # case when sphere matches its environment
-    if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
-        return 0, 0, 0, 0
-
-    # small conducting spheres --- see Wiscombe
-    if m.real == 0 and x < 0.1 and n_pole == 0:
-        return _small_conducting_mie(m, x)
-
-    if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
-        return _small_mie(m, x)
-
-    # sometimes m=0 is used to signal perfectly conducting sphere
-    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
-        m = 1 - 10000j
-
-    a, b = an_bn(m, x, n_pole)
-
-    if n_pole == 0:
-        n = np.arange(1, len(a) + 1)
-        cn = 2.0 * n + 1.0
-
-        qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
-
-        if m.imag == 0:
-            qsca = qext
-        else:
-            qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
-
-        qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
-
-        c1n = n * (n + 2) / (n + 1)
-        c2n = cn / n / (n + 1)
-        asy1 = c1n[:-1] * (a[:-1] * a[1:].conjugate() + b[:-1] * b[1:].conjugate()).real
-        asy2 = c2n[:-1] * (a[:-1] * b[:-1].conjugate()).real
-        g = 4 * np.sum(asy1 + asy2) / qsca / x**2
-
-    else:
-        cn = 2.0 * n_pole + 1
-        c1n = n_pole * (n_pole + 2) / (n_pole + 1)
-        if e_field:
-            qext = 2 * cn * a.real / x**2
-            qsca = 2 * cn * np.abs(a) ** 2 / x**2
-            qback = qsca / 2
-            g = None
-        else:
-            qext = 2 * cn * b.real / x**2
-            qsca = 2 * cn * np.abs(b) ** 2 / x**2
-            qback = qsca / 2
-            g = None
-
-    return qext, qsca, qback, g
+        return np.array([a, b, c, d])
+    return np.array([a, b])
 
 
 def efficiencies_mx(m, x, n_pole=0, field="Electric"):
@@ -426,7 +210,7 @@ def efficiencies_mx(m, x, n_pole=0, field="Electric"):
         xlen = len(x)
 
     if mlen == 0 and xlen == 0:
-        return _mie_scalar(m, x, n_pole)
+        return single_sphere(m, x, n_pole)
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
         raise RuntimeError("m and x arrays to mie must be same length")
@@ -446,7 +230,7 @@ def efficiencies_mx(m, x, n_pole=0, field="Electric"):
         if xlen > 0:
             xx = x[i]
 
-        qext[i], qsca[i], qback[i], g[i] = _mie_scalar(mm, xx, n_pole)
+        qext[i], qsca[i], qback[i], g[i] = single_sphere(mm, xx, n_pole)
 
     return qext, qsca, qback, g
 
@@ -476,7 +260,7 @@ def normalization_factor(m, x, norm_str):
         factor = x * np.sqrt(np.pi)
 
     else:
-        qext, qsca, _, _ = _mie_scalar(m, x, 0)
+        qext, qsca, _, _ = single_sphere(m, x, 0)
 
         if norm in ["a", "albedo"]:
             factor = x * np.sqrt(np.pi * qext)
@@ -595,13 +379,13 @@ def phase_matrix(m, x, mu, norm="albedo", n_pole=0):
 def i_per(m, x, mu, norm="albedo", n_pole=0):
     """
     Compute the scattered intensity for perpendicular incident light.
-    
-    This function calculates the angular distribution of the scattered intensity from a sphere 
-    for incident light with its electric field vector perpendicular to the scattering plane 
-    (the plane defined by the incident direction and the scattered direction). 
+
+    This function calculates the angular distribution of the scattered intensity from a sphere
+    for incident light with its electric field vector perpendicular to the scattering plane
+    (the plane defined by the incident direction and the scattered direction).
     This corresponds to the |S₁(θ)|² term in Mie theory.
 
-    The result is normalized according to the specified method. The normalization affects 
+    The result is normalized according to the specified method. The normalization affects
     the total integrated intensity over 4π steradians. Accepted normalization options include:
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', 'wiscombe'].
 
@@ -610,7 +394,7 @@ def i_per(m, x, mu, norm="albedo", n_pole=0):
         x (float): Size parameter of the sphere.
         mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
         norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
-        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
 
     Returns:
@@ -625,12 +409,12 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
     """
     Compute the scattered intensity for parallel incident light.
 
-    This function calculates the angular distribution of the scattered intensity from a sphere 
-    for incident light with its electric field vector parallel to the scattering plane 
-    (the plane defined by the incident direction and the scattered direction). 
+    This function calculates the angular distribution of the scattered intensity from a sphere
+    for incident light with its electric field vector parallel to the scattering plane
+    (the plane defined by the incident direction and the scattered direction).
     This corresponds to the |S₂(θ)|² term in Mie theory.
 
-    The result is normalized according to the specified method. The normalization affects 
+    The result is normalized according to the specified method. The normalization affects
     the total integrated intensity over 4π steradians. Accepted normalization options include:
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', 'wiscombe'].
 
@@ -639,7 +423,7 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
         x (float): Size parameter of the sphere.
         mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
         norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
-        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
 
     Returns:
@@ -653,10 +437,10 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
 def i_unpolarized(m, x, mu, norm="albedo", n_pole=0):
     """
     Return the unpolarized scattered intensity at specified angles.
- 
+
     The unpolarized scattering is the average of the scattered intensity for polarized
     incidence parallel to and perpendicular to the plane of scattering.
-    
+
     The unpolarized scattering may also be thought of as a time average of randomly
     polarized incident light over some interval.
 
@@ -669,7 +453,7 @@ def i_unpolarized(m, x, mu, norm="albedo", n_pole=0):
         x: the size parameter
         mu: the cos(theta) of each direction desired
         norm: (optional) string describing scattering function normalization
-        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
 
     Returns:
@@ -725,7 +509,7 @@ def intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo", n_pole=0):
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
         norm: (optional) string describing scattering function normalization
-        n_pole (int, optional): If greater than zero, returns only the nth multipole term; 
+        n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
 
     Returns:
