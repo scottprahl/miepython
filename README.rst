@@ -37,21 +37,17 @@
 miepython
 =========
 
-**A pure Python library for Mie light scattering calculations**
-
 |pypi| |github| |conda| |doi|
 
 |license| |test| |docs| |downloads| |black|
 
---------
-
-Overview
---------
-
 ``miepython`` is a pure‑Python implementation of Mie theory for spherical
 scatterers, validated against Wiscombe's reference results.  The library is
 lightweight, extensively tested, and—thanks to an *optional* Numba backend—can
-process nearly a **million particles per second**.
+process nearly a million particles per second.
+
+Overview
+--------
 
 - **Non-absorbing spheres** (dielectric particles)
 - **Partially-absorbing spheres** (lossy dielectrics)  
@@ -113,29 +109,6 @@ Basic Example
     Backscatter efficiency: 0.573
     Scattering anisotropy:  0.192
 
-Angular Scattering
-~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    # Calculate scattering at different angles
-    angles = np.linspace(0, np.pi, 100)
-    mu = np.cos(angles)
-
-    # Get parallel and perpendicular intensities
-    I_par, I_per = mie.intensities(m, d, lambda0, mu)
-
-    # Plot results
-    plt.figure(figsize=(8, 6))
-    plt.semilogy(np.degrees(angles), I_par, label='Parallel')
-    plt.semilogy(np.degrees(angles), I_per, label='Perpendicular')
-    plt.xlabel('Scattering Angle (degrees)')
-    plt.ylabel('Intensity (1/sr)')
-    plt.legend()
-    plt.show()
 
 API Reference
 -------------
@@ -146,16 +119,18 @@ Core Functions
 =============================================== ===========================================================
 Function                                        Purpose
 =============================================== ===========================================================
-``efficiencies(m, d, lambda0)``                 Calculate extinction, scattering, backscattering, asymmetry
-``intensities(m, d, lambda0, mu)``              Angular scattering intensities for parallel/perpendicular polarization
+``efficiencies(m, d, lambda0, n_env=1)``        Calculate extinction, scattering, backscattering, asymmetry
+``intensities(m, d, lambda0, mu n_env=1)``      Angular scattering intensities for parallel/perpendicular polarization
 ``S1_S2(m, x, mu)``                             Complex scattering amplitudes
 ``coefficients(m, x)``                          Mie coefficients for field calculations
+``phase_matrix(m, x, mu)``                      Mueller matrix for sphere
 =============================================== ===========================================================
 
 Parameters
 ~~~~~~~~~~
 
-- **m** (complex): Refractive index of sphere relative to medium
+- **m** (complex): Complex refractive index of sphere
+- **n_env** (complex): Real refractive index of medium
 - **d** (float): Sphere diameter [same units as wavelength]
 - **lambda0** (float): Wavelength in vacuum [same units as diameter]
 - **x** (float): Size parameter (π×diameter/wavelength)
@@ -260,9 +235,6 @@ Gold Nanoparticles
 Important Conventions
 ---------------------
 
-.. warning::
-   **Key assumptions in miepython:**
-
    1. **Negative imaginary refractive index**: For absorbing materials, use ``m = n - ik`` where k > 0
    2. **Albedo normalization**: Scattering phase functions integrate to the single scattering albedo over 4π steradians (customizable)
 
@@ -271,7 +243,7 @@ Important Conventions
 Version 3.0 Breaking Changes
 ----------------------------
 
-Version 3.0 introduces significant API changes and new functionality:
+Version 3.0 introduced significant API changes and new functionality:
 
 New Features
 ~~~~~~~~~~~~
@@ -289,24 +261,6 @@ If you need the old API, pin to version 2.5.5::
 
 For new projects, use v3.0+ to access the latest features and improvements.
 
-Advanced Usage
---------------
-
-Multiple Wavelengths
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    # Wavelength-dependent calculations
-    wavelengths = np.linspace(400, 700, 100)  # nm
-    diameters = np.full_like(wavelengths, 200)  # 200 nm spheres
-
-    results = []
-    for wl, d in zip(wavelengths, diameters):
-        qext, qsca, qback, g = mie.efficiencies(m, d, wl)
-        results.append([qext, qsca, qback, g])
-
-    results = np.array(results)
 
 Custom Normalization
 ~~~~~~~~~~~~~~~~~~~~
@@ -329,7 +283,8 @@ Documentation
 Citation
 --------
 
-If you use miepython in your research, please cite:
+If you use miepython in your research, use the zenodo link |doi| to cite
+the version of miepython that you used:
 
 .. code-block:: bibtex
 
