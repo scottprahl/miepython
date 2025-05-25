@@ -29,7 +29,7 @@ def spherical_to_cartesian(r, theta, phi):
     return x, y, z
 
 
-def spherical_vector_to_cartesian(E_r, E_theta, E_phi, r, theta, phi):
+def spherical_vector_to_cartesian(E_r, E_theta, E_phi, _r, theta, phi):
     """Convert spherical components (E_r, E_theta, E_phi) to Cartesian (Ex, Ey, Ez)."""
     sin_theta = np.sin(theta)
     cos_theta = np.cos(theta)
