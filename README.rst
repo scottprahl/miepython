@@ -263,19 +263,19 @@ Gold Nanoparticles
 Citing `miepython`
 --------------------
 
-If this library contributes to your research, please cite the archived release
-on `zenodo <https://zenodo.org>`_
-
-.. code-block:: bibtex
-
-    S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
-    16 March 2025. doi:10.5281/zenodo.7949263
+If this library contributes to your research, please cite the `relevant doi release
+on zenodo <https://zenodo.org/badge/latestdoi/99259684>`_
 
 * **Generic DOI (always the newest release)** — `10.5281/zenodo.7949263`.  The
   badge at the top of this file resolves to that record.
 * **Version‑specific DOIs** — click the Zenodo badge |doi| and choose the DOI that
   corresponds to the exact version you want to cite (e.g.
   `10.5281/zenodo.14257432 for v2.5.5`).
+
+For example::
+
+    S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
+    16 March 2025. doi:10.5281/zenodo.7949263
 
 .. code-block:: bibtex
 
