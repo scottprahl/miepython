@@ -12,7 +12,7 @@ jobs:
 
     environment:
       name: pypi repository
-      url: https://pypi.org/p/iadpython
+      url: https://pypi.org/p/miepython
 
     permissions:
       id-token: write
