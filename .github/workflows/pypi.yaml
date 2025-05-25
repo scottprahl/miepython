@@ -1,36 +1,39 @@
----
-name: pypi
+name: Publish to PyPI
 
-on:    # yamllint disable-line rule:truthy
+on:
   release:
-    types: [published]
-  workflow_dispatch:
+    types: [published]   # run only when a *GitHub Release* is published
+  workflow_dispatch:     # manual trigger
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-
-    environment:
-      name: pypi repository
-      url: https://pypi.org/p/iadpython
-
     permissions:
-      id-token: write
+      id-token: write     # mandatory for trusted publishing
 
     steps:
-      - uses: actions/checkout@master
-
-      - uses: actions/setup-python@master
+      # Always fetch full history + tags
+      - uses: actions/checkout@v3
         with:
-          python-version: 3.11
+          fetch-depth: 0
 
-      - name: Build
+      # Set up Python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # Install build backend
+      - name: Install build tools
+        run: python -m pip install --upgrade build hatchling   # or setuptools,wheel
+
+      # Clean *and* build -- everything ends up in fresh ./dist
+      - name: Build package
         run: |
-          pip install setuptools wheel twine build
-          pip install -r requirements.txt
-          python -m build
+          rm -rf dist/             # ensure no stale artefacts
+          python -m build          # creates sdist and wheel
 
-      - name: Publish package to PyPI
+      # Upload
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
