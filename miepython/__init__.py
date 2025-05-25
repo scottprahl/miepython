@@ -46,18 +46,32 @@ The scattering matrix
 
 import os
 
-USE_JIT = os.environ.get("MIEPYTHON_USE_JIT", "1").lower() == "1"
+USE_JIT = os.environ.get("MIEPYTHON_USE_JIT", "0") == "1"
 
 if USE_JIT:
-    from .mie_jit import _an_bn, _cn_dn, _S1_S2, _D_calc, _pi_tau
-
+    # pull in the jit‐compiled backends under the "private" names core.py expects
+    from .mie_jit import _an_bn_nb as an_bn
+    from .mie_jit import _cn_dn_nb as cn_dn
+    from .mie_jit import _single_sphere_nb as single_sphere
+    from .mie_jit import _small_sphere_nb as small_sphere
+    from .mie_jit import _small_conducting_sphere_nb as small_conducting_sphere
+    from .mie_jit import _pi_tau_nb as _pi_tau
+    from .mie_jit import _D_calc_nb as _D_calc
+    from .mie_jit import _S1_S2_nb as _S1_S2
 else:
-    from .mie_nojit import _an_bn, _cn_dn, _S1_S2, _D_calc, _pi_tau
+    from .mie_nojit import _an_bn_py as an_bn
+    from .mie_nojit import _cn_dn_py as cn_dn
+    from .mie_nojit import _single_sphere_py as single_sphere
+    from .mie_nojit import _small_sphere_py as small_sphere
+    from .mie_nojit import _small_conducting_sphere_py as small_conducting_sphere
+    from .mie_nojit import _pi_tau_py as _pi_tau
+    from .mie_nojit import _D_calc_py as _D_calc
+    from .mie_nojit import _S1_S2_py as _S1_S2
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
-from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients, an_bn, cn_dn
+from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
 
-# The only functions exposed to the user
+# functions exposed to the user
 __all__ = (
     "intensities",
     "i_par",
@@ -70,14 +84,15 @@ __all__ = (
     "an_bn",
     "cn_dn",
     "S1_S2",
-    "_an_bn",
-    "_cn_dn",
+    "single_sphere",
+    "small_sphere",
+    "small_conducting_sphere",
     "_S1_S2",
     "_D_calc",
     "_pi_tau",
 )
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 __author__ = "Scott Prahl"
 __email__ = "scott.prahl@oit.edu"
 __copyright__ = "2017-25, Scott Prahl"
