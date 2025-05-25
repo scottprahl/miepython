@@ -62,12 +62,10 @@ Key Features
 - ✅ **Validated algorithms** - Follows Wiscombe's trusted implementation
 - ✅ **Comprehensive outputs** - Extinction, scattering, backscattering, asymmetry
 - ✅ **Angular distributions** - Full scattering phase functions
-- ✅ **Field calculations** - Internal field coefficients (v3.0+)
 - ✅ **Flexible normalization** - Multiple conventions supported
 - ✅ **Code Jitting** - the python Numba package enables 10-50X speedup
+- ✅ **Field calculations** - Internal field coefficients coming!
 
-Quick Start
------------
 
 Installation
 ~~~~~~~~~~~~
@@ -113,18 +111,18 @@ Basic Example
 API Reference
 -------------
 
-Core Functions
-~~~~~~~~~~~~~~
+Basic Functions
+~~~~~~~~~~~~~~~
 
-=============================================== ===========================================================
-Function                                        Purpose
-=============================================== ===========================================================
-``efficiencies(m, d, lambda0, n_env=1)``        Calculate extinction, scattering, backscattering, asymmetry
-``intensities(m, d, lambda0, mu n_env=1)``      Angular scattering intensities for parallel/perpendicular polarization
-``S1_S2(m, x, mu)``                             Complex scattering amplitudes
-``coefficients(m, x)``                          Mie coefficients for field calculations
-``phase_matrix(m, x, mu)``                      Mueller matrix for sphere
-=============================================== ===========================================================
+============================================ ===========================================================
+Function                                     Purpose
+============================================ ===========================================================
+``efficiencies(m, d, lambda0, n_env=1)``     Calculate extinction, scattering, backscattering, asymmetry
+``intensities(m, d, lambda0, mu, n_env=1)``  Angular scattering intensities for parallel/perpendicular polarization
+``S1_S2(m, x, mu)``                          Complex scattering amplitudes
+``coefficients(m, x)``                       Mie coefficients for field calculations
+``phase_matrix(m, x, mu)``                   Mueller matrix for sphere
+============================================ ===========================================================
 
 Parameters
 ~~~~~~~~~~
@@ -136,15 +134,6 @@ Parameters
 - **x** (float): Size parameter (π×diameter/wavelength)
 - **mu** (array): Cosine of scattering angles
 
-Size Parameter Functions
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-For direct size parameter calculations:
-
-.. code-block:: python
-
-    x = np.pi * diameter / wavelength
-    qext, qsca, qback, g = mie.efficiencies_mx(m, x)
 
 Performance & JIT Compilation
 -----------------------------
@@ -276,9 +265,9 @@ Documentation
 -------------
 
 - **Full Documentation**: `miepython.readthedocs.io <https://miepython.readthedocs.io>`_
-- **API Reference**: Complete function documentation with examples
+- **API Reference**: `miepython api <https://miepython.readthedocs.io/en/latest/#api-reference>`_
 - **Theory Background**: Mathematical foundations and validation
-- **Example Gallery**: Interactive Jupyter notebooks
+- **Example Gallery**: `Interactive Jupyter notebooks <https://github.com/scottprahl/miepython/tree/main/docs>`_
 
 Citation
 --------
