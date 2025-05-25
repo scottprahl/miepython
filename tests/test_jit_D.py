@@ -6,10 +6,12 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=line-too-long
 
+import os
 import unittest
 import numpy as np
 
-from miepython.mie_jit import _D_calc
+os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
+import miepython as mie
 from miepython.bessel import *
 from miepython.util import cs
 
@@ -70,7 +72,7 @@ class TestD(unittest.TestCase):
         m = 1.5
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -88,7 +90,7 @@ class TestD(unittest.TestCase):
         m = 1.5
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -106,7 +108,7 @@ class TestD(unittest.TestCase):
         m = 1.5
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -124,7 +126,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 0.5j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -142,7 +144,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 0.5j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -160,7 +162,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 0.5j
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -178,7 +180,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 15j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -196,7 +198,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 15j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -214,7 +216,7 @@ class TestD(unittest.TestCase):
         m = 1.5 - 15j
         x = 10
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = _D_calc(m, x, nstop)
+        D = mie._D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -232,7 +234,7 @@ class TestD(unittest.TestCase):
         x = 62
         m = 1.28 - 1.37j
         nstop = 50
-        dn = _D_calc(m, x, nstop)
+        dn = mie._D_calc(m, x, nstop)
         self.assertAlmostEqual(dn[9].real, 0.004087, delta=0.00001)
         self.assertAlmostEqual(dn[9].imag, 1.0002620, delta=0.00001)
 

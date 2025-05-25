@@ -6,10 +6,12 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=line-too-long
 
+import os
 import unittest
 import numpy as np
 from scipy.special import spherical_jn, spherical_yn, jv, yv
 
+os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
 from miepython.bessel import *
 from miepython.util import cs
@@ -742,7 +744,7 @@ class TestAnBnCnDnLengths(unittest.TestCase):
             self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
             self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
 
-    def test_lengths_npole_scalar(self):
+    def test_lengths_npole(self):
         """
         Test that scalars returned when we pass scalars.
         """
@@ -754,13 +756,17 @@ class TestAnBnCnDnLengths(unittest.TestCase):
         for m, x, n_pole in test_cases:
             a, b = mie.an_bn(m, x, n_pole)
             c, d = mie.cn_dn(m, x, n_pole)
-            for var, name in zip([a, b, c, d], "abcd"):
-                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
+            self.assertEqual(len(a), n_pole, "Length wrong for a with n_pole=%d" % n_pole)
+            self.assertEqual(len(b), n_pole, "Length wrong for b with n_pole=%d" % n_pole)
+            self.assertEqual(len(c), n_pole, "Length wrong for c with n_pole=%d" % n_pole)
+            self.assertEqual(len(d), n_pole, "Length wrong for d with n_pole=%d" % n_pole)
 
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
-            for var, name in zip([a, b, c, d], "abcd"):
-                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
+            self.assertEqual(len(a), n_pole, "Length wrong for a with n_pole=%d" % n_pole)
+            self.assertEqual(len(b), n_pole, "Length wrong for b with n_pole=%d" % n_pole)
+            self.assertEqual(len(c), n_pole, "Length wrong for c with n_pole=%d" % n_pole)
+            self.assertEqual(len(d), n_pole, "Length wrong for d with n_pole=%d" % n_pole)
 
     def test_lengths_npole_arrays(self):
         """

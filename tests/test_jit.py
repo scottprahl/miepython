@@ -6,8 +6,11 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=line-too-long
 
+import os
 import unittest
 import numpy as np
+
+os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
 
 
