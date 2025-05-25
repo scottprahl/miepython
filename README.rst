@@ -266,10 +266,10 @@ Citing `miepython`
 If this library contributes to your research, please cite the archived release
 on `zenodo <https://zenodo.org>`_
 
-```
-S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
-16 March 2025. doi:10.5281/zenodo.7949263
-```
+.. code-block:: bibtex
+
+    S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
+    16 March 2025. doi:10.5281/zenodo.7949263
 
 * **Generic DOI (always the newest release)** — `10.5281/zenodo.7949263`.  The
   badge at the top of this file resolves to that record.
