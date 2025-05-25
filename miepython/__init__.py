@@ -92,7 +92,7 @@ __all__ = (
     "_pi_tau",
 )
 
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 __author__ = "Scott Prahl"
 __email__ = "scott.prahl@oit.edu"
 __copyright__ = "2017-25, Scott Prahl"

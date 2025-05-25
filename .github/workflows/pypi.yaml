@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }} # <<— checkout the tag that triggered the release
 
       # Set up Python
       - uses: actions/setup-python@v4

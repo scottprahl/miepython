@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "miepython"
-version = "3.0.0"
+version = "3.0.2"
 description = "Mie scattering of a plane wave by a sphere"
 requires-python = ">=3.8"
 readme = { file = "README.rst", content-type = "text/x-rst" }
