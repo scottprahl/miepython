@@ -53,8 +53,6 @@ Overview
 - **Partially-absorbing spheres** (lossy dielectrics)  
 - **Perfectly-conducting spheres** (metallic particles)
 
-Full documentation at <https://miepython.readthedocs.io>
-
 Key Features
 ~~~~~~~~~~~~
 
@@ -66,6 +64,27 @@ Key Features
 - ✅ **Code Jitting** - the python Numba package enables 10-50X speedup
 - ✅ **Field calculations** - Internal field coefficients coming!
 
+
+Documentation
+-------------
+
+- **Full Documentation**: `miepython.readthedocs.io <https://miepython.readthedocs.io>`_
+- **API Reference**: `miepython api <https://miepython.readthedocs.io/en/latest/#api-reference>`_
+- **Jupyter Notebooks**: `Interactive Jupyter notebooks <https://github.com/scottprahl/miepython/tree/main/docs>`_
+- **Theory Background**: `Mathematical foundations and validation <https://miepython.readthedocs.io/en/latest/07_algorithm.html>`_
+
+Version 3.0 Breaking Changes
+----------------------------
+
+Version 3.0 introduced significant API changes and new functionality:
+
+- **Internal field calculations** - Compute electromagnetic fields inside spheres
+- **Enhanced coefficient access** - Direct access to Mie expansion coefficients
+- **Future-ready architecture** - Foundation for full field calculations
+
+If you need the old API, pin to version 2.5.5::
+
+    pip install miepython==2.5.5
 
 Installation
 ~~~~~~~~~~~~
@@ -133,6 +152,23 @@ Parameters
 - **lambda0** (float): Wavelength in vacuum [same units as diameter]
 - **x** (float): Size parameter (π×diameter/wavelength)
 - **mu** (array): Cosine of scattering angles
+
+
+Important Conventions
+---------------------
+
+   1. **Negative imaginary refractive index**: For absorbing materials, use ``m = n - ik`` where k > 0
+   2. **Albedo normalization**: Scattering phase functions integrate to the single scattering albedo over 4π steradians (customizable)
+
+   These latter may be mitigated using custom normalization
+
+.. code-block:: python
+
+    # Different scattering function normalizations
+    I_albedo = mie.i_unpolarized(m, x, mu, norm='albedo')  # Default
+    I_unity = mie.i_unpolarized(m, x, mu, norm='one')      # Normalized to 1
+    I_4pi = mie.i_unpolarized(m, x, mu, norm='4pi')        # 4π normalization
+
 
 
 Performance & JIT Compilation
@@ -221,86 +257,38 @@ Gold Nanoparticles
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/04.svg
    :alt: Gold Nanoparticles
 
-Important Conventions
----------------------
-
-   1. **Negative imaginary refractive index**: For absorbing materials, use ``m = n - ik`` where k > 0
-   2. **Albedo normalization**: Scattering phase functions integrate to the single scattering albedo over 4π steradians (customizable)
-
-   These conventions may differ from other Mie codes - always verify when comparing results!
-
-Version 3.0 Breaking Changes
-----------------------------
-
-Version 3.0 introduced significant API changes and new functionality:
-
-New Features
-~~~~~~~~~~~~
-
-- **Internal field calculations** - Compute electromagnetic fields inside spheres
-- **Enhanced coefficient access** - Direct access to Mie expansion coefficients
-- **Future-ready architecture** - Foundation for full field calculations
-
-Migration
-~~~~~~~~~
-
-If you need the old API, pin to version 2.5.5::
-
-    pip install miepython==2.5.5
-
-For new projects, use v3.0+ to access the latest features and improvements.
 
 
-Custom Normalization
-~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
+Citing `miepython`
+--------------------
 
-    # Different scattering function normalizations
-    I_albedo = mie.i_unpolarized(m, x, mu, norm='albedo')  # Default
-    I_unity = mie.i_unpolarized(m, x, mu, norm='one')      # Normalized to 1
-    I_4pi = mie.i_unpolarized(m, x, mu, norm='4pi')        # 4π normalization
+If this library contributes to your research, please cite the archived release
+on `zenodo <https://zenodo.org>`_
 
-Documentation
--------------
+```
+S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
+16 March 2025. doi:10.5281/zenodo.7949263
+```
 
-- **Full Documentation**: `miepython.readthedocs.io <https://miepython.readthedocs.io>`_
-- **API Reference**: `miepython api <https://miepython.readthedocs.io/en/latest/#api-reference>`_
-- **Theory Background**: Mathematical foundations and validation
-- **Example Gallery**: `Interactive Jupyter notebooks <https://github.com/scottprahl/miepython/tree/main/docs>`_
-
-Citation
---------
-
-If you use miepython in your research, use the zenodo link |doi| to cite
-the version of miepython that you used:
+* **Generic DOI (always the newest release)** — `10.5281/zenodo.7949263`.  The
+  badge at the top of this file resolves to that record.
+* **Version‑specific DOIs** — click the Zenodo badge |doi| and choose the DOI that
+  corresponds to the exact version you want to cite (e.g.
+  `10.5281/zenodo.14257432 for v2.5.5`).
 
 .. code-block:: bibtex
 
-    @software{miepython,
-      author = {Scott Prahl},
-      title = {miepython: A Python library for Mie scattering calculations},
-      url = {https://github.com/scottprahl/miepython},
-      doi = {10.5281/zenodo.xxxxx},
-      year = {2024}
-    }
-
-Contributing
-------------
-
-Contributions are welcome! Please see our `contributing guidelines <CONTRIBUTING.md>`_ for details on:
-
-- Reporting bugs
-- Suggesting enhancements  
-- Submitting pull requests
-- Running tests locally
-
-Support
--------
-
-- **Issues**: `GitHub Issues <https://github.com/scottprahl/miepython/issues>`_
-- **Discussions**: `GitHub Discussions <https://github.com/scottprahl/miepython/discussions>`_
-- **Documentation**: `ReadTheDocs <https://miepython.readthedocs.io>`_
+```
+@software{prahl_miepython_2025,
+  author  = {Prahl, Scott},
+  title   = {{miepython}: A Python library for Mie scattering calculations},
+  url     = {https://github.com/scottprahl/miepython},
+  doi     = {10.5281/zenodo.7949263},
+  year    = {2025},
+  version = {latest}
+}
+```
 
 License
 -------
