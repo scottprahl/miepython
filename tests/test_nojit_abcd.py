@@ -642,7 +642,7 @@ class TestCnDn(unittest.TestCase):
     def test_00_cn_dn(self):
         m = 1.5 - 1j
         x = 2.5
-        c, d = mie.cn_dn(m, x)
+        c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
         at, bt, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
@@ -665,7 +665,7 @@ class TestCnDn(unittest.TestCase):
     def test_02_cn_dn(self):
         m = 1.5 - 0.1j
         x = 1
-        c, d = mie.cn_dn(m, x)
+        c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
         at, bt, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
@@ -688,7 +688,7 @@ class TestCnDn(unittest.TestCase):
     def test_03_cn_dn(self):
         m = 1.5 - 1j
         x = 1
-        c, d = mie.cn_dn(m, x)
+        c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
         at, bt, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
@@ -727,12 +727,11 @@ class TestAnBnCnDnLengths(unittest.TestCase):
             a, b = mie.an_bn(m, x, n_pole)
             c, d = mie.cn_dn(m, x, n_pole)
 
-            expected = int(x + 4.05 * x**0.33333 + 2.0) + 1
-
-            self.assertEqual(len(a), expected, "Length mismatch for a_n with n_pole=0")
-            self.assertEqual(len(b), expected, "Length mismatch for b_n with n_pole=0")
-            self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
-            self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
+            exp = int(x + 4.05 * x**0.33333 + 2.0) + 1
+            self.assertEqual(len(a), exp, "Length mismatch for a_n with n_pole=0")
+            self.assertEqual(len(b), exp, "Length mismatch for b_n with n_pole=0")
+            self.assertEqual(len(c), exp, "Length mismatch for c_n with n_pole=0")
+            self.assertEqual(len(d), exp, "Length mismatch for d_n with n_pole=0")
 
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
@@ -744,7 +743,7 @@ class TestAnBnCnDnLengths(unittest.TestCase):
             self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
             self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
 
-    def test_lengths_npole_scalar(self):
+    def test_lengths_npole(self):
         """
         Test that scalars returned when we pass scalars.
         """
@@ -756,13 +755,17 @@ class TestAnBnCnDnLengths(unittest.TestCase):
         for m, x, n_pole in test_cases:
             a, b = mie.an_bn(m, x, n_pole)
             c, d = mie.cn_dn(m, x, n_pole)
-            for var, name in zip([a, b, c, d], "abcd"):
-                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
+            self.assertEqual(len(a), n_pole, "bad length for a_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(b), n_pole, "bad length for b_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(c), n_pole, "bad length for c_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(d), n_pole, "bad length for d_n when n_pole=%d" % n_pole)
 
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
-            for var, name in zip([a, b, c, d], "abcd"):
-                self.assertTrue(np.isscalar(var), f"{name} is not a scalar, got {type(var)}")
+            self.assertEqual(len(a), n_pole, "bad length for a_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(b), n_pole, "bad length for b_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(c), n_pole, "bad length for c_n when n_pole=%d" % n_pole)
+            self.assertEqual(len(d), n_pole, "bad length for d_n when n_pole=%d" % n_pole)
 
     def test_lengths_npole_arrays(self):
         """
