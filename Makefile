@@ -16,7 +16,10 @@ rstcheck:
 	-rstcheck docs/index.rst
 	-rstcheck --ignore-directives automodapi docs/miepython.rst
 
-lintcheck:
+black:
+	black .
+
+lint:
 	-pylint miepython/__init__.py
 	-pylint miepython/bessel.py
 	-pylint miepython/mie_jit.py
@@ -31,7 +34,7 @@ lintcheck:
 	-pylint tests/test_nojit.py
 	-pylint docs/conf.py
 
-doccheck:
+ruff:
 	-ruff check miepython/__init__.py
 	-ruff check miepython/bessel.py
 	-ruff check miepython/core.py
@@ -67,6 +70,10 @@ test:
 
 	-pytest -v tests/test_all_examples.py
 	-pytest -v tests/test_all_notebooks.py
+
+speed:
+	-python tests/test_nojit_speed.py
+	-python tests/test_jit_speed.py
 
 clean:
 	rm -rf .ruff_cache
