@@ -63,7 +63,7 @@ def e_far(lambda0, d_sphere, m_sphere, r, theta, phi):
 #     amp = np.exp(jkr) / (-jkr)
 #     mu = np.cos(theta)
 #
-#     a, b = mie._an_bn(m_sphere, x, 0)
+#     a, b = mie.an_bn(m_sphere, x, 0)
 #     N = len(a)
 #     pi = np.zeros(N)
 #     tau = np.zeros(N)
