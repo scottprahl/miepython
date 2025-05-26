@@ -76,9 +76,8 @@ Documentation
 Version 3.0 Breaking Changes
 ----------------------------
 
-Version 3.0 introduced significant API changes and new functionality:
+Version 3.0 introduced significant API changes to rationalize the API as well as new functionality:
 
-- **Internal field calculations** - Compute electromagnetic fields inside spheres
 - **Enhanced coefficient access** - Direct access to Mie expansion coefficients
 - **Future-ready architecture** - Foundation for full field calculations
 
