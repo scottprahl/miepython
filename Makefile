@@ -57,6 +57,7 @@ ruff:
 test:
 	-pytest -v tests/test_bessel.py
 	-pytest -v tests/test_rayleigh.py
+	-pytest -v tests/test_unpolarized_intensity.py
 
 	-pytest -v tests/test_nojit_D.py
 	-pytest -v tests/test_nojit_abcd.py
