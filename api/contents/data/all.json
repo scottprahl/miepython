@@ -1,0 +1,57 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2025-11-11T21:18:06.675633Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2025-11-11T21:18:02.791719Z",
+      "mimetype": "text/plain",
+      "name": "segelstein81_index.txt",
+      "path": "data/segelstein81_index.txt",
+      "size": 36719,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2025-11-11T21:18:06.675430Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2025-11-11T21:18:02.791996Z",
+      "mimetype": "text/plain",
+      "name": "ag-Johnson.txt",
+      "path": "data/ag-Johnson.txt",
+      "size": 1337,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2025-11-11T21:18:06.675236Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2025-11-11T21:18:02.792248Z",
+      "mimetype": "text/plain",
+      "name": "Johnson.txt",
+      "path": "data/Johnson.txt",
+      "size": 1337,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2025-11-11T21:18:06.675542Z",
+  "format": "json",
+  "hash": null,
+  "hash_algorithm": null,
+  "last_modified": "2025-11-11T21:18:06.675542Z",
+  "mimetype": null,
+  "name": "data",
+  "path": "data",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}
