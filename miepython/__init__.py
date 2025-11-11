@@ -58,6 +58,9 @@ if USE_JIT:
     from .mie_jit import _pi_tau_nb as _pi_tau
     from .mie_jit import _D_calc_nb as _D_calc
     from .mie_jit import _S1_S2_nb as _S1_S2
+    from .mie_jit import _Lentz_Dn as _Lentz_Dn
+    from .mie_jit import _D_upwards as _D_upwards
+    from .mie_jit import _D_downwards as _D_downwards
 else:
     from .mie_nojit import _an_bn_py as an_bn
     from .mie_nojit import _cn_dn_py as cn_dn
@@ -67,6 +70,9 @@ else:
     from .mie_nojit import _pi_tau_py as _pi_tau
     from .mie_nojit import _D_calc_py as _D_calc
     from .mie_nojit import _S1_S2_py as _S1_S2
+    from .mie_nojit import _Lentz_Dn as _Lentz_Dn
+    from .mie_nojit import _D_upwards as _D_upwards
+    from .mie_nojit import _D_downwards as _D_downwards
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
@@ -90,6 +96,9 @@ __all__ = (
     "_S1_S2",
     "_D_calc",
     "_pi_tau",
+    "_Lentz_Dn",
+    "_D_upwards",
+    "_D_downwards",
 )
 
 __version__ = "3.0.2"

@@ -354,9 +354,7 @@ def _small_conducting_sphere_py(_m, x):
     ahat2 = complex(0.0, x**2 / 30.0)
     bhat2 = complex(0.0, -(x**2) / 45.0)
 
-    qsca = x**4 * (
-        6 * np.abs(ahat1) ** 2 + 6 * np.abs(bhat1) ** 2 + 10 * np.abs(ahat2) ** 2 + 10 * np.abs(bhat2) ** 2
-    )
+    qsca = x**4 * (6 * np.abs(ahat1) ** 2 + 6 * np.abs(bhat1) ** 2 + 10 * np.abs(ahat2) ** 2 + 10 * np.abs(bhat2) ** 2)
     qext = qsca
     g = ahat1.imag * (ahat2.imag + bhat1.imag)
     g += bhat2.imag * (5.0 / 9.0 * ahat2.imag + bhat1.imag)

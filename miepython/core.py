@@ -276,8 +276,7 @@ def normalization_factor(m, x, norm_str):
 
     if factor is None:
         raise ValueError(
-            "normalization must be one of 'albedo' (default), 'one'"
-            "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
+            "normalization must be one of 'albedo' (default), 'one'" "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
         )
     return factor
 
