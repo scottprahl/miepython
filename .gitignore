@@ -1,14 +1,44 @@
+# macOS
 .DS_Store
+
+# Python
 *.pyc
-.tox
-miepython/__pycache__
-miepython/.ipynb_checkpoints/*
-dist
-docs/.ipynb_checkpoints
-docs/_build
-docs/api
-miepython.egg-info
-.vscode/*
+*.py[cod]
+*$py.class
+*.so
+__pycache__/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
 venv/
-04_plot.png
-tests/.ipynb_checkpoints
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+.jupyterlite.doit.db
+
+# JupyterLite
+_site/
+.lite_src/
+.lite_root/
+lite/
+
+# Documentation
+docs/_build/
+docs/api/
+
+# Testing
+.pytest_cache/
+
+# GitHub Pages
+.gh-pages/
+
+# Temporary
+.tmp/
+*.tmp
+todo
