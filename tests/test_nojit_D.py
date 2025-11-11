@@ -10,7 +10,7 @@ import os
 import unittest
 import numpy as np
 
-os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
+os.environ["MIEPYTHON_USE_JIT"] = "0"  # must come before importing miepython
 import miepython as mie
 from miepython.bessel import *
 from miepython.util import cs
