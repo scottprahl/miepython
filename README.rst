@@ -30,85 +30,74 @@
    :target: https://pypi.org/project/miepython/
    :alt: Downloads
 
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black
-   :alt: code style: black
+.. |lite| image:: https://img.shields.io/badge/try-JupyterLite-68CA66.svg
+   :target: https://scottprahl.github.io/miepython/
+   :alt: Try JupyterLite
 
 miepython
 =========
 
 |pypi| |github| |conda| |doi|
 
-|license| |test| |docs| |downloads| |black|
+|license| |test| |docs| |downloads|
 
-``miepython`` is a pure‑Python implementation of Mie theory for spherical
-scatterers, validated against Wiscombe's reference results.  The library is
-lightweight, extensively tested, and—thanks to an *optional* Numba backend—can
-process nearly a million particles per second.
+|lite|
 
-Overview
+**Fast, pure-Python Mie scattering calculations for spherical particles**
+
+``miepython`` implements Mie theory for light scattering by spherical particles. It's validated against Wiscombe's reference implementation and can process nearly a million particles per second with optional Numba acceleration.
+
+Perfect for modeling aerosols, colloids, nanoparticles, and atmospheric optics.
+
+Features
 --------
 
-- **Non-absorbing spheres** (dielectric particles)
-- **Partially-absorbing spheres** (lossy dielectrics)  
-- **Perfectly-conducting spheres** (metallic particles)
+✅ **Pure Python** — Works anywhere, no compilers needed  
+✅ **Fast** — Optional Numba JIT gives 10-50× speedup  
+✅ **Validated** — Matches Wiscombe's MIEV0 reference code  
+✅ **Complete** — Efficiencies, angular patterns, phase matrices  
+✅ **Flexible** — Multiple normalization conventions  
+✅ **Well-documented** — Extensive examples and theory guides
 
-Key Features
-~~~~~~~~~~~~
+Supported Particles
+~~~~~~~~~~~~~~~~~~~
 
-- ✅ **Pure Python** - No external dependencies beyond NumPy
-- ✅ **Validated algorithms** - Follows Wiscombe's trusted implementation
-- ✅ **Comprehensive outputs** - Extinction, scattering, backscattering, asymmetry
-- ✅ **Angular distributions** - Full scattering phase functions
-- ✅ **Flexible normalization** - Multiple conventions supported
-- ✅ **Code Jitting** - the python Numba package enables 10-50X speedup
-- ✅ **Field calculations** - Internal field coefficients coming!
-
-
-Documentation
--------------
-
-- **Full Documentation**: `miepython.readthedocs.io <https://miepython.readthedocs.io>`_
-- **API Reference**: `miepython api <https://miepython.readthedocs.io/en/latest/#api-reference>`_
-- **Jupyter Notebooks**: `Interactive Jupyter notebooks <https://github.com/scottprahl/miepython/tree/main/docs>`_
-- **Theory Background**: `Mathematical foundations and validation <https://miepython.readthedocs.io/en/latest/07_algorithm.html>`_
-
-Version 3.0 Breaking Changes
-----------------------------
-
-Version 3.0 introduced significant API changes to rationalize the API as well as new functionality:
-
-- **Enhanced coefficient access** - Direct access to Mie expansion coefficients
-- **Future-ready architecture** - Foundation for full field calculations
-
-If you need the old API, pin to version 2.5.5::
-
-    pip install miepython==2.5.5
+- Non-absorbing spheres (dielectrics)
+- Partially-absorbing spheres (lossy materials)  
+- Perfectly-conducting spheres (metals)
 
 Installation
-~~~~~~~~~~~~
+------------
 
-Using pip::
+**Using pip:**
+
+.. code-block:: bash
 
     pip install miepython
 
-Using conda::
+**Using conda:**
+
+.. code-block:: bash
 
     conda install -c conda-forge miepython
 
-Basic Example
-~~~~~~~~~~~~~
+**Immediately using jupyter-lite.**
+
+  No installation needed!  |lite| **
+
+Quick Start
+-----------
 
 .. code-block:: python
 
     import miepython as mie
 
-    # Define sphere properties
-    m = 1.5 - 1j       # Complex refractive index
+    # 100 nm sphere in air at 314.15 nm wavelength
+    m = 1.5 - 0.1j     # Complex refractive index (n - ik)
     d = 100            # Diameter (nm)
-    lambda0 = 314.15   # Wavelength in vacuum (nm)
+    lambda0 = 314.15   # Wavelength (nm)
 
-    # Calculate efficiencies
+    # Calculate scattering properties
     qext, qsca, qback, g = mie.efficiencies(m, d, lambda0)
 
     print(f"Extinction efficiency:  {qext:.3f}")
@@ -125,156 +114,121 @@ Basic Example
     Backscatter efficiency: 0.573
     Scattering anisotropy:  0.192
 
+Performance
+-----------
 
-API Reference
--------------
+Enable Numba JIT compilation for dramatic speedups on large datasets:
 
-Basic Functions
-~~~~~~~~~~~~~~~
+.. code-block:: python
+
+    import os
+    os.environ["MIEPYTHON_USE_JIT"] = "1"  # Set before importing
+    import miepython as mie
+
+**Benchmark Results** (100,000 particles):
+
+============ ============ ==========
+Version      Time         Speedup
+============ ============ ==========
+Pure Python  4.00 s       1×
+**With JIT** **0.15 s**   **27×**
+============ ============ ==========
+
+Core API
+--------
+
+**Efficiency Calculations**
+
+.. code-block:: python
+
+    qext, qsca, qback, g = mie.efficiencies(m, d, lambda0, n_env=1)
+
+**Angular Scattering**
+
+.. code-block:: python
+
+    # Scattering intensities vs angle
+    mu = np.cos(np.linspace(0, np.pi, 100))  # Scattering angles
+    Ipar, Iper = mie.intensities(m, d, lambda0, mu)
+
+**Advanced Functions**
 
 ============================================ ===========================================================
 Function                                     Purpose
 ============================================ ===========================================================
-``efficiencies(m, d, lambda0, n_env=1)``     Calculate extinction, scattering, backscattering, asymmetry
-``intensities(m, d, lambda0, mu, n_env=1)``  Angular scattering intensities for parallel/perpendicular polarization
+``efficiencies(m, d, lambda0, n_env=1)``     Extinction, scattering, backscattering, asymmetry
+``intensities(m, d, lambda0, mu, n_env=1)``  Angular scattering for parallel/perpendicular polarization
 ``S1_S2(m, x, mu)``                          Complex scattering amplitudes
-``coefficients(m, x)``                       Mie coefficients for field calculations
-``phase_matrix(m, x, mu)``                   Mueller matrix for sphere
+``coefficients(m, x)``                       Mie expansion coefficients
+``phase_matrix(m, x, mu)``                   Full Mueller scattering matrix
 ============================================ ===========================================================
 
-Parameters
-~~~~~~~~~~
+**Parameters:**
 
-- **m** (complex): Complex refractive index of sphere
-- **n_env** (complex): Real refractive index of medium
-- **d** (float): Sphere diameter [same units as wavelength]
-- **lambda0** (float): Wavelength in vacuum [same units as diameter]
-- **x** (float): Size parameter (π×diameter/wavelength)
+- **m** (complex): Refractive index of sphere (use ``n - ik`` with k > 0 for absorption)
+- **d** (float): Sphere diameter  
+- **lambda0** (float): Wavelength in vacuum (same units as diameter)
+- **n_env** (float): Refractive index of surrounding medium (default: 1.0)
 - **mu** (array): Cosine of scattering angles
+- **x** (float): Size parameter = πd/λ
 
+Examples
+--------
 
-Important Conventions
----------------------
+The repository includes detailed `example notebooks <https://github.com/scottprahl/miepython/tree/master/docs>`_ showing:
 
-   1. **Negative imaginary refractive index**: For absorbing materials, use ``m = n - ik`` where k > 0
-   2. **Albedo normalization**: Scattering phase functions integrate to the single scattering albedo over 4π steradians (customizable)
+**Dielectric vs. Absorbing Spheres**
 
-   These latter may be mitigated using custom normalization
-
-.. code-block:: python
-
-    # Different scattering function normalizations
-    I_albedo = mie.i_unpolarized(m, x, mu, norm='albedo')  # Default
-    I_unity = mie.i_unpolarized(m, x, mu, norm='one')      # Normalized to 1
-    I_4pi = mie.i_unpolarized(m, x, mu, norm='4pi')        # 4π normalization
-
-
-
-Performance & JIT Compilation
------------------------------
-
-``miepython`` supports **Just-In-Time (JIT) compilation** via Numba for dramatic performance improvements on large datasets. This is especially beneficial for batch calculations with thousands of particles.
-
-Enabling JIT
-~~~~~~~~~~~~
-
-.. code-block:: python
-
-    import os
-    os.environ["MIEPYTHON_USE_JIT"] = "1"  # Must be set before importing
-    import miepython as mie
-
-Performance Comparison
-~~~~~~~~~~~~~~~~~~~~~~
-
-JIT compilation provides substantial speedups for large-scale calculations:
-
-=========== ============== ================== ==========
-Version     JIT Status     Time (N=100,000)   Speedup
-=========== ============== ================== ==========
-v3.0.1      Disabled       4.00 seconds       1×
-v3.0.1      **Enabled**    **0.15 seconds**   **27×**
-=========== ============== ================== ==========
-
-Benchmark Example
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    import os
-    import numpy as np
-    from time import time
-
-    os.environ["MIEPYTHON_USE_JIT"] = "1"  # must be before import miepython
-    import miepython as mie
-
-    # Generate random particle ensemble
-    N = 100_000
-    refr = np.random.uniform(1.0, 2.0, N)
-    refi = np.exp(np.random.uniform(np.log(1e-4), np.log(1.0), N))
-    x = np.exp(np.random.uniform(np.log(0.01), np.log(100), N))
-    m = refr - 1j * refi
-
-    # Benchmark calculation
-    t0 = time()
-    qext, qsca, qback, g = mie.efficiencies_mx(m, x)
-    elapsed = time() - t0
-
-    print(f"JIT enabled: {os.environ.get('MIEPYTHON_USE_JIT') == '1'}")
-    print(f"Calculated {N:,} particles in {elapsed:.3f} seconds")
-    print(f"Rate: {N/elapsed:,.0f} particles/second")
-
-.. note::
-   The first JIT-compiled call includes compilation overhead (~1-2 seconds). Subsequent calls achieve full performance.
-
-Examples Gallery
-----------------
-
-The repository includes several `example scripts <https://github.com/scottprahl/miepython/tree/master/miepython/examples>`_ demonstrating different applications:
-
-Dielectric vs. Absorbing Spheres
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/01.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/01.svg
    :alt: Dielectric vs Absorbing
 
-Glass Microspheres with Resonances
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Glass Microspheres (showing resonances)**
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/02.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/02.svg
    :alt: Glass Spheres
 
-Water Droplets
-~~~~~~~~~~~~~~
+**Water Droplets**
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/03.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/03.svg
    :alt: Water Droplets
 
-Gold Nanoparticles
-~~~~~~~~~~~~~~~~~~
+**Gold Nanoparticles (plasmonic resonance)**
 
-.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/04.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/04.svg
    :alt: Gold Nanoparticles
 
+Documentation
+-------------
 
+📚 **Full Documentation:** `miepython.readthedocs.io <https://miepython.readthedocs.io>`_
 
+📖 **Interactive Tutorials:** `Jupyter notebooks <https://github.com/scottprahl/miepython/tree/main/docs>`_
 
-Citing `miepython`
---------------------
+🔬 **Theory & Validation:** `Mathematical foundations <https://miepython.readthedocs.io/en/latest/07_algorithm.html>`_
 
-If this library contributes to your research, please cite the `relevant doi release
-on zenodo <https://zenodo.org/badge/latestdoi/99259684>`_
+Version 3.0 Changes
+-------------------
 
-* **Generic DOI (always the newest release)** — `10.5281/zenodo.7949263`.  The
-  badge at the top of this file resolves to that record.
-* **Version‑specific DOIs** — click the Zenodo badge |doi| and choose the DOI that
-  corresponds to the exact version you want to cite (e.g.
-  `10.5281/zenodo.14257432 for v2.5.5`).
+Version 3.0 rationalized the API and added new capabilities:
 
-For example::
+- Direct access to Mie expansion coefficients
+- Improved function naming consistency  
+- Foundation for future field calculations
 
-    S. Prahl, *miepython — Pure‑Python Mie scattering calculations*, Zenodo,
-    16 March 2025. doi:10.5281/zenodo.7949263
+If you need the old API, pin to version 2.5.5:
+
+.. code-block:: bash
+
+    pip install miepython==2.5.5
+
+Citation
+--------
+
+If ``miepython`` helps your research, please cite it via Zenodo:
+
+**Generic DOI** (always latest): `10.5281/zenodo.7949263 <https://doi.org/10.5281/zenodo.7949263>`_
+
+**BibTeX:**
 
 .. code-block:: bibtex
 
@@ -283,16 +237,10 @@ For example::
       title   = {{miepython}: A Python library for Mie scattering calculations},
       url     = {https://github.com/scottprahl/miepython},
       doi     = {10.5281/zenodo.7949263},
-      year    = {2025},
-      version = {latest}
+      year    = {2025}
     }
-
 
 License
 -------
 
 ``miepython`` is licensed under the `MIT License <LICENSE.txt>`_.
-
---------
-
-**Maintained by** `Scott Prahl <https://github.com/scottprahl>`_
