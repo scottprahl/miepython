@@ -114,13 +114,10 @@ The full documentation is available as:
 Interactive documentation (JupyterLite):
     |lite|
 
-Static notebooks and sources:
-    |docs|
-
 Static Jupyter notebooks on ReadTheDocs:
     |docs|
 
-The documentation includes many examples as well as detailed explanations of:
+Among other things the documentation discusses:
 
 - **Mathematical formulation of Mie theory**  
   https://miepython.readthedocs.io/en/latest/01_theory.html
@@ -170,16 +167,6 @@ Version      Time         Speedup
 Pure Python  4.00 s       1×
 JIT Enabled  0.15 s       27×
 ============ ============ ==========
-
-Version Notes
--------------
-
-Version history, changes, and migration notes are recorded in:
-
-``CHANGELOG.rst``
-
-This includes interface updates, improvements in numerical stability,
-and implementation details relevant to reproducibility.
 
 Citation
 --------
