@@ -185,7 +185,7 @@ rst-check: $(VENV)/.ready    ## Validate all RST files
 
 .PHONY: note-check
 note-check: $(VENV)/.ready    ## Validate notebooks
-	$(PYTEST) --verbose tests/all_test_notebooks.py
+	$(PYTEST) --verbose tests/test_all_notebooks.py
 	@echo "✅ Notebook check complete"
 
 .PHONY: ruff-check
