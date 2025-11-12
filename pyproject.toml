@@ -4,6 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["miepython"]
+include-package-data = false
+
+[tool.setuptools.package-data]
+miepython = ["data/*.txt"]
 
 [project]
 name = "miepython"
@@ -95,7 +99,6 @@ ignore = [
   "jupyter-lite.json",
   "jupyter_lite_config.py",
   "requirements-dev.txt",
-  "docs/*",
   "Makefile",
   "release.txt",
   "requirements.txt",
@@ -108,7 +111,7 @@ ignore = [
   ".lite_src/*",
   ".lite_root",
   ".lite_root/*",
+  ".testignore",
+  "docs/**",
+  "miepython/examples/**",
 ]
-
-
-

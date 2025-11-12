@@ -1,24 +1,8 @@
-include CHANGELOG.rst
-include CITATION.cff
+# Core package files
 include LICENSE.txt
 include README.rst
-include requirements-dev.txt
-include requirements.txt
+include CHANGELOG.rst
+include CITATION.cff
 
-include miepython/examples/*.py
+# Package data needed at runtime
 include miepython/data/*.txt
-
-include tests/test_jit.py
-include tests/test_nojit.py
-
-exclude .readthedocs.yaml
-exclude .testignore
-exclude Makefile
-exclude release.txt
-exclude tests/test_all_examples.py
-exclude tests/conftest.py
-exclude tests/test_all_notebooks.py
-exclude docs/*
-
-# Exclude documentation images
-prune docs/images
