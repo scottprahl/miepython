@@ -155,7 +155,7 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
             - If non-zero, computes contributions from the specified multipole order.
-        field (boolean):
+        e_field (boolean):
             If n_pole>0, then True value returns the electric
             multipole contribution otherwise the Magnetic field contribution
     Returns:
@@ -235,7 +235,7 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
     return qext, qsca, qback, g
 
 
-def normalization_factor(m, x, norm_str, e_field=True):
+def normalization_factor(m, x, norm_str):
     """
     Figure out scattering function normalization.
 
@@ -260,7 +260,7 @@ def normalization_factor(m, x, norm_str, e_field=True):
         factor = x * np.sqrt(np.pi)
 
     else:
-        qext, qsca, _, _ = single_sphere(m, x, 0, e_field)
+        qext, qsca, _, _ = single_sphere(m, x, 0, True)
 
         if norm in ["a", "albedo"]:
             factor = x * np.sqrt(np.pi * qext)
