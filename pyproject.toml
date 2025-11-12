@@ -57,7 +57,10 @@ line-length = 120
 target-version = ["py39", "py310", "py311", "py312"]
 
 [tool.pytest.ini_options]
-markers = ["notebooks: tests related to Jupyter notebooks"]
+testpaths = ["tests"]
+addopts = [
+    "--ignore=tests/test_all_notebooks.py",
+]
 
 [tool.pylint]
 disable = [
