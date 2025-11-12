@@ -13,6 +13,7 @@ scipy
 nbconvert
 nbformat
 numba
+imageio
 
 # Lint
 ruff
