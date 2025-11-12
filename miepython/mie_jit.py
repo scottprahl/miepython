@@ -3,7 +3,7 @@ Low-level Mie calculations that use numba.
 """
 
 import numpy as np
-from numba import njit, complex128, float64, int64
+from numba import njit, complex128, float64, int64, boolean
 
 __all__ = (
     "_D_calc_nb",
@@ -426,8 +426,8 @@ def _small_sphere_nb(m, x):
     return qext, qsca, qback, g
 
 
-@njit((complex128, float64, int64), cache=True, fastmath=True)
-def _single_sphere_nb(m, x, n_pole):
+@njit((complex128, float64, int64, boolean), cache=True, fastmath=True)
+def _single_sphere_nb(m, x, n_pole, e_field):
     """
     Calculate the efficiencies for a single sphere (both m and x are scalars).
 
@@ -443,6 +443,8 @@ def _single_sphere_nb(m, x, n_pole):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
+    e_field = not e_field  #unused
+
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
         return 0, 0, 0, 0

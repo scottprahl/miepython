@@ -413,7 +413,7 @@ def _small_sphere_py(m, x):
     return qext, qsca, qback, g
 
 
-def _single_sphere_py(m, x, n_pole):
+def _single_sphere_py(m, x, n_pole, e_field):
     """
     Calculate the efficiencies for a sphere when both m and x are scalars.
 
@@ -429,6 +429,8 @@ def _single_sphere_py(m, x, n_pole):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
+    e_field = not e_field  #unused
+
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
         return 0, 0, 0, 0

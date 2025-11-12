@@ -135,7 +135,7 @@ def coefficients(m, x, n_pole=0, internal=False):
     return np.array([a, b])
 
 
-def efficiencies_mx(m, x, n_pole=0):
+def efficiencies_mx(m, x, n_pole=0, e_field=True):
     """
     Computes scattering and extinction efficiencies for a spherical particle using Mie theory.
 
@@ -155,8 +155,8 @@ def efficiencies_mx(m, x, n_pole=0):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
             - If non-zero, computes contributions from the specified multipole order.
-        field (str):
-            If "Electric" (default) If n_pole>0, then True value returns the electric
+        field (boolean):
+            If n_pole>0, then True value returns the electric
             multipole contribution otherwise the Magnetic field contribution
     Returns:
         tuple:
@@ -210,7 +210,7 @@ def efficiencies_mx(m, x, n_pole=0):
         xlen = len(x)
 
     if mlen == 0 and xlen == 0:
-        return single_sphere(m, x, n_pole)
+        return single_sphere(m, x, n_pole, e_field)
 
     if xlen > 0 and mlen > 0 and xlen != mlen:
         raise RuntimeError("m and x arrays to mie must be same length")
@@ -230,12 +230,12 @@ def efficiencies_mx(m, x, n_pole=0):
         if xlen > 0:
             xx = x[i]
 
-        qext[i], qsca[i], qback[i], g[i] = single_sphere(mm, xx, n_pole)
+        qext[i], qsca[i], qback[i], g[i] = single_sphere(mm, xx, n_pole, e_field)
 
     return qext, qsca, qback, g
 
 
-def normalization_factor(m, x, norm_str):
+def normalization_factor(m, x, norm_str, e_field=True):
     """
     Figure out scattering function normalization.
 
@@ -260,7 +260,7 @@ def normalization_factor(m, x, norm_str):
         factor = x * np.sqrt(np.pi)
 
     else:
-        qext, qsca, _, _ = single_sphere(m, x, 0)
+        qext, qsca, _, _ = single_sphere(m, x, 0, e_field)
 
         if norm in ["a", "albedo"]:
             factor = x * np.sqrt(np.pi * qext)
