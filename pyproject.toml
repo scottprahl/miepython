@@ -58,7 +58,7 @@ Changelog = "https://github.com/scottprahl/miepython/blob/main/docs/CHANGELOG.rs
 
 [tool.black]
 line-length = 120
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,7 +69,7 @@ addopts = [
 [tool.pylint]
 disable = [
     "C0103", "C0209", "C0302", "C0413",
-    "R0902", "R0904", "R0912", "R0913", "R0914", "R0915", "R1702",
+    "R0902", "R0904", "R0912", "R0913", "R0914", "R0915", "R0917", "R1702",
     "W0511"
 ]
 max-line-length = 120
@@ -80,17 +80,8 @@ exclude = [".venv", "docs"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "W"]
-ignore = ["D101", "D102", "D103", "D200", "D212", "E402", "F403"]
+ignore = ["D100", "D101", "D102", "D103", "D200", "D212", "E402", "F403", "F405"]
 pydocstyle.convention = "google"
-
-[tool.ruff.lint.per-file-ignores]
-"tests/test_bessel.py" = ["D100", "D101", "D102", "D103", "F405"]
-"tests/test_jit.py" = ["D100", "D101", "D102", "D103"]
-"tests/test_jit_D.py" = ["D100", "D101", "D102", "D103", "F405"]
-"tests/test_jit_abcd.py" = ["D100", "D101", "D102", "D103", "F405"]
-"tests/test_nojit.py" = ["D100", "D101", "D102", "D103"]
-"tests/test_nojit_D.py" = ["D100", "D101", "D102", "D103", "F405"]
-"tests/test_nojit_abcd.py" = ["D100", "D101", "D102", "D103", "F405"]
 
 [tool.check-manifest]
 ignore = [
