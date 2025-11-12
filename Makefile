@@ -143,10 +143,11 @@ lint: pylint-check yaml-check
 pylint-check: $(VENV)/.ready
 	-@$(PYLINT) miepython/__init__.py
 	-@$(PYLINT) miepython/bessel.py
+	-@$(PYLINT) miepython/core.py
 	-@$(PYLINT) miepython/mie_jit.py
 	-@$(PYLINT) miepython/mie_nojit.py
-	-@$(PYLINT) miepython/core.py
 	-@$(PYLINT) miepython/monte_carlo.py
+	-@$(PYLINT) miepython/rayleigh.py
 	-@$(PYLINT) miepython/util.py
 	-@$(PYLINT) miepython/vsh.py
 	-@$(PYLINT) tests/test_all_examples.py
@@ -158,23 +159,6 @@ pylint-check: $(VENV)/.ready
 .PHONY: yaml-check
 yaml-check: $(VENV)/.ready
 	-@$(PYTHON) -m yamllint $(YAML_FILES)
-
-.PHONY: lint
-lint: $(VENV)/.ready      ## Run pylint and yamllint
-	-@$(PYLINT) miepython/__init__.py
-	-@$(PYLINT) miepython/bessel.py
-	-@$(PYLINT) miepython/mie_jit.py
-	-@$(PYLINT) miepython/mie_nojit.py
-	-@$(PYLINT) miepython/core.py
-	-@$(PYLINT) miepython/monte_carlo.py
-	-@$(PYLINT) miepython/util.py
-	-@$(PYLINT) miepython/vsh.py
-	-@$(PYLINT) tests/test_all_examples.py
-	-@$(PYLINT) tests/test_all_notebooks.py
-	-@$(PYLINT) tests/test_jit.py
-	-@$(PYLINT) tests/test_nojit.py
-	-@$(PYLINT) docs/conf.py
-	-@$(YAMLLINT) $(YAML_FILES)
 
 .PHONY: rst-check
 rst-check: $(VENV)/.ready    ## Validate all RST files
