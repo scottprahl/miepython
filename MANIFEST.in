@@ -20,3 +20,5 @@ exclude tests/conftest.py
 exclude tests/test_all_notebooks.py
 exclude docs/*
 
+# Exclude documentation images
+prune docs/images
