@@ -135,7 +135,7 @@ def coefficients(m, x, n_pole=0, internal=False):
     return np.array([a, b])
 
 
-def efficiencies_mx(m, x, n_pole=0, field="Electric"):
+def efficiencies_mx(m, x, n_pole=0):
     """
     Computes scattering and extinction efficiencies for a spherical particle using Mie theory.
 
@@ -276,7 +276,7 @@ def normalization_factor(m, x, norm_str):
 
     if factor is None:
         raise ValueError(
-            "normalization must be one of 'albedo' (default), 'one'" "'4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
+            "normalization must be one of 'albedo' (default), 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
         )
     return factor
 
