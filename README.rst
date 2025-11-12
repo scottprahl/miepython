@@ -44,10 +44,10 @@ miepython
 
 |lite|
 
-Accurate and validated Mie scattering calculations in pure Python
------------------------------------------------------------------
+Mie scattering calculations in pure Python
+------------------------------------------
 
-``miepython`` provides a rigorously validated and efficient implementation of Mie scattering for spherical particles.  
+``miepython`` provides a validated and efficient implementation of Mie scattering for spherical particles.  
 It reproduces established reference results (including Wiscombe's MIEV0) and is designed for scientific, educational, and computational research applications in optics.
 
 The library implements the full Mie solution, including:
@@ -149,7 +149,7 @@ Representative results simple examples:
 Performance and Acceleration
 ----------------------------
 
-Although implemented entirely in Python, ``miepython`` supports optional Numba JIT compilation:
+``miepython`` supports optional Numba JIT compilation:
 
 .. code-block:: python
 
