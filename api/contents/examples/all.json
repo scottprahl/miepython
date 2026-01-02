@@ -1,0 +1,71 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2026-01-02T23:26:53.343805Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-01-02T23:26:48.345325Z",
+      "mimetype": "text/x-python",
+      "name": "04_gold.py",
+      "path": "examples/04_gold.py",
+      "size": 3643,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2026-01-02T23:26:53.343120Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-01-02T23:26:48.344487Z",
+      "mimetype": "text/x-python",
+      "name": "01_dielectric.py",
+      "path": "examples/01_dielectric.py",
+      "size": 762,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2026-01-02T23:26:53.343333Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-01-02T23:26:48.344829Z",
+      "mimetype": "text/x-python",
+      "name": "02_glass.py",
+      "path": "examples/02_glass.py",
+      "size": 868,
+      "type": "file",
+      "writable": true
+    },
+    {
+      "content": null,
+      "created": "2026-01-02T23:26:53.343577Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-01-02T23:26:48.345058Z",
+      "mimetype": "text/x-python",
+      "name": "03_droplets.py",
+      "path": "examples/03_droplets.py",
+      "size": 1054,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2026-01-02T23:26:53.343709Z",
+  "format": "json",
+  "hash": null,
+  "hash_algorithm": null,
+  "last_modified": "2026-01-02T23:26:53.343709Z",
+  "mimetype": null,
+  "name": "examples",
+  "path": "examples",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}
