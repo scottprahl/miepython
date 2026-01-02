@@ -2,7 +2,7 @@ PACKAGE         := miepython
 GITHUB_USER     := scottprahl
 
 # -------- venv config --------
-PY_VERSION      ?= 3.11
+PY_VERSION      ?= 3.12
 VENV            ?= .venv
 PY              := /opt/homebrew/opt/python@$(PY_VERSION)/bin/python$(PY_VERSION)
 PYTHON          := $(VENV)/bin/python
@@ -48,14 +48,17 @@ help:
 	@echo "Build Targets:"
 	@echo "  dist           - Build sdist+wheel locally"
 	@echo "  html           - Build Sphinx HTML documentation"
+	@echo "  lab            - Start jupyterlab"
 	@echo "  speed          - Quick test of jit and no-jit speeds"
 	@echo "  venv           - Create/provision the virtual environment ($(VENV))"
 	@echo ""
-	@echo "Packaging Targets:"
-	@echo "  lint           - Run pylint"
-	@echo "  rcheck         - Distribution release checks"
+	@echo "Test Targets:"
 	@echo "  test           - Run pytest on python files"
 	@echo "  note-test      - Test all notebooks for errors"
+	@echo ""
+	@echo ""
+	@echo "Packaging Targets:"
+	@echo "  rcheck         - Distribution release checks"
 	@echo "  manifest-check - Validate MANIFEST"
 	@echo "  note-check     - Validate jupyter notebooks"
 	@echo "  pylint-check   - Same as lint above"
@@ -65,7 +68,6 @@ help:
 	@echo "  yaml-check     - Validate YAML files"
 	@echo ""
 	@echo "JupyterLite Targets:"
-	@echo "  run            - Clean lite, build, and serve locally"
 	@echo "  lite           - Build JupyterLite site into $(OUT_DIR)"
 	@echo "  lite-serve     - Serve $(OUT_DIR) at http://$(HOST):$(PORT)"
 	@echo "  lite-deploy    - Upload to github"
@@ -139,7 +141,7 @@ pylint-check: $(VENV)/.ready
 yaml-check: $(VENV)/.ready
 	-@$(PYTHON) -m yamllint .github/workflows/update_citation.yaml
 	-@$(PYTHON) -m yamllint .github/workflows/pypi.yaml
-	-@$(PYTHON) -m yamllint .github/workflows/test.yml
+	-@$(PYTHON) -m yamllint .github/workflows/test.yaml
 
 .PHONY: rst-check
 rst-check: $(VENV)/.ready
@@ -147,7 +149,7 @@ rst-check: $(VENV)/.ready
 	-@$(RSTCHECK) CHANGELOG.rst
 	-@$(RSTCHECK) $(DOCS_DIR)/index.rst
 	-@$(RSTCHECK) $(DOCS_DIR)/changelog.rst
-	-@$(RSTCHECK) --ignore-directives automodapi $(DOCS_DIR)/miepython.rst
+	-@$(RSTCHECK) --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
 
 .PHONY: ruff-check
 ruff-check: $(VENV)/.ready
@@ -180,44 +182,56 @@ rcheck:
 .PHONY: lite
 lite: $(VENV)/.ready
 	@echo "==> Ensuring required files exist"; \
-	test -f "$(ROOT)/jupyter-lite.json" || (echo "❌ Missing jupyter-lite.json" && false)
-	test -f "$(ROOT)/jupyter_lite_config.py" || (echo "❌ Missing jupyter_lite_config.py" && false)
-	test -f "$(ROOT)/lab/jupyter-lite.json" || (echo "❌ Missing lab/jupyter-lite.json" && false)
+	test -f "$(ROOT)/jupyter_lite_config.json" || (echo "❌ Missing jupyter_lite_config.json" && false)
 
-	@echo "==> Clearing doit cache (if present)"
-	@/bin/rm -f "$(DOIT_DB)"
+	@echo "==> Building package wheel for PyOdide"
+	@$(PYTHON) -m build
+
+	@echo "==> Checking for .gh-pages worktree"
+	@if [ -d "$(WORKTREE)" ]; then \
+		echo "    Found .gh-pages worktree, removing..."; \
+		git worktree remove "$(WORKTREE)" --force 2>/dev/null || true; \
+		git worktree prune; \
+		rm -rf "$(WORKTREE)"; \
+		echo "    ✓ Removed"; \
+	else \
+		echo "    No .gh-pages worktree found"; \
+	fi
+
+	@echo "==> Cleaning previous builds"
+	@/bin/rm -rf "$(OUT_ROOT)"
+	@/bin/rm -rf "$(DOIT_DB)"
+	@/bin/rm -rf ".doit.db"
+	@/bin/rm -rf ".jupyterlite.doit.db.db"
+	@echo "    ✓ Cleaned"
 
 	@echo "==> Staging notebooks from docs -> $(STAGE_DIR)"
 	@/bin/rm -rf "$(STAGE_DIR)"; mkdir -p "$(STAGE_DIR)"
-	@/bin/cp docs/0*.ipynb "$(STAGE_DIR)"
-	@/bin/cp docs/1*.ipynb "$(STAGE_DIR)"
-	@/bin/cp -R "$(ROOT)/$(PACKAGE)/examples" "$(STAGE_DIR)"
-	@/bin/cp -R "$(ROOT)/$(PACKAGE)/data" "$(STAGE_DIR)"
+	@if ls docs/*.ipynb 1> /dev/null 2>&1; then \
+		/bin/cp docs/*.ipynb "$(STAGE_DIR)"; \
+		echo "==> Clearing outputs from staged notebooks"; \
+		"$(PYTHON)" -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
+	else \
+		echo "⚠️  No notebooks found in docs/"; \
+	fi
 
-	@echo "==> Clearing outputs from staged notebooks"
-	@"$(PYTHON)" -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb
+	@echo "==> Building JupyterLite"
+	@"$(PYTHON)" -m jupyter lite build \
+		--contents="$(STAGE_DIR)" \
+		--output-dir="$(OUT_DIR)"
 
-	@echo "==> Preparing pristine lite_dir at .lite_root"
-	@/bin/rm -rf ".lite_root"; mkdir -p ".lite_root/lab"
-	@/bin/cp -f "$(ROOT)/jupyter-lite.json" ".lite_root/jupyter-lite.json" || true
-	@/bin/cp -f "$(ROOT)/lab/jupyter-lite.json" ".lite_root/lab/jupyter-lite.json" || true
-	
-	@echo "==> Building JupyterLite into $(OUT_DIR)"
-	@/bin/rm -rf "$(OUT_DIR)"; mkdir -p "$(OUT_DIR)"
-	"$(PYTHON)" -m jupyter lite build \
-	  --apps lab \
-	  --contents "$(STAGE_DIR)" \
-	  --LiteBuildApp.lite_dir=".lite_root" \
-	  --LiteBuildApp.output_dir="$(OUT_DIR)"
-
+	@echo "==> Adding .nojekyll for GitHub Pages"
 	@touch "$(OUT_DIR)/.nojekyll"
+	
 	@echo "✅ Build complete -> $(OUT_DIR)"
 
 .PHONY: lite-serve
-lite-serve:
-	[ -d $(OUT_ROOT) ] || { echo "❌ run 'make lite' first"; exit 1; }
-	@echo "==> Serving _site at http://127.0.0.1:8000/$(PACKAGE)/?disableCache=1"
-	python3 -m http.server -d "$(OUT_ROOT)" --bind 127.0.0.1 8000
+lite-serve: $(VENV)/.ready
+	@test -d "$(OUT_DIR)" || { echo "❌ run 'make lite' first"; exit 1; }
+	@echo "Serving at"
+	@echo "   http://$(HOST):$(PORT)/$(PACKAGE)/?disableCache=1"
+	@echo ""
+	"$(PYTHON)" -m http.server -d "$(OUT_ROOT)" --bind $(HOST) $(PORT)
 
 .PHONY: lite-deploy
 lite-deploy: 
@@ -255,6 +269,11 @@ lite-deploy:
 	    echo "✅ Deployed to https://$(GITHUB_USER).github.io/$(PACKAGE)/"; \
 	  fi
 
+.PHONY: lab
+lab:
+	@echo "==> Launching JupyterLab using venv ($(PYTHON))"
+	"$(PYTHON)" -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
+
 .PHONY: speed
 speed:
 	-python tests/test_nojit_speed.py
@@ -267,11 +286,12 @@ clean:
 	@find . -name '.DS_Store' -type f -delete
 	@find . -name '.ipynb_checkpoints' -type d -prune -exec rm -rf {} +
 	@find . -name '.pytest_cache' -type d -prune -exec rm -rf {} +
-	rm -rf .ruff_cache
-	rm -rf miepython.egg-info
-	rm -rf docs/api
-	rm -rf docs/_build
-	rm -rf dist
+	@/bin/rm -rf .ruff_cache
+	@/bin/rm -rf $(PACKAGE).egg-info
+	@/bin/rm -rf docs/api
+	@/bin/rm -rf docs/_build
+	@/bin/rm -rf tests/charts
+	@/bin/rm -rf dist
 
 .PHONY: lite-clean
 lite-clean:
@@ -281,10 +301,17 @@ lite-clean:
 	@/bin/rm -rf ".lite_root"
 	@/bin/rm -rf "$(DOIT_DB)"
 	@/bin/rm -rf "_output"
+	@/bin/rm -rf "_site"
 
 .PHONY: realclean
 realclean: lite-clean clean
 	@echo "==> Deep cleaning: removing venv and deployment worktree"
-	@git worktree remove "$(WORKTREE)" --force 2>/dev/null || true
+#	@git worktree remove "$(WORKTREE)" --force 2>/dev/null || true
+	@/bin/rm -rf .cache
+	@/bin/rm -rf .tmp
 	@/bin/rm -rf "$(WORKTREE)"
 	@/bin/rm -rf "$(VENV)"
+	@/bin/rm -rf "docs/api"
+	@/bin/rm -rf "docs/_static"
+	@/bin/rm -rf "docs/_templates"
+
