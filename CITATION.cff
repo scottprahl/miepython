@@ -4,7 +4,7 @@ message: If you use this software, please cite it as below.
 title: 'miepython: Pure python calculation of Mie scattering'
 version: 3.0.3
 doi: 10.5281/zenodo.7949264
-date-released: '2025-05-25'
+date-released: '2026-01-02'
 url: https://doi.org/10.5281/zenodo.7949264
 repository-code: https://github.com/scottprahl/miepython
 license: MIT
@@ -32,7 +32,7 @@ keywords:
 preferred-citation:
   type: software
   title: 'miepython: Pure python calculation of Mie scattering'
-  year: 2025
+  year: 2026
   version: 3.0.3
   doi: 10.5281/zenodo.7949264
   url: https://doi.org/10.5281/zenodo.7949264
