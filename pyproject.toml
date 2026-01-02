@@ -84,8 +84,15 @@ select = ["D", "E", "F", "W"]
 ignore = ["D100", "D101", "D102", "D103", "D200", "D212", "E402", "F403", "F405"]
 pydocstyle.convention = "google"
 
+[tool.ruff.lint.per-file-ignores]
+"docs/x_*.ipynb" = ["ALL"]
+"docs/11_performance.ipynb" = ["ALL"]
+
 [tool.check-manifest]
 ignore = [
+  "_site/**",
+  ".gh-pages/**",
+  ".lite_src/**",
   ".readthedocs.yaml",
   ".testignore",
   ".yamllint",
@@ -93,11 +100,6 @@ ignore = [
   "Makefile",
   "release.txt",
   "requirements*.txt",
-
-  ".gh-pages/**",
-  "_site/**",
-  ".lite_src/**",
-
   "docs/**",
   "miepython/examples/**",
 ]
