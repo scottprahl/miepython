@@ -12,7 +12,6 @@ miepython = ["data/*.txt"]
 [project]
 name = "miepython"
 authors = [{name = "Scott Prahl", email = "scott.prahl@oit.edu"}]
-version = "3.0.2"
 description = "Mie scattering of a plane wave by a sphere"
 requires-python = ">=3.9"
 readme = "README.rst"
@@ -40,7 +39,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
     "numpy",
@@ -48,6 +46,7 @@ dependencies = [
     "numba",
     "scipy",
 ]
+dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/scottprahl/miepython"
@@ -56,9 +55,12 @@ Source = "https://github.com/scottprahl/miepython"
 Tracker = "https://github.com/scottprahl/miepython/issues"
 Changelog = "https://github.com/scottprahl/miepython/blob/main/docs/CHANGELOG.rst"
 
+[tool.setuptools.dynamic]
+version = {attr = "miepython.__version__"}
+
 [tool.black]
 line-length = 120
-target-version = ["py39", "py310", "py311", "py312", "py313"]
+target-version = ["py39", "py310", "py311", "py312"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -86,23 +88,18 @@ pydocstyle.convention = "google"
 [tool.check-manifest]
 ignore = [
   ".readthedocs.yaml",
+  ".testignore",
   ".yamllint",
-  "jupyter-lite.json",
-  "jupyter_lite_config.py",
   "Makefile",
   "release.txt",
-  "requirements.txt",
-  "requirements-dev.txt",
+  "requirements*.txt",
   "todo",
-  ".gh-pages",
-  ".gh-pages/*",
-  "_site",
-  "_site/*",
-  ".lite_src",
-  ".lite_src/*",
-  ".lite_root",
-  ".lite_root/*",
-  ".testignore",
+
+  ".gh-pages/**",
+  "_site/**",
+  ".lite_src/**",
+  ".lite_root/**",
+
   "docs/**",
   "miepython/examples/**",
 ]
