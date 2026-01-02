@@ -78,7 +78,6 @@ max-line-length = 120
 
 [tool.ruff]
 line-length = 120
-exclude = [".venv", "docs"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "W"]
@@ -90,15 +89,14 @@ ignore = [
   ".readthedocs.yaml",
   ".testignore",
   ".yamllint",
+  "jupyter_lite_config.json",
   "Makefile",
   "release.txt",
   "requirements*.txt",
-  "todo",
 
   ".gh-pages/**",
   "_site/**",
   ".lite_src/**",
-  ".lite_root/**",
 
   "docs/**",
   "miepython/examples/**",
