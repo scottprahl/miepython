@@ -1,6 +1,24 @@
 Changelog
 =========
 
+3.0.4 (1/2/2026)
+-------------------
+*   Host jupyterlite instance of github
+*   improve citation guidelines
+*   add test for unpolarized intensity methods
+*   begin work on local electrical and magnetic fields
+*   using black now with longer lines
+*   improved packaging
+*   improve readme
+
+3.0.3
+-------------------
+*   skipped
+
+3.0.2 (5/25/2025)
+-------------------
+*   fix version number
+
 3.0.1 (5/25/2025)
 -------------------
 *   fix JIT regression (thanks @avgeiss)
