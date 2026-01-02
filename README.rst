@@ -171,20 +171,22 @@ JIT Enabled  0.15 s       27×
 Citation
 --------
 
-If ``miepython`` contributes to your research, please cite the Zenodo archive:
+If you use ``laserbeamsize`` in academic, instructional, or applied technical work, please cite:
 
-DOI: 10.5281/zenodo.7949263
+Prahl, S. (2025). *miepython: Pure python calculation of Mie scattering* (Version 3.0.2) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.7949263
 
 BibTeX:
 
 .. code-block:: bibtex
 
     @software{prahl_miepython_2025,
-      author  = {Prahl, Scott},
+      author  = {Scott Prahl},
       title   = {{miepython}: A Python library for Mie scattering calculations},
       url     = {https://github.com/scottprahl/miepython},
       doi     = {10.5281/zenodo.7949263},
-      year    = {2025}
+      year    = {2025},
+      version = {3.0.2},
+      publisher = {Zenodo}
     }
 
 License
