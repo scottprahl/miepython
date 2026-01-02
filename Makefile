@@ -209,6 +209,9 @@ lite: $(VENV)/.ready
 	@/bin/rm -rf "$(STAGE_DIR)"; mkdir -p "$(STAGE_DIR)"
 	@if ls docs/*.ipynb 1> /dev/null 2>&1; then \
 		/bin/cp docs/*.ipynb "$(STAGE_DIR)"; \
+		/bin/rm $(STAGE_DIR)/x_*.ipynb; \
+		mkdir -p "$(STAGE_DIR)/examples"; \
+		/bin/cp $(PACKAGE)/examples/*.py "$(STAGE_DIR)/examples"; \
 		echo "==> Clearing outputs from staged notebooks"; \
 		"$(PYTHON)" -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
 	else \
@@ -286,11 +289,13 @@ clean:
 	@find . -name '.DS_Store' -type f -delete
 	@find . -name '.ipynb_checkpoints' -type d -prune -exec rm -rf {} +
 	@find . -name '.pytest_cache' -type d -prune -exec rm -rf {} +
+	@find . -name '__pycache__' -type d -prune -exec rm -rf {} +
+	@/bin/rm -rf .cache
 	@/bin/rm -rf .ruff_cache
 	@/bin/rm -rf $(PACKAGE).egg-info
 	@/bin/rm -rf docs/api
 	@/bin/rm -rf docs/_build
-	@/bin/rm -rf tests/charts
+	@/bin/rm -rf docs/.jupyter
 	@/bin/rm -rf dist
 
 .PHONY: lite-clean
