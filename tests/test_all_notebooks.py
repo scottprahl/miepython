@@ -1,28 +1,15 @@
-# pylint: disable=invalid-name
-
 """
-This file is intended to be the target of a pytest run.
+This script will test all the jupyter notebooks..
+
+    pytest --verbose tests/test_all_notebooks.py
 
 It will recursively find all .ipynb files in the ../docs directory, ignoring
-directories that start with . and any files matching patterins found in the file
-.testignore
+directories starting with . and any files matching patterns found in .testignore
 
-List patterns to skip in .testignore file:
-
-    under_construction/*
-
-Sample invocations of pytest which make the output nicely readable:
-
-    pytest --verbose --durations=5 test_all_notebooks.py
-
-If you install pytest-xdist you can run tests in parallel with
-
-    pytest --verbose --durations=5 -n 4 test_all_notebooks.py
-
-Original version is licensed under GPL 3.0 so this one is too.
-The original can be located at
+Original script is GPL 3.0 licensed so this one is too. See
     https://github.com/alchemyst/Dynamics-and-Control/test_all_notebooks.py
 """
+
 import os.path
 import pathlib
 import pytest
@@ -58,7 +45,6 @@ for n in notebooks:
     print(n)
 
 
-@pytest.mark.notebooks
 @pytest.mark.parametrize("notebook", notebooks, ids=ids)
 def test_run_notebook(notebook):
     """Read and execute notebook.
