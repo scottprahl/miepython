@@ -1,9 +1,14 @@
 {
-  "jupyter-lite-schema-version": 0
+  "LiteBuildConfig": {
+    "apps": ["lab"]
+  },
+  "PipliteAddon": {
+    "piplite_urls": ["./dist/"]
+  },
   "jupyter-config-data": {
-    "appName": "JupyterLite",
+    "appName": "miepython",
     "appUrl": "./lab",
-    "baseUrl": "/miepython/",
+    "baseUrl": "./",
     "defaultKernelName": "python"
   }
 }
