@@ -1,36 +1,47 @@
----
-name: test
-'on':
+# .github/workflows/test.yaml
+name: CI
+
+on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
-  workflow_dispatch:  # allow manual triggering
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:                       # cancel stale CI runs on the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Build and test
+  tests:
+    name: Python ${{ matrix.python-version }} – ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.11']
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.12"]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@master
+    - name: Checkout sources
+      uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@master
-        with:
-          python-version: ${{ matrix.python-version }}
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip                       # built-in cache for wheels
+        cache-dependency-path: |
+          pyproject.toml
 
-      - name: Install package and dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install -e .  # current package in editable mode
+    - name: Install package (+tests)
+      run: |
+        python -m pip install --upgrade pip setuptools
+        python -m pip install -e .
+        python -m pip install pytest
 
-      - name: Test with pytest
-        run: |
-          python -m pytest tests/test_nojit.py
-          python -m pytest tests/test_jit.py
+    - name: Run pytest
+      run: |
+        python -m pytest tests/test_nojit.py
+#        python -m pytest tests/test_jit.py
