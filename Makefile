@@ -60,7 +60,6 @@ help:
 	@echo "Packaging Targets:"
 	@echo "  rcheck         - Distribution release checks"
 	@echo "  manifest-check - Validate MANIFEST"
-	@echo "  note-check     - Validate jupyter notebooks"
 	@echo "  pylint-check   - Same as lint above"
 	@echo "  pyroma-check   - Validate overall packaging"
 	@echo "  rst-check      - Validate all RST files"
@@ -88,9 +87,9 @@ $(VENV)/.ready: Makefile $(REQUIREMENTS)
 	@if [ ! -d "$(VENV)" ]; then \
 		"$(PY)" -m venv "$(VENV)"; \
 	fi
-	@$(PIP) -q install --upgrade pip wheel
+	@$(PYTHON) -m pip -q install --upgrade pip wheel
 	@echo "==> Installing dev requirements from $(REQUIREMENTS)"
-	@$(PIP) -q install -r "$(REQUIREMENTS)"
+	@$(PYTHON) -m pip install -r "$(REQUIREMENTS)"
 	@touch "$(VENV)/.ready"
 	@echo "✅ venv ready"
 
@@ -272,10 +271,16 @@ lite-deploy:
 	    echo "✅ Deployed to https://$(GITHUB_USER).github.io/$(PACKAGE)/"; \
 	  fi
 
+.PHONY: kernelspec
+kernelspec: $(VENV)/.ready
+	@$(PYTHON) -m ipykernel install --user \
+	  --name miepython-venv \
+	  --display-name "Python (miepython venv)" >/dev/null
+
 .PHONY: lab
-lab:
+lab: kernelspec
 	@echo "==> Launching JupyterLab using venv ($(PYTHON))"
-	"$(PYTHON)" -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
+	@$(PYTHON) -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
 
 .PHONY: speed
 speed:
