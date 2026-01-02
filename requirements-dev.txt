@@ -1,16 +1,15 @@
 -e .
-#
-# Test
-pytest
-libarchive-c
-setuptools
-numba
 
-# Testing notebooks
+# Required
+numba
 numpy
 matplotlib
 scipy
+
+# Testing
 imageio
+pytest
+requests
 
 # Lint
 ruff
@@ -21,17 +20,20 @@ pyroma
 black[jupyter]
 
 # Release
+build
 check-manifest
+libarchive-c
 pyroma
 pyyaml
-requests
-build
+setuptools
 
-# docs
-jupyter-client>=8
-ipykernel>=6
+# jupyter notebooks
+jupyterlab
 nbconvert
 nbformat
+notebook
+
+# docs
 nbsphinx==0.9.7
 Sphinx==8.1.3
 sphinx_automodapi
@@ -40,6 +42,3 @@ sphinx_rtd_theme
 # jupyterlite
 jupyterlite-core==0.6.4
 jupyterlite-pyodide-kernel==0.6.1
-
-jupyter_server
-jupyterlab_server
