@@ -2,9 +2,9 @@ cff-version: 1.2.0
 type: software
 message: If you use this software, please cite it as below.
 title: 'miepython: Pure python calculation of Mie scattering'
-version: 3.0.2
+version: 3.0.3
 doi: 10.5281/zenodo.7949264
-date-released: '2025-11-30'
+date-released: '2025-05-25'
 url: https://doi.org/10.5281/zenodo.7949264
 repository-code: https://github.com/scottprahl/miepython
 license: MIT
@@ -12,10 +12,10 @@ authors:
 - family-names: Prahl
   given-names: Scott
   orcid: https://orcid.org/0000-0003-1468-6851
-abstract: "miepython provides a validated and efficient pure python implementation of \
-  \ Mie scattering for spherical particles.  It reproduces established reference results \
-  \ (including Wiscombe's MIEV0) and is designed for scientific, educational, and 
-  \ computational research applications in optics."
+abstract: miepython provides a validated and efficient pure python implementation
+  of  Mie scattering for spherical particles.  It reproduces established reference
+  results  (including Wiscombe's MIEV0) and is designed for scientific, educational,
+  and  computational research applications in optics.
 keywords:
 - mie
 - scattering
@@ -33,7 +33,7 @@ preferred-citation:
   type: software
   title: 'miepython: Pure python calculation of Mie scattering'
   year: 2025
-  version: 3.0.2
+  version: 3.0.3
   doi: 10.5281/zenodo.7949264
   url: https://doi.org/10.5281/zenodo.7949264
   authors:
