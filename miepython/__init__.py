@@ -101,9 +101,9 @@ __all__ = (
     "_D_downwards",
 )
 
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 __author__ = "Scott Prahl"
 __email__ = "scott.prahl@oit.edu"
-__copyright__ = "2017-25, Scott Prahl"
+__copyright__ = "2017-26, Scott Prahl"
 __license__ = "MIT"
 __url__ = "https://github.com/scottprahl/miepython.git"
