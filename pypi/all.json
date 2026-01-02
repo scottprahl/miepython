@@ -1,0 +1,28 @@
+{
+  "miepython": {
+    "releases": {
+      "3.0.2": [
+        {
+          "comment_text": "",
+          "digests": {
+            "md5": "f969c572cc70f08c68ef2e55e53e0319",
+            "sha256": "7c993ba75bcbc5f2fe83184a3453efb6ba24d4bc39b35020ed1ec2f6012cd396"
+          },
+          "downloads": -1,
+          "filename": "miepython-3.0.2-py3-none-any.whl",
+          "has_sig": false,
+          "md5_digest": "f969c572cc70f08c68ef2e55e53e0319",
+          "packagetype": "bdist_wheel",
+          "python_version": "py3",
+          "requires_python": ">=3.9",
+          "size": 42884,
+          "upload_time": "2026-01-02T19:29:16.263533Z",
+          "upload_time_iso_8601": "2026-01-02T19:29:16.263533Z",
+          "url": "./miepython-3.0.2-py3-none-any.whl",
+          "yanked": false,
+          "yanked_reason": null
+        }
+      ]
+    }
+  }
+}
