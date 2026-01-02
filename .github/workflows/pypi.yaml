@@ -1,41 +1,33 @@
----
 name: Publish to PyPI
 
-'on':
-  release:
-    types: [published]   # run only when a *GitHub Release* is published
-  workflow_dispatch:     # manual trigger
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
 
 jobs:
-  publish:
+  build-and-publish:
     runs-on: ubuntu-latest
+    environment: pypi-repository
     permissions:
-      id-token: write     # mandatory for trusted publishing
-
+      contents: read      # checkout
+      id-token: write     # OIDC for Trusted Publishing
+    
     steps:
-      # Always fetch full history + tags
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.ref }}  # <<— checkout tag triggering release
-
-      # Set up Python
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      # Install build backend
-      - name: Install build tools
-        run: python -m pip install --upgrade build hatchling
-
-      # Clean *and* build -- everything ends up in fresh ./dist
-      - name: Build package
-        run: |
-          rm -rf dist/             # ensure no stale artefacts
-          python -m build          # creates sdist and wheel
-
-      # Upload
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Build package
+      run: |
+        pip install build twine
+        python -m build
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        verbose: true
+        attestations: true  # Optional: enable provenance
