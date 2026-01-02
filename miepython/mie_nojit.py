@@ -429,7 +429,7 @@ def _single_sphere_py(m, x, n_pole, e_field):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    e_field = not e_field  #unused
+    e_field = not e_field  # unused
 
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
