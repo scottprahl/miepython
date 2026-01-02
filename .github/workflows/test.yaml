@@ -44,4 +44,4 @@ jobs:
     - name: Run pytest
       run: |
         python -m pytest tests/test_nojit.py
-#        python -m pytest tests/test_jit.py
+        python -m pytest tests/test_jit.py
