@@ -2,43 +2,26 @@
 .DS_Store
 
 # Python
-*.pyc
-*.py[cod]
-*$py.class
-*.so
 __pycache__/
+*.py[cod]
 *.egg-info/
-.eggs/
 dist/
 build/
-*.egg
 .venv/
-venv/
-env/
-ENV/
+.cache/
+.pytest_cache/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb_checkpoints
-.jupyterlite.doit.db
 
 # JupyterLite
 _site/
 .lite_src/
-.lite_root/
-lite/
+.jupyterlite.doit.db
 
 # Documentation
 docs/_build/
 docs/api/
 
-# Testing
-.pytest_cache/
-
 # GitHub Pages
 .gh-pages/
-
-# Temporary
-.tmp/
-*.tmp
-todo
