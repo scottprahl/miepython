@@ -19,7 +19,7 @@
    :alt: License
 
 .. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
-   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yml
+   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
    :alt: Testing
 
 .. |docs| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
