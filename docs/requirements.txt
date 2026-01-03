@@ -1,8 +1,0 @@
-numpy
-numba
-scipy
-matplotlib
-nbsphinx
-sphinx-automodapi
-sphinx-rtd-theme
-miepython
