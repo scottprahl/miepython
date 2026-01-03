@@ -43,8 +43,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "matplotlib",
-    "numba",
     "scipy",
+    "numba; sys_platform != 'emscripten'",
 ]
 dynamic = ["version"]
 
