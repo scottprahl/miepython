@@ -382,7 +382,7 @@ def i_per(m, x, mu, norm="albedo", n_pole=0):
     This function calculates the angular distribution of the scattered intensity from a sphere
     for incident light with its electric field vector perpendicular to the scattering plane
     (the plane defined by the incident direction and the scattered direction).
-    This corresponds to the |S₁(θ)|² term in Mie theory.
+    This corresponds to the :math:`|S₁(θ)|²` term in Mie theory.
 
     The result is normalized according to the specified method. The normalization affects
     the total integrated intensity over 4π steradians. Accepted normalization options include:
@@ -411,7 +411,7 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
     This function calculates the angular distribution of the scattered intensity from a sphere
     for incident light with its electric field vector parallel to the scattering plane
     (the plane defined by the incident direction and the scattered direction).
-    This corresponds to the |S₂(θ)|² term in Mie theory.
+    This corresponds to the :math:`|S₂(θ)|²` term in Mie theory.
 
     The result is normalized according to the specified method. The normalization affects
     the total integrated intensity over 4π steradians. Accepted normalization options include:

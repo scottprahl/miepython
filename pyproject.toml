@@ -40,13 +40,13 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+dynamic = ["version"]
 dependencies = [
     "numpy",
     "matplotlib",
     "scipy",
     "numba; sys_platform != 'emscripten'",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 docs = [
@@ -54,6 +54,38 @@ docs = [
   "nbsphinx==0.9.7",
   "sphinx_automodapi",
   "sphinx_rtd_theme",
+]
+
+dev = [
+  # Testing
+  "pytest",
+  "imageio",
+  "requests",
+
+  # Lint / QA
+  "ruff",
+  "yamllint",
+  "rstcheck",
+  "pylint",
+  "pyroma",
+  "black[jupyter]",
+
+  # Release / packaging checks
+  "build",
+  "check-manifest",
+  "libarchive-c",
+  "pyyaml",
+  "setuptools",
+
+  # Notebooks (local JupyterLab workflows)
+  "jupyterlab",
+  "nbconvert",
+  "nbformat",
+]
+
+lite = [
+  "jupyterlite-core==0.6.4",
+  "jupyterlite-pyodide-kernel==0.6.1",
 ]
 
 [project.urls]
@@ -107,7 +139,6 @@ ignore = [
   "jupyter_lite_config.json",
   "Makefile",
   "release.txt",
-  "requirements*.txt",
   "docs/**",
   "miepython/examples/**",
 ]

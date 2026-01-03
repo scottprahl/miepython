@@ -8,7 +8,7 @@ PY              := /opt/homebrew/opt/python@$(PY_VERSION)/bin/python$(PY_VERSION
 PYTHON          := $(VENV)/bin/python
 SERVE_PY        := $(abspath $(PYTHON))
 PIP             := $(VENV)/bin/pip
-REQUIREMENTS    := requirements-dev.txt
+PYPROJECT       := pyproject.toml
 
 BUILD_APPS      := lab
 DOCS_DIR        := docs
@@ -76,8 +76,8 @@ help:
 	@echo "  lite-clean     - Remove JupyterLite outputs"
 	@echo "  realclean      - clean + remove $(VENV)"
 
-# venv bootstrap (runs once, or when requirements change)
-$(VENV)/.ready: Makefile $(REQUIREMENTS)
+# venv bootstrap
+$(VENV)/.ready: Makefile $(PYPROJECT)
 	@echo "==> Ensuring venv at $(VENV) using $(PY)"
 	@if [ ! -x "$(PY)" ]; then \
 		echo "❌ Homebrew Python $(PY_VERSION) not found at $(PY)"; \
@@ -88,8 +88,8 @@ $(VENV)/.ready: Makefile $(REQUIREMENTS)
 		"$(PY)" -m venv "$(VENV)"; \
 	fi
 	@$(PYTHON) -m pip -q install --upgrade pip wheel
-	@echo "==> Installing dev requirements from $(REQUIREMENTS)"
-	@$(PYTHON) -m pip install -r "$(REQUIREMENTS)"
+	@echo "==> Installing miepython + dev extras"
+	@$(PYTHON) -m pip install -e ".[dev,docs,lite]"
 	@touch "$(VENV)/.ready"
 	@echo "✅ venv ready"
 
