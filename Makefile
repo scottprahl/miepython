@@ -19,6 +19,7 @@ OUT_ROOT        := $(ROOT)/_site
 OUT_DIR         := $(OUT_ROOT)/$(PACKAGE)
 STAGE_DIR       := $(ROOT)/.lite_src
 DOIT_DB         := $(ROOT)/.jupyterlite.doit.db
+LITE_CONFIG     := $(ROOT)/$(PACKAGE)/jupyter_lite_config.json
 
 # --- GitHub Pages deploy config ---
 PAGES_BRANCH    := gh-pages
@@ -179,10 +180,7 @@ rcheck:
 	@echo "✅ Release checks complete"
 	
 .PHONY: lite
-lite: $(VENV)/.ready
-	@echo "==> Ensuring required files exist"; \
-	test -f "$(ROOT)/jupyter_lite_config.json" || (echo "❌ Missing jupyter_lite_config.json" && false)
-
+lite: $(VENV)/.ready $(LITE_CONFIG)
 	@echo "==> Building package wheel for PyOdide"
 	@$(PYTHON) -m build
 
@@ -219,6 +217,7 @@ lite: $(VENV)/.ready
 
 	@echo "==> Building JupyterLite"
 	@"$(PYTHON)" -m jupyter lite build \
+		--config="$(LITE_CONFIG)" \
 		--contents="$(STAGE_DIR)" \
 		--output-dir="$(OUT_DIR)"
 
