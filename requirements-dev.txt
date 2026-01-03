@@ -31,7 +31,6 @@ setuptools
 jupyterlab
 nbconvert
 nbformat
-notebook
 
 # docs
 nbsphinx==0.9.7

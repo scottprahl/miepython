@@ -1,6 +1,13 @@
 Changelog
 =========
 
+3.0.6 (xx/xx/2026)
+-------------------
+*   remove requirements.txt and doc/requirements.txt
+*   fix testing badge
+*   update 11_performance.ipynb to work with jupyterlite
+*   do not install numba when using jupyterlite
+
 3.0.5 (1/2/2026)
 -------------------
 *   fix versioning
