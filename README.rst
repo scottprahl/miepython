@@ -18,7 +18,7 @@
    :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
    :alt: License
 
-.. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yml/badge.svg
+.. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yaml/badge.svg
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
    :alt: Testing
 
