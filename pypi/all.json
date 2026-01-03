@@ -1,24 +1,24 @@
 {
   "miepython": {
     "releases": {
-      "3.0.2": [
+      "3.0.5": [
         {
           "comment_text": "",
           "digests": {
-            "md5": "b46c8024e2ebd921dbd3a3f600a7fcea",
-            "sha256": "cd49515a18488dad89523a5a6ec2333b42af32917dd022deb6fbe325f8ed21db"
+            "md5": "1d061eb993dc795a1ff0a10989a0d1c5",
+            "sha256": "67579f1c670f8007af679ec264e43bbba9629d33226c5fc8c9bb6982de395f7e"
           },
           "downloads": -1,
-          "filename": "miepython-3.0.2-py3-none-any.whl",
+          "filename": "miepython-3.0.5-py3-none-any.whl",
           "has_sig": false,
-          "md5_digest": "b46c8024e2ebd921dbd3a3f600a7fcea",
+          "md5_digest": "1d061eb993dc795a1ff0a10989a0d1c5",
           "packagetype": "bdist_wheel",
           "python_version": "py3",
           "requires_python": ">=3.9",
-          "size": 42884,
-          "upload_time": "2026-01-02T23:26:48.169299Z",
-          "upload_time_iso_8601": "2026-01-02T23:26:48.169299Z",
-          "url": "./miepython-3.0.2-py3-none-any.whl",
+          "size": 42995,
+          "upload_time": "2026-01-03T15:02:44.519759Z",
+          "upload_time_iso_8601": "2026-01-03T15:02:44.519759Z",
+          "url": "./miepython-3.0.5-py3-none-any.whl",
           "yanked": false,
           "yanked_reason": null
         }
