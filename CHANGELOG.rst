@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.0.5 (1/2/2026)
+-------------------
+*   fix versioning
+
 3.0.4 (1/2/2026)
 -------------------
 *   Host jupyterlite instance of github
