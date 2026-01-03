@@ -1,61 +1,42 @@
-# pylint: disable=invalid-name
-# pylint: disable=consider-using-f-string
 """
-Configuration file for building documentation.
+Sphinx configuration for miepython documentation.
 
-Sphinx builds the docs using couple of external modules: napoleon and nbsphinx.
-
-The overall format is controlled by `.rst` files. The top level file is `index.rst`
-
-`napoleon` builds the API in HTML assuming that the code is documented with
-docstrings that follow the Google docstring format.
-
-`nbsphinx` convert the Jupyter notebooks to html with nbsphinx, will
+Uses:
+- sphinx.ext.napoleon for Google-style docstrings
+- nbsphinx for rendering Jupyter notebooks (pre-executed; no execution on RTD)
 """
-import re
-import os.path
+from importlib.metadata import version as pkg_version
 
 project = "miepython"
+release = pkg_version(project)
+version = release
 
+root_doc = "index"
 
-def get_init_property(prop):
-    """Return property from __init__.py."""
-    here = os.path.abspath(os.path.dirname(__file__))
-    file_name = os.path.join(here, "..", project, "__init__.py")
-    regex = r'{}\s*=\s*[\'"]([^\'"]*)[\'"]'.format(prop)
-    with open(file_name, "r", encoding="utf-8") as file:
-        result = re.search(regex, file.read())
-    return result.group(1)
-
-
-release = get_init_property("__version__")
-author = get_init_property("__author__")
-copyright = get_init_property("__copyright__")
-
-master_doc = "index"
-
-# -- General configuration ---------------------------------------------------
-
-# Sphinx extension modules
 extensions = [
+    "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "sphinx_automodapi.automodapi",
     "nbsphinx",
 ]
-numpydoc_show_class_members = False
+
 napoleon_use_param = False
 napoleon_use_rtype = False
+numpydoc_show_class_members = False
 
-# List of patterns, relative to source directory, of files to ignore
-exclude_patterns = ["_build", "14_fields.ipynb", "1d-efield.ipynb", "Untitled*", "MnNn-calc.ipynb"]
+exclude_patterns = [
+    "_build",
+    ".ipynb_checkpoints",
+    "Untitled*.ipynb",
+    "x_MnNn_calc.ipynb",
+    "x_14_fields.ipynb",
+    "x_one_d_efield.ipynb",
+]
 
-# I execute the notebooks manually in advance.
 nbsphinx_execute = "never"
-nbsphinx_allow_errors = True
-
-# -- Options for HTML output -------------------------------------------------
+nbsphinx_allow_errors = False
 
 html_theme = "sphinx_rtd_theme"
 html_scaled_image_link = False
