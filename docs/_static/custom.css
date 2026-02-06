@@ -1,0 +1,14 @@
+/* Ensure images keep aspect ratio and don't get squashed in RTD theme/nbsphinx */
+.wy-nav-content img,
+.rst-content img,
+.nboutput .output_area img,
+.nboutput img {
+  max-width: 100% !important;
+  height: auto !important;
+  width: auto !important;
+}
+
+/* nbsphinx output images often get inline width/height; force aspect ratio */
+.nboutput img[style] {
+  height: auto !important;
+}
