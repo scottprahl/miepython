@@ -28,6 +28,7 @@
    04_rayleigh.ipynb
    09_backscattering.ipynb
    10_basic_tests.ipynb
+   14_boundary_conditions.ipynb
 
 .. toctree::
    :caption: Algorithm Details
