@@ -311,7 +311,9 @@ def N_base(n, m_index, kr, theta, inside):
             factor1 = rho ** (n - 1) / factorial2(2 * n + 1)
         else:
             factor1 = spherical_jn(n, rho)
-            factor2 = factor1 * mie._D_calc(m_index, kr, n)[-1]
+            # _D_calc returns D_1..D_N; request one extra term and take D_n.
+            Dn = mie._D_calc(m_index, kr, n + 1)[n - 1]
+            factor2 = factor1 * Dn
             factor1 /= rho
     else:
         factor1 = spherical_h1(n, rho) / rho
