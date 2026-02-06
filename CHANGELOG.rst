@@ -9,6 +9,7 @@ Changelog
 *   do not install numba when using jupyterlite
 *   clean up docs/conf.py
 *   move jupyter_lite_config.json out of root repo level
+*   modernize .readthedocs.yaml
 
 3.0.5 (1/2/2026)
 -------------------
