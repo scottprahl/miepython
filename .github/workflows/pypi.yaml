@@ -1,8 +1,8 @@
 name: Publish to PyPI
 
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -10,24 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi-repository
     permissions:
-      contents: read      # checkout
-      id-token: write     # OIDC for Trusted Publishing
-    
+      contents: read
+      id-token: write
+
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        ref: ${{ github.event.release.tag_name }}
+
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-        cache: 'pip'
-    
+
     - name: Build package
       run: |
-        pip install build twine
+        python -m pip install --upgrade pip
+        python -m pip install build
         python -m build
-    
+
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         verbose: true
-        attestations: true  # Optional: enable provenance
+        attestations: true
