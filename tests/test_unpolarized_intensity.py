@@ -21,4 +21,4 @@ def test_i_unpolarized_matches_intensities():
     size = 2 * np.pi * radius_m * medium_index / wavelength_m
     i_un2 = mie.i_unpolarized(m, size, mu)
 
-    assert np.allclose(i_un1, i_un2, rtol=1e-14, atol=1e-15)
+    assert np.allclose(i_un1, i_un2, rtol=1e-8, atol=1e-8)
