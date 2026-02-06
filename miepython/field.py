@@ -13,8 +13,6 @@ Conventions
 - Near-field definition: outside the sphere, total field = incident + scattered;
   inside the sphere, the internal field only
 - Magnetic response: relative permeability mu_r = 1 (non-magnetic materials)
-
-Only e_far has been verified to work.
 """
 
 import numpy as np
@@ -22,7 +20,16 @@ from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
 from miepython.util import cartesian_to_spherical, spherical_vector_to_cartesian
 import miepython as mie
 
-__all__ = ("e_near", "h_near", "eh_near", "e_plane", "e_far")
+__all__ = (
+    "e_near",
+    "h_near",
+    "eh_near",
+    "e_near_cartesian",
+    "h_near_cartesian",
+    "eh_near_cartesian",
+    "e_plane",
+    "e_far",
+)
 
 
 def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
@@ -169,6 +176,60 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
     return np.array([a, b, c, d])
 
 
+def _vectorized_field_eval(evaluator, r, theta, phi):
+    """
+    Evaluate a field callback on scalar or broadcastable spherical coordinates.
+
+    The callback must accept scalar (r, theta, phi) and return a 3-vector.
+    """
+    rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
+
+    if rr.ndim == 0:
+        return evaluator(float(rr), float(tt), float(pp))
+
+    out = np.empty((3,) + rr.shape, dtype=complex)
+    for idx in np.ndindex(rr.shape):
+        out[(slice(None),) + idx] = evaluator(float(rr[idx]), float(tt[idx]), float(pp[idx]))
+    return out
+
+
+def _vectorized_field_pair_eval(evaluator, r, theta, phi):
+    """
+    Evaluate a field-pair callback on scalar or broadcastable spherical coordinates.
+
+    The callback must accept scalar (r, theta, phi) and return (E, H) 3-vectors.
+    """
+    rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
+
+    if rr.ndim == 0:
+        return evaluator(float(rr), float(tt), float(pp))
+
+    e_out = np.empty((3,) + rr.shape, dtype=complex)
+    h_out = np.empty((3,) + rr.shape, dtype=complex)
+    for idx in np.ndindex(rr.shape):
+        e_val, h_val = evaluator(float(rr[idx]), float(tt[idx]), float(pp[idx]))
+        e_out[(slice(None),) + idx] = e_val
+        h_out[(slice(None),) + idx] = h_val
+    return e_out, h_out
+
+
+def _cartesian_to_spherical_safe(x, y, z):
+    """Array-safe Cartesian->spherical conversion for field wrappers."""
+    xx, yy, zz = np.broadcast_arrays(np.asarray(x), np.asarray(y), np.asarray(z))
+    rr = np.sqrt(xx**2 + yy**2 + zz**2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        cos_theta = np.where(rr == 0, 1.0, np.clip(zz / rr, -1.0, 1.0))
+    theta = np.arccos(cos_theta)
+    phi = np.arctan2(yy, xx)
+    return rr, theta, phi
+
+
+def _spherical_components_to_cartesian(field_sph, r, theta, phi):
+    """Convert [F_r, F_theta, F_phi] to [F_x, F_y, F_z]."""
+    fx, fy, fz = spherical_vector_to_cartesian(field_sph[0], field_sph[1], field_sph[2], r, theta, phi)
+    return np.array([fx, fy, fz])
+
+
 def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
     """Core near-field evaluation using precomputed Mie coefficients."""
     a, b, c, d = abcd
@@ -259,7 +320,10 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    return _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+    evaluator = lambda rr, tt, pp: _e_near_abcd(  # noqa: E731
+        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
+    )
+    return _vectorized_field_eval(evaluator, r, theta, phi)
 
 
 def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
@@ -285,7 +349,10 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    return _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+    evaluator = lambda rr, tt, pp: _h_near_abcd(  # noqa: E731
+        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
+    )
+    return _vectorized_field_eval(evaluator, r, theta, phi)
 
 
 def eh_near(
@@ -308,9 +375,69 @@ def eh_near(
     """
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
-    E = _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
-    H = _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
-    return E, H
+
+    def evaluator(rr, tt, pp):
+        e_val = _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
+        h_val = _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
+        return e_val, h_val
+
+    return _vectorized_field_pair_eval(evaluator, r, theta, phi)
+
+
+def e_near_cartesian(
+    lambda0,
+    d_sphere,
+    m_sphere,
+    n_env,
+    x,
+    y,
+    z,
+    include_incident=True,
+    n_pole=0,
+    abcd=None,
+):
+    """Electric near field in Cartesian components at (x, y, z)."""
+    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    e_sph = e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
+    return _spherical_components_to_cartesian(e_sph, r, theta, phi)
+
+
+def h_near_cartesian(
+    lambda0,
+    d_sphere,
+    m_sphere,
+    n_env,
+    x,
+    y,
+    z,
+    include_incident=True,
+    n_pole=0,
+    abcd=None,
+):
+    """Magnetic near field in Cartesian components at (x, y, z)."""
+    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    h_sph = h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
+    return _spherical_components_to_cartesian(h_sph, r, theta, phi)
+
+
+def eh_near_cartesian(
+    lambda0,
+    d_sphere,
+    m_sphere,
+    n_env,
+    x,
+    y,
+    z,
+    include_incident=True,
+    n_pole=0,
+    abcd=None,
+):
+    """Electric and magnetic near fields in Cartesian components at (x, y, z)."""
+    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    e_sph, h_sph = eh_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
+    e_xyz = _spherical_components_to_cartesian(e_sph, r, theta, phi)
+    h_xyz = _spherical_components_to_cartesian(h_sph, r, theta, phi)
+    return e_xyz, h_xyz
 
 
 def e_plane(x, y, z, N=100):

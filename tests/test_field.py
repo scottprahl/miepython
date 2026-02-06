@@ -3,16 +3,25 @@
 import pytest
 import numpy as np
 import miepython as mie
-from miepython.field import e_near, e_far, h_near, eh_near
+from miepython.field import (
+    e_near,
+    e_far,
+    h_near,
+    eh_near,
+    e_near_cartesian,
+    h_near_cartesian,
+    eh_near_cartesian,
+)
+from miepython.util import spherical_vector_to_cartesian
 
 
 @pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.1j])
+@pytest.mark.parametrize("n_env", [1.0, 1.33])
 @pytest.mark.parametrize("r", [1000, 10000])
 @pytest.mark.parametrize("d_sphere", [0.1, 1])
-def test_e_near_vs_e_far(m_sphere, r, d_sphere):
+def test_e_near_vs_e_far(m_sphere, n_env, r, d_sphere):
     """Confirm that e_near matches far field approximation for large r."""
     lambda0 = 1
-    n_env = 1
     theta = np.radians(45)
     phi = np.radians(45)
 
@@ -217,3 +226,68 @@ def test_eh_near_matches_individual_calls(m_sphere, n_env):
 
     np.testing.assert_allclose(E, E_ref, rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(H, H_ref, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.05j])
+@pytest.mark.parametrize("n_env", [1.0, 1.33])
+def test_eh_near_vectorized_matches_scalar_loop(m_sphere, n_env):
+    """Vectorized spherical input should match scalar evaluations."""
+    lambda0 = 0.6328
+    d_sphere = 1.2
+    r = d_sphere * np.array([[0.25, 0.55, 0.85], [0.35, 0.75, 1.05]])
+    theta = np.array([np.radians(20), np.radians(80), np.radians(140)])
+    phi = np.array([[np.radians(15)], [np.radians(75)]])
+
+    x = np.pi * d_sphere * n_env / lambda0
+    m_rel = m_sphere / n_env
+    abcd = np.array(mie.coefficients(m_rel, x, internal=True))
+
+    e_vec, h_vec = eh_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, abcd=abcd)
+    rr, tt, pp = np.broadcast_arrays(r, theta, phi)
+
+    e_ref = np.empty((3,) + rr.shape, dtype=complex)
+    h_ref = np.empty((3,) + rr.shape, dtype=complex)
+    for idx in np.ndindex(rr.shape):
+        e_ref[(slice(None),) + idx], h_ref[(slice(None),) + idx] = eh_near(
+            lambda0,
+            d_sphere,
+            m_sphere,
+            n_env,
+            float(rr[idx]),
+            float(tt[idx]),
+            float(pp[idx]),
+            abcd=abcd,
+        )
+
+    np.testing.assert_allclose(e_vec, e_ref, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_vec, h_ref, rtol=1e-12, atol=1e-12)
+
+
+@pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.05j])
+@pytest.mark.parametrize("n_env", [1.0, 1.33])
+def test_cartesian_wrappers_match_spherical_transform(m_sphere, n_env):
+    """Cartesian wrappers should match explicit spherical->Cartesian conversion."""
+    lambda0 = 0.6328
+    d_sphere = 1.2
+    x = np.array([0.2, -0.35, 0.5])
+    y = np.array([0.1, 0.4, -0.25])
+    z = np.array([0.6, 0.2, -0.45])
+
+    rr = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(np.clip(z / rr, -1.0, 1.0))
+    phi = np.arctan2(y, x)
+
+    e_sph, h_sph = eh_near(lambda0, d_sphere, m_sphere, n_env, rr, theta, phi)
+    ex_ref, ey_ref, ez_ref = spherical_vector_to_cartesian(e_sph[0], e_sph[1], e_sph[2], rr, theta, phi)
+    hx_ref, hy_ref, hz_ref = spherical_vector_to_cartesian(h_sph[0], h_sph[1], h_sph[2], rr, theta, phi)
+    e_ref = np.array([ex_ref, ey_ref, ez_ref])
+    h_ref = np.array([hx_ref, hy_ref, hz_ref])
+
+    e_xyz = e_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z)
+    h_xyz = h_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z)
+    e_xyz2, h_xyz2 = eh_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z)
+
+    np.testing.assert_allclose(e_xyz, e_ref, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_xyz, h_ref, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(e_xyz2, e_ref, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_xyz2, h_ref, rtol=1e-12, atol=1e-12)
