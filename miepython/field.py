@@ -18,11 +18,11 @@ Only e_far has been verified to work.
 """
 
 import numpy as np
-from miepython.vsh import M_odd_array, N_even_array
+from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
 from miepython.util import cartesian_to_spherical, spherical_vector_to_cartesian
 import miepython as mie
 
-__all__ = ("e_near", "e_plane", "e_far")
+__all__ = ("e_near", "h_near", "eh_near", "e_plane", "e_far")
 
 
 def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
@@ -149,6 +149,26 @@ def _incident_e_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
     return np.array([e_r, e_theta, e_phi])
 
 
+def _incident_h_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
+    """Incident plane wave (propagating +z, H along +y) in spherical components."""
+    k = 2 * np.pi * n_env / lambda0
+    phase = np.exp(1j * k * r * np.cos(theta))
+    amp = amplitude * phase
+
+    h_r = amp * np.sin(theta) * np.sin(phi)
+    h_theta = amp * np.cos(theta) * np.sin(phi)
+    h_phi = amp * np.cos(phi)
+    return np.array([h_r, h_theta, h_phi])
+
+
+def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
+    """Return Mie coefficients [a, b, c, d] with consistent medium scaling."""
+    x = np.pi * d_sphere * n_env / lambda0
+    m_rel = m_sphere / n_env
+    a, b, c, d = mie.coefficients(m_rel, x, n_pole=n_pole, internal=True)
+    return np.array([a, b, c, d])
+
+
 def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
     """Core near-field evaluation using precomputed Mie coefficients."""
     a, b, c, d = abcd
@@ -183,6 +203,39 @@ def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
     return np.array([E_rad, E_the, -E_phi])
 
 
+def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
+    """Core near-field magnetic-field evaluation using precomputed Mie coefficients."""
+    a, b, c, d = abcd
+
+    N = len(a)
+    nn = np.arange(1, N + 1)
+    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
+
+    inside = r < d_sphere / 2
+    m_index = np.conjugate(m_sphere) if inside else n_env
+
+    M_rad, M_the, M_phi = M_even_array(N, lambda0, d_sphere, m_index, r, theta, phi)
+    N_rad, N_the, N_phi = N_odd_array(N, lambda0, d_sphere, m_index, r, theta, phi)
+
+    if inside:
+        m_rel = np.conjugate(m_sphere / n_env)
+        H_rad = m_rel * np.sum(scale * (-d * M_rad - 1j * c * N_rad))
+        H_the = m_rel * np.sum(scale * (-d * M_the - 1j * c * N_the))
+        H_phi = m_rel * np.sum(scale * (-d * M_phi - 1j * c * N_phi))
+    else:
+        H_rad = np.sum(scale * (1j * b * N_rad + a * M_rad))
+        H_the = np.sum(scale * (1j * b * N_the + a * M_the))
+        H_phi = np.sum(scale * (1j * b * N_phi + a * M_phi))
+
+        if include_incident:
+            Hi_rad, Hi_the, Hi_phi = _incident_h_spherical(lambda0, n_env, r, theta, phi)
+            H_rad += Hi_rad
+            H_the += Hi_the
+            H_phi += Hi_phi
+
+    return np.array([H_rad, H_the, -H_phi])
+
+
 def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
     """
     Calculate the electric field in and around a sphere.
@@ -204,12 +257,60 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         tuple: Electric field components (E_r, E_theta, E_phi).
     """
     if abcd is None:
-        x = np.pi * d_sphere * n_env / lambda0
-        m_rel = m_sphere / n_env
-        a, b, c, d = mie.coefficients(m_rel, x, n_pole=n_pole, internal=True)
-        abcd = np.array([a, b, c, d])
+        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
     return _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+
+
+def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
+    """
+    Calculate the magnetic field in and around a sphere.
+
+    Args:
+        lambda0 (float): Wavelength of the incident wave in vacuum.
+        d_sphere (float): Diameter of the sphere.
+        m_sphere (complex): Refractive index of the sphere.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float): Radial distance at which the field is evaluated.
+        theta (float): Polar angle in radians.
+        phi (float): Azimuthal angle in radians.
+        include_incident (bool): If True, include incident field outside the sphere.
+        n_pole (int): Multipole order (0 for automatic truncation).
+        abcd (array, optional): Precomputed Mie coefficients [a, b, c, d].
+            If provided, `n_pole` is ignored.
+
+    Returns:
+        tuple: Magnetic field components (H_r, H_theta, H_phi).
+    """
+    if abcd is None:
+        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+
+    return _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+
+
+def eh_near(
+    lambda0,
+    d_sphere,
+    m_sphere,
+    n_env,
+    r,
+    theta,
+    phi,
+    include_incident=True,
+    n_pole=0,
+    abcd=None,
+):
+    """
+    Calculate electric and magnetic fields in and around a sphere.
+
+    Returns:
+        tuple: (E, H), each in spherical components.
+    """
+    if abcd is None:
+        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+    E = _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+    H = _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident)
+    return E, H
 
 
 def e_plane(x, y, z, N=100):
