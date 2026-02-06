@@ -117,9 +117,6 @@ html: $(VENV)/.ready
 	$(SPHINX) $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
 	@command -v open >/dev/null 2>&1 && open "$(HTML_DIR)/index.html" || true
 
-.PHONY: lint
-lint: pylint-check
-
 .PHONY: pylint-check
 pylint-check: $(VENV)/.ready
 	-@$(PYLINT) miepython/__init__.py
@@ -136,6 +133,7 @@ pylint-check: $(VENV)/.ready
 	-@$(PYLINT) tests/test_jit.py
 	-@$(PYLINT) tests/test_nojit.py
 	-@$(PYLINT) docs/conf.py
+	-@$(PYLINT) .github/scripts/update_citation.py
 
 .PHONY: yaml-check
 yaml-check: $(VENV)/.ready
@@ -321,6 +319,5 @@ realclean: lite-clean clean
 	@/bin/rm -rf "$(WORKTREE)"
 	@/bin/rm -rf "$(VENV)"
 	@/bin/rm -rf "docs/api"
-	@/bin/rm -rf "docs/_static"
 	@/bin/rm -rf "docs/_templates"
 
