@@ -5,6 +5,7 @@ Uses:
 - sphinx.ext.napoleon for Google-style docstrings
 - nbsphinx for rendering Jupyter notebooks (pre-executed; no execution on RTD)
 """
+
 from importlib.metadata import version as pkg_version
 
 project = "miepython"
@@ -41,3 +42,6 @@ nbsphinx_allow_errors = False
 html_theme = "sphinx_rtd_theme"
 html_scaled_image_link = False
 html_sourcelink_suffix = ""
+
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
