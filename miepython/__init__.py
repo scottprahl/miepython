@@ -42,6 +42,24 @@ The scattering matrix
 
     mie.phase_matrix(m, x, mu)
 
+Near-field calculations are provided by the ``miepython.field`` module::
+
+    from miepython.field import e_near, h_near, eh_near
+    from miepython.field import e_near_cartesian, h_near_cartesian, eh_near_cartesian
+    from miepython.field import e_far
+
+Example near-field usage::
+
+    import numpy as np
+    from miepython.field import eh_near_cartesian
+
+    u = np.linspace(-1.5, 1.5, 101)
+    X, Z = np.meshgrid(u, u, indexing='xy')
+    E_xyz, H_xyz = eh_near_cartesian(
+        lambda0=1.0, d_sphere=1.0, m_sphere=1.5 + 0.0j, n_env=1.0,
+        x=X, y=np.zeros_like(X), z=Z
+    )
+
 """
 
 import os
@@ -76,6 +94,15 @@ else:
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
+from .field import (
+    e_far,
+    e_near,
+    h_near,
+    eh_near,
+    e_near_cartesian,
+    h_near_cartesian,
+    eh_near_cartesian,
+)
 
 # functions exposed to the user
 __all__ = (
@@ -87,6 +114,13 @@ __all__ = (
     "coefficients",
     "efficiencies",
     "efficiencies_mx",
+    "e_far",
+    "e_near",
+    "h_near",
+    "eh_near",
+    "e_near_cartesian",
+    "h_near_cartesian",
+    "eh_near_cartesian",
     "an_bn",
     "cn_dn",
     "S1_S2",
