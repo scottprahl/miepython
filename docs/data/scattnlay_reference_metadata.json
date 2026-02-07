@@ -1,5 +1,5 @@
 {
-  "scattnlay_exe": "/Users/prahl/Documents/Code/git/miepython/docs/scattnlay/fieldnlay-dp",
+  "scattnlay_python_package": "2.4",
   "d_sphere": 2.0,
   "n_env": 1.0,
   "lambda0": 1.0,
@@ -7,14 +7,25 @@
   "npts": 121,
   "cases": {
     "nonabs": {
+      "scattering": {
+        "terms_fieldnlay": 44,
+        "terms_scattnlay": 44,
+        "Qext": 2.351382357157882,
+        "Qsca": 2.351382357157882,
+        "Qabs": 0.0,
+        "Qbk": 2.53277025110356,
+        "Qpr": 0.9795314328862283,
+        "g": 0.583423159613144,
+        "albedo": 1.0
+      },
       "n_sphere_scatt": [
         1.5,
         0.0
       ],
       "n_sphere_physical": "1.5+0.0j",
       "n_sphere_miepython": "1.5+0.0j",
-      "max_abs_E": 5.005581852881841,
-      "max_abs_H_raw": 0.0192457585031092,
+      "max_abs_E": 5.005583970849667,
+      "max_abs_H_raw": 0.019245813368565155,
       "files": {
         "X": "scattnlay_nonabs_X.npy",
         "Z": "scattnlay_nonabs_Z.npy",
@@ -23,14 +34,25 @@
       }
     },
     "abs": {
+      "scattering": {
+        "terms_fieldnlay": 44,
+        "terms_scattnlay": 44,
+        "Qext": 2.5837269073859774,
+        "Qsca": 1.3566707303067342,
+        "Qabs": 1.2270561770792432,
+        "Qbk": 0.1707308516638513,
+        "Qpr": 1.4621844154485677,
+        "g": 0.8266873213103347,
+        "albedo": 0.5250828663155088
+      },
       "n_sphere_scatt": [
         1.5,
         0.1
       ],
       "n_sphere_physical": "1.5-0.1j",
       "n_sphere_miepython": "1.5-0.1j",
-      "max_abs_E": 2.3274471126556238,
-      "max_abs_H_raw": 0.008316927385675552,
+      "max_abs_E": 2.32745076357907,
+      "max_abs_H_raw": 0.008316923968012131,
       "files": {
         "X": "scattnlay_abs_X.npy",
         "Z": "scattnlay_abs_Z.npy",
