@@ -1,0 +1,43 @@
+{
+  "scattnlay_exe": "/Users/prahl/Documents/Code/git/miepython/docs/scattnlay/fieldnlay-dp",
+  "d_sphere": 2.0,
+  "n_env": 1.0,
+  "lambda0": 1.0,
+  "extent": 3.0,
+  "npts": 121,
+  "cases": {
+    "nonabs": {
+      "n_sphere_scatt": [
+        1.5,
+        0.0
+      ],
+      "n_sphere_physical": "1.5+0.0j",
+      "n_sphere_miepython": "1.5+0.0j",
+      "max_abs_E": 5.005581852881841,
+      "max_abs_H_raw": 0.0192457585031092,
+      "files": {
+        "X": "scattnlay_nonabs_X.npy",
+        "Z": "scattnlay_nonabs_Z.npy",
+        "E": "scattnlay_nonabs_E.npy",
+        "H": "scattnlay_nonabs_H.npy"
+      }
+    },
+    "abs": {
+      "n_sphere_scatt": [
+        1.5,
+        0.1
+      ],
+      "n_sphere_physical": "1.5-0.1j",
+      "n_sphere_miepython": "1.5-0.1j",
+      "max_abs_E": 2.3274471126556238,
+      "max_abs_H_raw": 0.008316927385675552,
+      "files": {
+        "X": "scattnlay_abs_X.npy",
+        "Z": "scattnlay_abs_Z.npy",
+        "E": "scattnlay_abs_E.npy",
+        "H": "scattnlay_abs_H.npy"
+      }
+    }
+  },
+  "scattnlay_commit": "211fc8d2168deff500b67042cea952fc74c84b64"
+}
