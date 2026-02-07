@@ -14,6 +14,13 @@
    05_fog.ipynb
 
 .. toctree::
+   :caption: Near Field
+   :hidden:
+
+   14_boundary_conditions.ipynb
+   15_2D_fields.ipynb
+
+.. toctree::
    :caption: Mie Resonance
    :hidden:
 
