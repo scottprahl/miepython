@@ -1,18 +1,81 @@
-"""
-Electric and magnetic field calculations.
+"""Near- and far-field electromagnetic fields for a homogeneous sphere.
+
+This module evaluates complex phasor electric and magnetic fields for a sphere
+embedded in a uniform medium.
+
+Main entry points
+-----------------
+Use these for most workflows:
+
+- ``e_near(...)``: electric field in spherical components ``[E_r, E_theta, E_phi]``.
+- ``h_near(...)``: magnetic field in spherical components ``[H_r, H_theta, H_phi]``.
+- ``eh_near(...)``: both electric and magnetic fields in one call.
+- ``e_near_cartesian(...)`` / ``h_near_cartesian(...)`` / ``eh_near_cartesian(...)``:
+  same near-field calculations in Cartesian components ``[Fx, Fy, Fz]``.
+- ``e_far(...)``: scattered far-field electric components.
+
+Quick examples
+--------------
+Evaluate the near electric field on a ring of points:
+
+>>> import numpy as np
+>>> import miepython.field as fields
+>>> theta = np.linspace(0.0, np.pi, 181)
+>>> phi = np.zeros_like(theta)
+>>> r = np.full_like(theta, 1.5)  # same length units as lambda0 and d_sphere
+>>> E = fields.e_near(
+...     lambda0=1.0,
+...     d_sphere=1.0,
+...     m_sphere=1.5 + 0.0j,
+...     n_env=1.0,
+...     r=r,
+...     theta=theta,
+...     phi=phi,
+... )
+>>> E.shape
+(3, 181)
+
+Evaluate both fields in Cartesian coordinates on a 2D x-z slice:
+
+>>> u = np.linspace(-1.5, 1.5, 101)
+>>> X, Z = np.meshgrid(u, u, indexing="xy")
+>>> E_xyz, H_xyz = fields.eh_near_cartesian(
+...     lambda0=1.0,
+...     d_sphere=1.0,
+...     m_sphere=1.5 + 0.0j,
+...     n_env=1.0,
+...     x=X,
+...     y=np.zeros_like(X),
+...     z=Z,
+... )
+>>> E_xyz.shape, H_xyz.shape
+((3, 101, 101), (3, 101, 101))
+
+Reuse precomputed Mie coefficients for repeated field evaluations:
+
+>>> import miepython as mie
+>>> m_rel = (1.5 + 0.0j) / 1.0
+>>> x_size = np.pi * 1.0 * 1.0 / 1.0
+>>> a, b, c, d = mie.coefficients(m_rel, x_size, internal=True)
+>>> abcd = np.array([a, b, c, d])
+>>> E2, H2 = fields.eh_near(
+...     1.0, 1.0, 1.5 + 0.0j, 1.0, r, theta, phi, abcd=abcd
+... )
 
 Conventions
 -----------
-- Phasor time dependence: exp(-i * omega * t)
-- Incident plane wave: propagation along +z, E along +x, H along +y, amplitude E0 = 1
-- Spherical coordinates: theta from +z, phi from +x toward +y
-- lambda0 is the vacuum wavelength
-- n_env is the surrounding medium index; m_sphere is the sphere index
-  (relative index m_rel = m_sphere / n_env)
-- Size parameter: x = pi * d_sphere * n_env / lambda0
-- Near-field definition: outside the sphere, total field = incident + scattered;
-  inside the sphere, the internal field only
-- Magnetic response: relative permeability mu_r = 1 (non-magnetic materials)
+- Phasor time dependence: ``exp(-i * omega * t)``.
+- Incident plane wave: propagation along ``+z``, ``E`` along ``+x``, ``H`` along ``+y``,
+  incident amplitude ``E0 = 1``.
+- Spherical coordinates: ``theta`` from ``+z`` and ``phi`` from ``+x`` toward ``+y``.
+- ``lambda0`` is vacuum wavelength.
+- ``n_env`` is the surrounding-medium index and ``m_sphere`` is the sphere index;
+  relative index is ``m_rel = m_sphere / n_env``.
+- Size parameter is ``x = pi * d_sphere * n_env / lambda0``.
+- Near field definition:
+  outside the sphere, returned field is incident plus scattered;
+  inside the sphere, returned field is the internal field.
+- Non-magnetic materials are assumed (relative permeability ``mu_r = 1``).
 """
 
 import numpy as np
