@@ -2,6 +2,8 @@
 Low-level Mie calculations that do not use numba.
 """
 
+from functools import lru_cache
+
 import numpy as np
 
 __all__ = (
@@ -14,6 +16,31 @@ __all__ = (
     "_small_conducting_sphere_py",
     "_small_sphere_py",
 )
+
+
+@lru_cache(maxsize=128)
+def _series_scale_factors(n_terms):
+    """Return cached per-order scale factors for Mie series summations."""
+    n = np.arange(1, n_terms + 1, dtype=np.float64)
+    scale = (2.0 * n + 1.0) / ((n + 1.0) * n)
+    scale.setflags(write=False)
+    return scale
+
+
+@lru_cache(maxsize=128)
+def _single_sphere_factors(n_terms):
+    """Return cached per-order factors used by ``_single_sphere_py``."""
+    n_int = np.arange(1, n_terms + 1, dtype=np.int64)
+    n = n_int.astype(np.float64)
+    cn = 2.0 * n + 1.0
+    alt = np.where((n_int % 2) == 0, 1.0, -1.0)  # (-1)^n with n starting at 1
+    c1n = n * (n + 2.0) / (n + 1.0)
+    c2n = cn / n / (n + 1.0)
+    cn.setflags(write=False)
+    alt.setflags(write=False)
+    c1n.setflags(write=False)
+    c2n.setflags(write=False)
+    return cn, alt, c1n, c2n
 
 
 def _Lentz_Dn(z, N):
@@ -139,7 +166,7 @@ def _an_bn_py(m, x, n_pole=0):
     Returns:
         a, b: arrays of Mie coefficents An and Bn
     """
-    if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
+    if m.imag > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
     if n_pole == 0:
@@ -152,21 +179,24 @@ def _an_bn_py(m, x, n_pole=0):
     if x <= 0:
         return a, b
 
+    inv_x = 1.0 / x
     psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-    psi_n = psi_nm1 / x - np.cos(x)
+    psi_n = psi_nm1 * inv_x - np.cos(x)
     xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
-    xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
+    xi_n = np.complex128(psi_n + 1j * (np.cos(x) * inv_x + np.sin(x)))
 
     if m.real > 0.0:
         D = _D_calc_py(m, x, nstop + 1)
 
         for n in range(1, nstop):
-            temp = D[n - 1] / m + n / x
+            n_over_x = n * inv_x
+            temp = D[n - 1] / m + n_over_x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            temp = D[n - 1] * m + n / x
+            temp = D[n - 1] * m + n_over_x
             b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            psi = (2 * n + 1) * psi_n / x - psi_nm1
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            two_np1_over_x = (2 * n + 1) * inv_x
+            psi = two_np1_over_x * psi_n - psi_nm1
+            xi = two_np1_over_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
@@ -174,9 +204,10 @@ def _an_bn_py(m, x, n_pole=0):
 
     else:
         for n in range(1, nstop):
-            a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
+            n_over_x = n * inv_x
+            a[n - 1] = (n_over_x * psi_n - psi_nm1) / (n_over_x * xi_n - xi_nm1)
             b[n - 1] = psi_n / xi_n
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi = (2 * n + 1) * inv_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
@@ -216,35 +247,39 @@ def _cn_dn_py(m, x, n_pole):
     if x <= 0:
         return c, d
 
+    inv_x = 1.0 / x
     # no need to calculate anything when sphere is perfectly conducting
     if m.real > 0.0 and not np.isinf(m.real) or not np.isinf(m.imag):
         psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-        psi_n = psi_nm1 / x - np.cos(x)
+        psi_n = psi_nm1 * inv_x - np.cos(x)
 
+        inv_mx = 1.0 / mx
         psi_nm1_mx = np.sin(mx)  # nm1 = n-1 = 0
-        psi_n_mx = psi_nm1_mx / mx - np.cos(mx)
+        psi_n_mx = psi_nm1_mx * inv_mx - np.cos(mx)
 
         xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
-        xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
+        xi_n = np.complex128(psi_n + 1j * (np.cos(x) * inv_x + np.sin(x)))
 
         Dmx = _D_calc_py(np.complex128(m), x, nstop + 1)
         Dx = _D_calc_py(np.complex128(1), x, nstop + 1)
 
         for n in range(1, nstop + 1):
-            common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
+            n_over_x = n * inv_x
+            common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n_over_x) * xi_n - xi_nm1)
 
-            c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
-            d[n - 1] = common / ((Dmx[n - 1] / m + n / x) * xi_n - xi_nm1)
+            c[n - 1] = m * common / ((m * Dmx[n - 1] + n_over_x) * xi_n - xi_nm1)
+            d[n - 1] = common / ((Dmx[n - 1] / m + n_over_x) * xi_n - xi_nm1)
 
-            psi = (2 * n + 1) * psi_n / x - psi_nm1
+            two_np1 = 2 * n + 1
+            psi = two_np1 * inv_x * psi_n - psi_nm1
             psi_nm1 = psi_n
             psi_n = psi
 
-            psi_mx = (2 * n + 1) * psi_n_mx / mx - psi_nm1_mx
+            psi_mx = two_np1 * inv_mx * psi_n_mx - psi_nm1_mx
             psi_nm1_mx = psi_n_mx
             psi_n_mx = psi_mx
 
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi = two_np1 * inv_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
 
@@ -310,8 +345,9 @@ def _S1_S2_py(m, x, mu, n_pole):
     N = len(a)
     pi = np.zeros(N)
     tau = np.zeros(N)
-    n = np.arange(1, N + 1)
-    scale = (2 * n + 1) / ((n + 1) * n)
+    scale = _series_scale_factors(N)
+    scale_a = scale * a
+    scale_b = scale * b
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -320,8 +356,8 @@ def _S1_S2_py(m, x, mu, n_pole):
     for k in range(nangles):
         _pi_tau_py(mu[k], pi, tau)
         if n_pole == 0:
-            S1[k] = np.sum(scale * (pi * a + tau * b))
-            S2[k] = np.sum(scale * (tau * a + pi * b))
+            S1[k] = np.dot(pi, scale_a) + np.dot(tau, scale_b)
+            S2[k] = np.dot(tau, scale_a) + np.dot(pi, scale_b)
         else:
             S1[k] = scale[n_pole] * (pi[n_pole] * a[n_pole] + tau[n_pole] * b[n_pole])
             S2[k] = scale[n_pole] * (tau[n_pole] * a[n_pole] + pi[n_pole] * b[n_pole])
@@ -429,7 +465,7 @@ def _single_sphere_py(m, x, n_pole, e_field):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    e_field = not e_field  # unused
+    _ = e_field  # currently unused in scalar aggregate efficiencies
 
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
@@ -447,33 +483,36 @@ def _single_sphere_py(m, x, n_pole, e_field):
         m = 1 - 10000j
 
     a, b = _an_bn_py(m, x, n_pole)
+    x2 = x * x
 
     if n_pole == 0:
-        n = np.arange(1, len(a) + 1)
-        cn = 2.0 * n + 1.0
+        n_terms = len(a)
+        cn, alt, c1n, c2n = _single_sphere_factors(n_terms)
+        a_re = a.real
+        b_re = b.real
+        a_abs2 = a_re * a_re + a.imag * a.imag
+        b_abs2 = b_re * b_re + b.imag * b.imag
 
-        qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+        qext = 2.0 * np.dot(cn, a_re + b_re) / x2
 
         if m.imag == 0:
             qsca = qext
         else:
-            qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
+            qsca = 2.0 * np.dot(cn, a_abs2 + b_abs2) / x2
 
-        qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
+        qback = np.abs(np.dot(alt * cn, a - b)) ** 2 / x2
 
-        c1n = n * (n + 2) / (n + 1)
-        c2n = cn / n / (n + 1)
         asy1 = c1n[:-1] * (a[:-1] * a[1:].conjugate() + b[:-1] * b[1:].conjugate()).real
         asy2 = c2n[:-1] * (a[:-1] * b[:-1].conjugate()).real
-        g = 4 * np.sum(asy1 + asy2) / qsca / x**2
+        g = 4.0 * np.sum(asy1 + asy2) / qsca / x2
 
     else:
         cn = 2.0 * n_pole + 1
-        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x**2
-        qext = 2 * cn * (a[-1].real + b[-1].real) / x**2
+        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x2
+        qext = 2.0 * cn * (a[-1].real + b[-1].real) / x2
         qsca = qext
         if m.imag < 0:
-            qsca = 2 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x**2
+            qsca = 2.0 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x2
         g = None
 
     return qext, qsca, qback, g

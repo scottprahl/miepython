@@ -321,8 +321,8 @@ def _S1_S2_nb(m, x, mu, n_pole):
     N = len(a)
     pi = np.zeros(N)
     tau = np.zeros(N)
-    n = np.arange(1, N + 1)
-    scale = (2 * n + 1) / ((n + 1) * n)
+    n = np.arange(1, N + 1, dtype=np.float64)
+    scale = (2.0 * n + 1.0) / ((n + 1.0) * n)
 
     nangles = len(mu)
     S1 = np.zeros(nangles, dtype=np.complex128)
@@ -331,8 +331,14 @@ def _S1_S2_nb(m, x, mu, n_pole):
     for k in range(nangles):
         _pi_tau_nb(mu[k], pi, tau)
         if n_pole == 0:
-            S1[k] = np.sum(scale * (pi * a + tau * b))
-            S2[k] = np.sum(scale * (tau * a + pi * b))
+            s1 = 0.0 + 0.0j
+            s2 = 0.0 + 0.0j
+            for i in range(N):
+                si = scale[i]
+                s1 += si * (pi[i] * a[i] + tau[i] * b[i])
+                s2 += si * (tau[i] * a[i] + pi[i] * b[i])
+            S1[k] = s1
+            S2[k] = s2
         else:
             S1[k] = scale[n_pole] * (pi[n_pole] * a[n_pole] + tau[n_pole] * b[n_pole])
             S2[k] = scale[n_pole] * (tau[n_pole] * a[n_pole] + pi[n_pole] * b[n_pole])
@@ -443,7 +449,7 @@ def _single_sphere_nb(m, x, n_pole, e_field):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    e_field = not e_field  # unused
+    _ = e_field  # unused
 
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
@@ -461,33 +467,60 @@ def _single_sphere_nb(m, x, n_pole, e_field):
         m = 1 - 10000j
 
     a, b = _an_bn_nb(m, x, n_pole)
+    x2 = x * x
 
     if n_pole == 0:
-        n = np.arange(1, len(a) + 1)
-        cn = 2.0 * n + 1.0
+        n_terms = len(a)
+        qext_acc = 0.0
+        qsca_acc = 0.0
+        qback_acc = 0.0 + 0.0j
+        g_acc = 0.0
 
-        qext = 2 * np.sum(cn * (a.real + b.real)) / x**2
+        for i in range(n_terms):
+            ni = i + 1
+            cn = 2.0 * ni + 1.0
 
-        if m.imag == 0:
+            ai = a[i]
+            bi = b[i]
+            ai_re = ai.real
+            ai_im = ai.imag
+            bi_re = bi.real
+            bi_im = bi.imag
+
+            qext_acc += cn * (ai_re + bi_re)
+
+            if m.imag != 0.0:
+                qsca_acc += cn * (ai_re * ai_re + ai_im * ai_im + bi_re * bi_re + bi_im * bi_im)
+
+            # (-1)^n with n starting from 1.
+            sign = -1.0 if (ni % 2) == 1 else 1.0
+            qback_acc += sign * cn * (ai - bi)
+
+            if i < n_terms - 1:
+                aip1 = a[i + 1]
+                bip1 = b[i + 1]
+                c1n = ni * (ni + 2.0) / (ni + 1.0)
+                c2n = cn / ni / (ni + 1.0)
+                g_acc += c1n * (ai * np.conjugate(aip1) + bi * np.conjugate(bip1)).real
+                g_acc += c2n * (ai * np.conjugate(bi)).real
+
+        qext = 2.0 * qext_acc / x2
+
+        if m.imag == 0.0:
             qsca = qext
         else:
-            qsca = 2 * np.sum(cn * (np.abs(a) ** 2 + np.abs(b) ** 2)) / x**2
+            qsca = 2.0 * qsca_acc / x2
 
-        qback = np.abs(np.sum((-1) ** n * cn * (a - b))) ** 2 / x**2
-
-        c1n = n * (n + 2) / (n + 1)
-        c2n = cn / n / (n + 1)
-        asy1 = c1n[:-1] * (a[:-1] * a[1:].conjugate() + b[:-1] * b[1:].conjugate()).real
-        asy2 = c2n[:-1] * (a[:-1] * b[:-1].conjugate()).real
-        g = 4 * np.sum(asy1 + asy2) / qsca / x**2
+        qback = np.abs(qback_acc) ** 2 / x2
+        g = 4.0 * g_acc / qsca / x2
 
     else:
         cn = 2.0 * n_pole + 1
-        qext = 2 * cn * (a[-1].real + b[-1].real) / x**2
-        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x**2
+        qext = 2.0 * cn * (a[-1].real + b[-1].real) / x2
+        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x2
         qsca = qext
         if m.imag < 0:
-            qsca = 2 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x**2
+            qsca = 2.0 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x2
         g = 0
 
     return qext, qsca, qback, g
