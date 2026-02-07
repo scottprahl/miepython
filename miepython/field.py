@@ -16,9 +16,9 @@ Conventions
 """
 
 import numpy as np
-from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
-from miepython.util import cartesian_to_spherical, spherical_vector_to_cartesian
 import miepython as mie
+from miepython.util import spherical_vector_to_cartesian
+from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
 
 __all__ = (
     "e_near",
@@ -27,26 +27,25 @@ __all__ = (
     "e_near_cartesian",
     "h_near_cartesian",
     "eh_near_cartesian",
-    "e_plane",
     "e_far",
 )
 
 
 def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
-    """
-    Calculate the electric field in the far field.
+    """Evaluate the scattered electric far field.
 
     Args:
-        lambda0 (float): Wavelength of the incident wave in vacuum.
-        d_sphere (float): Diameter of the sphere.
-        m_sphere (complex): Refractive index of the sphere.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
         n_env (float): Refractive index of the surrounding medium.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Scattering angle (from z-axis) in radians.
-        phi (float): Azimuthal angle (from x-axis) in radians.
+        r (float or ndarray): Radial observation distance.
+        theta (float or ndarray): Polar angle in radians.
+        phi (float or ndarray): Azimuth angle in radians.
 
     Returns:
-        tuple: Electric field components (E_r, E_theta, E_phi).
+        ndarray: Complex spherical components ``[E_r, E_theta, E_phi]`` with
+            shape ``(3, ...)`` following broadcasted input shape.
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
@@ -63,89 +62,20 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     return np.array([E_r, E_theta, E_phi])
 
 
-# def e_far_old(lambda0, d_sphere, m_sphere, r, theta, phi):
-#     """
-#     Calculate the electric field in the far field.
-#
-#     Args:
-#         lambda0 (float): Wavelength the incident wave in vacuum.
-#         d_sphere (float): Diameter of the sphere.
-#         m_sphere (complex): Rrefractive index of the sphere
-#         r (float): Radial distance at which the field is evaluated.
-#         theta (float): Scattering angle (from z-axis) in radians.
-#         phi (float): Azimuthal angle (from x-axis) in radians.
-#         norm: type of normalization to use for scattering function
-#
-#     Returns:
-#         tuple: Electric field components (E_r, E_theta, E_phi).
-#     """
-#     x = np.pi * d_sphere / lambda0
-#     jkr = 1j * 2 * np.pi * r / lambda0
-#     amp = np.exp(jkr) / (-jkr)
-#     mu = np.cos(theta)
-#
-#     a, b = mie.an_bn(m_sphere, x, 0)
-#     N = len(a)
-#     pi = np.zeros(N)
-#     tau = np.zeros(N)
-#
-#     n = np.arange(1, N + 1)
-#     scale = (2 * n + 1) / ((n + 1) * n)
-#
-#     mie._pi_tau(mu, pi, tau)
-#
-#     E_r = complex(0)
-#     E_theta = np.sum(scale * (tau * a + pi * b)) * amp * np.cos(phi)
-#     E_phi = np.sum(scale * (pi * a + tau * b)) * amp * np.sin(phi)
-#     return np.array([E_r, E_theta, E_phi])
-#
-#
-# def e_near_old(abcd, lambda0, d_sphere, m_index, r, theta, phi):
-#     """
-#     Calculate the electric field in and around a sphere.
-#
-#     Args:
-#         abcd (array): Mie coefficients [a, b, c, d]
-#         lambda0 (float): Wavelength of the incident wave in vacuum.
-#         d_sphere (float): Diameter of the sphere.
-#         m_index (complex): refractive index at r
-#         r (float): Radial distance at which the field is evaluated.
-#         theta (float): Polar angle in radians.
-#         phi (float): Azimuthal angle in radians.
-#
-#     Returns:
-#         tuple: Electric field components (E_r, E_theta, E_phi).
-#     """
-#     a, b, c, d = abcd
-#     E_r = np.complex128(0)
-#     E_theta = np.complex128(0)
-#     E_phi = np.complex128(0)
-#
-#     N = len(a)
-#     nn = np.arange(1, N + 1)
-#     scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
-#
-#     inside = r < d_sphere / 2
-#
-#     for n in nn:
-#         Mn = M_odd(n, lambda0, d_sphere, m_index, r, theta, phi)
-#         Nn = N_even(n, lambda0, d_sphere, m_index, r, theta, phi)
-#
-#         if inside:
-#             E_r += scale[n - 1] * (c[n - 1] * Mn[0] - 1j * d[n - 1] * Nn[0])
-#             E_theta += scale[n - 1] * (c[n - 1] * Mn[1] - 1j * d[n - 1] * Nn[1])
-#             E_phi += scale[n - 1] * (c[n - 1] * Mn[2] - 1j * d[n - 1] * Nn[2])
-#         else:
-#             E_r += scale[n - 1] * (1j * a[n - 1] * Nn[0] - b[n - 1] * Mn[0])
-#             th_part = scale[n - 1] * (1j * a[n - 1] * Nn[1] - b[n - 1] * Mn[1])
-#             E_theta += th_part
-#             E_phi += -scale[n - 1] * (1j * a[n - 1] * Nn[2] - b[n - 1] * Mn[2])
-#
-#     return np.array([E_r, E_theta, E_phi])
-
-
 def _incident_e_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
-    """Incident plane wave (propagating +z, E along +x) in spherical components."""
+    """Return incident electric plane-wave components in spherical coordinates.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float): Radial coordinate.
+        theta (float): Polar angle in radians.
+        phi (float): Azimuth angle in radians.
+        amplitude (complex): Incident electric field amplitude.
+
+    Returns:
+        ndarray: Complex spherical vector ``[E_r, E_theta, E_phi]``.
+    """
     k = 2 * np.pi * n_env / lambda0
     phase = np.exp(1j * k * r * np.cos(theta))
     amp = amplitude * phase
@@ -157,7 +87,19 @@ def _incident_e_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
 
 
 def _incident_h_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
-    """Incident plane wave (propagating +z, H along +y) in spherical components."""
+    """Return incident magnetic plane-wave components in spherical coordinates.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float): Radial coordinate.
+        theta (float): Polar angle in radians.
+        phi (float): Azimuth angle in radians.
+        amplitude (complex): Incident magnetic field amplitude in normalized units.
+
+    Returns:
+        ndarray: Complex spherical vector ``[H_r, H_theta, H_phi]``.
+    """
     k = 2 * np.pi * n_env / lambda0
     phase = np.exp(1j * k * r * np.cos(theta))
     amp = amplitude * phase
@@ -169,7 +111,18 @@ def _incident_h_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
 
 
 def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
-    """Return Mie coefficients [a, b, c, d] with consistent medium scaling."""
+    """Compute Mie coefficients with consistent medium scaling.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+
+    Returns:
+        ndarray: Coefficients packed as ``[a, b, c, d]``.
+    """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
     a, b, c, d = mie.coefficients(m_rel, x, n_pole=n_pole, internal=True)
@@ -177,10 +130,17 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
 
 
 def _vectorized_field_eval(evaluator, r, theta, phi):
-    """
-    Evaluate a field callback on scalar or broadcastable spherical coordinates.
+    """Evaluate a spherical-field callback on scalar or broadcasted inputs.
 
-    The callback must accept scalar (r, theta, phi) and return a 3-vector.
+    Args:
+        evaluator (callable): Callable that accepts scalar ``(r, theta, phi)``
+            and returns a complex 3-vector.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+
+    Returns:
+        ndarray: Complex array with shape ``(3, ...)``.
     """
     rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
 
@@ -194,10 +154,18 @@ def _vectorized_field_eval(evaluator, r, theta, phi):
 
 
 def _vectorized_field_pair_eval(evaluator, r, theta, phi):
-    """
-    Evaluate a field-pair callback on scalar or broadcastable spherical coordinates.
+    """Evaluate an ``(E, H)`` callback on scalar or broadcasted inputs.
 
-    The callback must accept scalar (r, theta, phi) and return (E, H) 3-vectors.
+    Args:
+        evaluator (callable): Callable that accepts scalar ``(r, theta, phi)``
+            and returns a tuple ``(E, H)``, each a complex 3-vector.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+
+    Returns:
+        tuple[ndarray, ndarray]: Tuple ``(E, H)`` with each array shaped
+            ``(3, ...)``.
     """
     rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
 
@@ -214,7 +182,17 @@ def _vectorized_field_pair_eval(evaluator, r, theta, phi):
 
 
 def _cartesian_to_spherical_safe(x, y, z):
-    """Array-safe Cartesian->spherical conversion for field wrappers."""
+    """Convert Cartesian coordinates to spherical coordinates safely.
+
+    Args:
+        x (float or ndarray): Cartesian x coordinate(s).
+        y (float or ndarray): Cartesian y coordinate(s).
+        z (float or ndarray): Cartesian z coordinate(s).
+
+    Returns:
+        tuple[ndarray, ndarray, ndarray]: ``(r, theta, phi)`` arrays after
+            broadcasting the inputs.
+    """
     xx, yy, zz = np.broadcast_arrays(np.asarray(x), np.asarray(y), np.asarray(z))
     rr = np.sqrt(xx**2 + yy**2 + zz**2)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -225,13 +203,38 @@ def _cartesian_to_spherical_safe(x, y, z):
 
 
 def _spherical_components_to_cartesian(field_sph, r, theta, phi):
-    """Convert [F_r, F_theta, F_phi] to [F_x, F_y, F_z]."""
+    """Convert spherical vector components to Cartesian components.
+
+    Args:
+        field_sph (ndarray): Spherical components ``[F_r, F_theta, F_phi]``.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+
+    Returns:
+        ndarray: Cartesian components ``[F_x, F_y, F_z]``.
+    """
     fx, fy, fz = spherical_vector_to_cartesian(field_sph[0], field_sph[1], field_sph[2], r, theta, phi)
     return np.array([fx, fy, fz])
 
 
 def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
-    """Core near-field evaluation using precomputed Mie coefficients."""
+    """Evaluate near-field electric components with precomputed coefficients.
+
+    Args:
+        abcd (ndarray): Mie coefficients ``[a, b, c, d]``.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float): Radial coordinate.
+        theta (float): Polar angle in radians.
+        phi (float): Azimuth angle in radians.
+        include_incident (bool): Include incident field outside the sphere.
+
+    Returns:
+        ndarray: Spherical electric components ``[E_r, E_theta, E_phi]``.
+    """
     a, b, c, d = abcd
 
     N = len(a)
@@ -265,7 +268,22 @@ def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
 
 
 def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
-    """Core near-field magnetic-field evaluation using precomputed Mie coefficients."""
+    """Evaluate near-field magnetic components with precomputed coefficients.
+
+    Args:
+        abcd (ndarray): Mie coefficients ``[a, b, c, d]``.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float): Radial coordinate.
+        theta (float): Polar angle in radians.
+        phi (float): Azimuth angle in radians.
+        include_incident (bool): Include incident field outside the sphere.
+
+    Returns:
+        ndarray: Spherical magnetic components ``[H_r, H_theta, H_phi]``.
+    """
     a, b, c, d = abcd
 
     N = len(a)
@@ -298,24 +316,24 @@ def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
 
 
 def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
-    """
-    Calculate the electric field in and around a sphere.
+    """Calculate the electric field in and around a sphere.
 
     Args:
-        lambda0 (float): Wavelength of the incident wave in vacuum.
-        d_sphere (float): Diameter of the sphere.
-        m_sphere (complex): Refractive index of the sphere.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
         n_env (float): Refractive index of the surrounding medium.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
-        include_incident (bool): If True, include incident field outside the sphere.
-        n_pole (int): Multipole order (0 for automatic truncation).
-        abcd (array, optional): Precomputed Mie coefficients [a, b, c, d].
-            If provided, `n_pole` is ignored.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+            If provided, ``n_pole`` is ignored.
 
     Returns:
-        tuple: Electric field components (E_r, E_theta, E_phi).
+        ndarray: Spherical electric components ``[E_r, E_theta, E_phi]`` with
+            shape ``(3, ...)``.
     """
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
@@ -327,24 +345,24 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
 
 
 def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
-    """
-    Calculate the magnetic field in and around a sphere.
+    """Calculate the magnetic field in and around a sphere.
 
     Args:
-        lambda0 (float): Wavelength of the incident wave in vacuum.
-        d_sphere (float): Diameter of the sphere.
-        m_sphere (complex): Refractive index of the sphere.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
         n_env (float): Refractive index of the surrounding medium.
-        r (float): Radial distance at which the field is evaluated.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuthal angle in radians.
-        include_incident (bool): If True, include incident field outside the sphere.
-        n_pole (int): Multipole order (0 for automatic truncation).
-        abcd (array, optional): Precomputed Mie coefficients [a, b, c, d].
-            If provided, `n_pole` is ignored.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+            If provided, ``n_pole`` is ignored.
 
     Returns:
-        tuple: Magnetic field components (H_r, H_theta, H_phi).
+        ndarray: Spherical magnetic components ``[H_r, H_theta, H_phi]`` with
+            shape ``(3, ...)``.
     """
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
@@ -367,20 +385,32 @@ def eh_near(
     n_pole=0,
     abcd=None,
 ):
-    """
-    Calculate electric and magnetic fields in and around a sphere.
+    """Calculate electric and magnetic fields in and around a sphere.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        r (float or ndarray): Radial coordinate(s).
+        theta (float or ndarray): Polar angle(s) in radians.
+        phi (float or ndarray): Azimuth angle(s) in radians.
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+            If provided, ``n_pole`` is ignored.
 
     Returns:
-        tuple: (E, H), each in spherical components.
+        tuple[ndarray, ndarray]: Tuple ``(E, H)`` in spherical components,
+            each with shape ``(3, ...)``.
     """
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    def evaluator(rr, tt, pp):
-        e_val = _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
-        h_val = _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
-        return e_val, h_val
-
+    evaluator = lambda rr, tt, pp: (  # noqa: E731
+        _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident),
+        _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident),
+    )
     return _vectorized_field_pair_eval(evaluator, r, theta, phi)
 
 
@@ -396,7 +426,23 @@ def e_near_cartesian(
     n_pole=0,
     abcd=None,
 ):
-    """Electric near field in Cartesian components at (x, y, z)."""
+    """Calculate electric near field in Cartesian coordinates.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        x (float or ndarray): Cartesian x coordinate(s).
+        y (float or ndarray): Cartesian y coordinate(s).
+        z (float or ndarray): Cartesian z coordinate(s).
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+
+    Returns:
+        ndarray: Cartesian electric components ``[E_x, E_y, E_z]``.
+    """
     r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
     e_sph = e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     return _spherical_components_to_cartesian(e_sph, r, theta, phi)
@@ -414,7 +460,23 @@ def h_near_cartesian(
     n_pole=0,
     abcd=None,
 ):
-    """Magnetic near field in Cartesian components at (x, y, z)."""
+    """Calculate magnetic near field in Cartesian coordinates.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        x (float or ndarray): Cartesian x coordinate(s).
+        y (float or ndarray): Cartesian y coordinate(s).
+        z (float or ndarray): Cartesian z coordinate(s).
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+
+    Returns:
+        ndarray: Cartesian magnetic components ``[H_x, H_y, H_z]``.
+    """
     r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
     h_sph = h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     return _spherical_components_to_cartesian(h_sph, r, theta, phi)
@@ -432,42 +494,26 @@ def eh_near_cartesian(
     n_pole=0,
     abcd=None,
 ):
-    """Electric and magnetic near fields in Cartesian components at (x, y, z)."""
+    """Calculate electric and magnetic near fields in Cartesian coordinates.
+
+    Args:
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
+        x (float or ndarray): Cartesian x coordinate(s).
+        y (float or ndarray): Cartesian y coordinate(s).
+        z (float or ndarray): Cartesian z coordinate(s).
+        include_incident (bool): Include incident field for points outside sphere.
+        n_pole (int): Requested multipole order. ``0`` means automatic truncation.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+
+    Returns:
+        tuple[ndarray, ndarray]: Tuple ``(E_xyz, H_xyz)`` where each array is
+            ``[x, y, z]`` components.
+    """
     r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
     e_sph, h_sph = eh_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     e_xyz = _spherical_components_to_cartesian(e_sph, r, theta, phi)
     h_xyz = _spherical_components_to_cartesian(h_sph, r, theta, phi)
     return e_xyz, h_xyz
-
-
-def e_plane(x, y, z, N=100):
-    """
-    Calculate a plane wave using vector spherical harmonics.
-
-    Args:
-        x: position
-        y: position
-        z: position
-        N: number of points
-
-    Returns:
-        tuple: Electric field components (E_z, E_y, E_z).
-    """
-    lambda0 = 1
-    m_index = 1
-
-    n = np.arange(1, N + 1)
-    scale = (1j) ** n * (2 * n + 1) / n / (n + 1)
-
-    r, theta, phi = cartesian_to_spherical(x, y, z)
-    d_sphere = 3 * r
-
-    M_r, M_theta, M_phi = M_odd_array(N, lambda0, d_sphere, m_index, r, theta, phi)
-    N_r, N_theta, N_phi = N_even_array(N, lambda0, d_sphere, m_index, r, theta, phi)
-
-    E_r = np.sum(scale * (M_r - 1j * N_r))
-    E_theta = np.sum(scale * (M_theta - 1j * N_theta))
-    E_phi = np.sum(scale * (M_phi - 1j * N_phi))
-
-    Ex, Ey, Ez = spherical_vector_to_cartesian(E_r, E_theta, E_phi, r, theta, phi)
-    return Ex, Ey, Ez
