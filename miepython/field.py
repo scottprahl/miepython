@@ -17,8 +17,9 @@ Conventions
 
 import numpy as np
 import miepython as mie
+from scipy.special import spherical_jn, factorial2
+from miepython.bessel import spherical_h1, d_riccati_bessel_h1
 from miepython.util import spherical_vector_to_cartesian
-from miepython.vsh import M_even_array, M_odd_array, N_even_array, N_odd_array
 
 __all__ = (
     "e_near",
@@ -29,6 +30,71 @@ __all__ = (
     "eh_near_cartesian",
     "e_far",
 )
+
+
+def _sum_two_scaled_terms(scale, coeff1, values1, scale1, coeff2, values2, scale2):
+    """Return ``sum(scale * (scale1*coeff1*values1 + scale2*coeff2*values2))``."""
+    return np.sum(scale * (scale1 * coeff1 * values1 + scale2 * coeff2 * values2))
+
+
+def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
+    """Compute shared VSH base components for one spatial point.
+
+    Args:
+        n_terms (int): Number of multipole terms.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_index (complex): Refractive index at the evaluation point.
+        r (float): Radial coordinate.
+        theta (float): Polar angle in radians.
+
+    Returns:
+        tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
+            ``(M_theta_base, M_phi_base, N_r_base, N_theta_base, N_phi_base)``
+            for multipole orders ``1..n_terms``.
+    """
+    mu = float(np.cos(theta))
+    if mu >= 1.0:
+        mu = 0.999999
+    elif mu <= -1.0:
+        mu = -0.999999
+
+    pi = np.empty(n_terms)
+    tau = np.empty(n_terms)
+    mie._pi_tau(mu, pi, tau)
+
+    n_int = np.arange(1, n_terms + 1, dtype=np.int64)
+    n_arr = n_int.astype(np.float64)
+    rho = 2 * np.pi * m_index * r / lambda0
+    kr = 2 * np.pi * r / lambda0
+    inside = r < d_sphere / 2
+
+    if inside:
+        jn = spherical_jn(n_int, rho)
+        m_factor = jn
+
+        if np.abs(rho) < 0.01:
+            rho_pow = rho ** np.arange(0, n_terms)
+            denom = factorial2(2 * n_int + 1)
+            n_factor1 = rho_pow / denom
+            n_factor2 = (n_arr + 1.0) * rho_pow / denom
+        else:
+            d_vals = mie._D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
+            n_factor1 = jn / rho
+            n_factor2 = jn * d_vals
+    else:
+        h1 = spherical_h1(n_int, rho)
+        m_factor = h1
+        n_factor1 = h1 / rho
+        n_factor2 = d_riccati_bessel_h1(n_int, rho) / rho
+
+    sin_theta = np.sin(theta)
+    M_theta_base = pi * m_factor
+    M_phi_base = tau * m_factor
+    N_r_base = n_arr * (n_arr + 1.0) * sin_theta * pi * n_factor1
+    N_theta_base = tau * n_factor2
+    N_phi_base = pi * n_factor2
+    return M_theta_base, M_phi_base, N_r_base, N_theta_base, N_phi_base
 
 
 def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
@@ -246,17 +312,26 @@ def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
     # internally; use conjugated sphere index so internal fields are consistent.
     m_index = np.conjugate(m_sphere) if inside else n_env
 
-    M_rad, M_the, M_phi = M_odd_array(N, lambda0, d_sphere, m_index, r, theta, phi)
-    N_rad, N_the, N_phi = N_even_array(N, lambda0, d_sphere, m_index, r, theta, phi)
+    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
+        N, lambda0, d_sphere, m_index, r, theta
+    )
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+    M_rad = np.zeros(N, dtype=np.complex128)
+    M_the = cos_phi * M_the_base
+    M_phi = -sin_phi * M_phi_base
+    N_rad = cos_phi * N_r_base
+    N_the = cos_phi * N_the_base
+    N_phi = -sin_phi * N_phi_base
 
     if inside:
-        E_rad = np.sum(scale * (c * M_rad - 1j * d * N_rad))
-        E_the = np.sum(scale * (c * M_the - 1j * d * N_the))
-        E_phi = np.sum(scale * (c * M_phi - 1j * d * N_phi))
+        E_rad = _sum_two_scaled_terms(scale, c, M_rad, 1.0 + 0.0j, d, N_rad, -1.0j)
+        E_the = _sum_two_scaled_terms(scale, c, M_the, 1.0 + 0.0j, d, N_the, -1.0j)
+        E_phi = _sum_two_scaled_terms(scale, c, M_phi, 1.0 + 0.0j, d, N_phi, -1.0j)
     else:
-        E_rad = np.sum(scale * (1j * a * N_rad - b * M_rad))
-        E_the = np.sum(scale * (1j * a * N_the - b * M_the))
-        E_phi = np.sum(scale * (1j * a * N_phi - b * M_phi))
+        E_rad = _sum_two_scaled_terms(scale, a, N_rad, 1.0j, b, M_rad, -1.0 + 0.0j)
+        E_the = _sum_two_scaled_terms(scale, a, N_the, 1.0j, b, M_the, -1.0 + 0.0j)
+        E_phi = _sum_two_scaled_terms(scale, a, N_phi, 1.0j, b, M_phi, -1.0 + 0.0j)
 
         if include_incident:
             Ei_rad, Ei_the, Ei_phi = _incident_e_spherical(lambda0, n_env, r, theta, phi)
@@ -293,18 +368,27 @@ def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
     inside = r < d_sphere / 2
     m_index = np.conjugate(m_sphere) if inside else n_env
 
-    M_rad, M_the, M_phi = M_even_array(N, lambda0, d_sphere, m_index, r, theta, phi)
-    N_rad, N_the, N_phi = N_odd_array(N, lambda0, d_sphere, m_index, r, theta, phi)
+    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
+        N, lambda0, d_sphere, m_index, r, theta
+    )
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+    M_rad = np.zeros(N, dtype=np.complex128)
+    M_the = -sin_phi * M_the_base
+    M_phi = -cos_phi * M_phi_base
+    N_rad = sin_phi * N_r_base
+    N_the = sin_phi * N_the_base
+    N_phi = cos_phi * N_phi_base
 
     if inside:
         m_rel = np.conjugate(m_sphere / n_env)
-        H_rad = m_rel * np.sum(scale * (-d * M_rad - 1j * c * N_rad))
-        H_the = m_rel * np.sum(scale * (-d * M_the - 1j * c * N_the))
-        H_phi = m_rel * np.sum(scale * (-d * M_phi - 1j * c * N_phi))
+        H_rad = m_rel * _sum_two_scaled_terms(scale, d, M_rad, -1.0 + 0.0j, c, N_rad, -1.0j)
+        H_the = m_rel * _sum_two_scaled_terms(scale, d, M_the, -1.0 + 0.0j, c, N_the, -1.0j)
+        H_phi = m_rel * _sum_two_scaled_terms(scale, d, M_phi, -1.0 + 0.0j, c, N_phi, -1.0j)
     else:
-        H_rad = np.sum(scale * (1j * b * N_rad + a * M_rad))
-        H_the = np.sum(scale * (1j * b * N_the + a * M_the))
-        H_phi = np.sum(scale * (1j * b * N_phi + a * M_phi))
+        H_rad = _sum_two_scaled_terms(scale, b, N_rad, 1.0j, a, M_rad, 1.0 + 0.0j)
+        H_the = _sum_two_scaled_terms(scale, b, N_the, 1.0j, a, M_the, 1.0 + 0.0j)
+        H_phi = _sum_two_scaled_terms(scale, b, N_phi, 1.0j, a, M_phi, 1.0 + 0.0j)
 
         if include_incident:
             Hi_rad, Hi_the, Hi_phi = _incident_h_spherical(lambda0, n_env, r, theta, phi)
@@ -313,6 +397,66 @@ def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
             H_phi += Hi_phi
 
     return np.array([H_rad, H_the, -H_phi])
+
+
+def _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
+    """Evaluate electric and magnetic near fields with shared VSH work."""
+    a, b, c, d = abcd
+
+    N = len(a)
+    nn = np.arange(1, N + 1)
+    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
+
+    inside = r < d_sphere / 2
+    m_index = np.conjugate(m_sphere) if inside else n_env
+    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
+        N, lambda0, d_sphere, m_index, r, theta
+    )
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    M_odd_rad = np.zeros(N, dtype=np.complex128)
+    M_odd_the = cos_phi * M_the_base
+    M_odd_phi = -sin_phi * M_phi_base
+    N_even_rad = cos_phi * N_r_base
+    N_even_the = cos_phi * N_the_base
+    N_even_phi = -sin_phi * N_phi_base
+
+    M_even_rad = np.zeros(N, dtype=np.complex128)
+    M_even_the = -sin_phi * M_the_base
+    M_even_phi = -cos_phi * M_phi_base
+    N_odd_rad = sin_phi * N_r_base
+    N_odd_the = sin_phi * N_the_base
+    N_odd_phi = cos_phi * N_phi_base
+
+    if inside:
+        e_rad = _sum_two_scaled_terms(scale, c, M_odd_rad, 1.0 + 0.0j, d, N_even_rad, -1.0j)
+        e_the = _sum_two_scaled_terms(scale, c, M_odd_the, 1.0 + 0.0j, d, N_even_the, -1.0j)
+        e_phi = _sum_two_scaled_terms(scale, c, M_odd_phi, 1.0 + 0.0j, d, N_even_phi, -1.0j)
+
+        m_rel = np.conjugate(m_sphere / n_env)
+        h_rad = m_rel * _sum_two_scaled_terms(scale, d, M_even_rad, -1.0 + 0.0j, c, N_odd_rad, -1.0j)
+        h_the = m_rel * _sum_two_scaled_terms(scale, d, M_even_the, -1.0 + 0.0j, c, N_odd_the, -1.0j)
+        h_phi = m_rel * _sum_two_scaled_terms(scale, d, M_even_phi, -1.0 + 0.0j, c, N_odd_phi, -1.0j)
+    else:
+        e_rad = _sum_two_scaled_terms(scale, a, N_even_rad, 1.0j, b, M_odd_rad, -1.0 + 0.0j)
+        e_the = _sum_two_scaled_terms(scale, a, N_even_the, 1.0j, b, M_odd_the, -1.0 + 0.0j)
+        e_phi = _sum_two_scaled_terms(scale, a, N_even_phi, 1.0j, b, M_odd_phi, -1.0 + 0.0j)
+        h_rad = _sum_two_scaled_terms(scale, b, N_odd_rad, 1.0j, a, M_even_rad, 1.0 + 0.0j)
+        h_the = _sum_two_scaled_terms(scale, b, N_odd_the, 1.0j, a, M_even_the, 1.0 + 0.0j)
+        h_phi = _sum_two_scaled_terms(scale, b, N_odd_phi, 1.0j, a, M_even_phi, 1.0 + 0.0j)
+
+        if include_incident:
+            e_i = _incident_e_spherical(lambda0, n_env, r, theta, phi)
+            h_i = _incident_h_spherical(lambda0, n_env, r, theta, phi)
+            e_rad += e_i[0]
+            e_the += e_i[1]
+            e_phi += e_i[2]
+            h_rad += h_i[0]
+            h_the += h_i[1]
+            h_phi += h_i[2]
+
+    return np.array([e_rad, e_the, -e_phi]), np.array([h_rad, h_the, -h_phi])
 
 
 def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
@@ -407,9 +551,8 @@ def eh_near(
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    evaluator = lambda rr, tt, pp: (  # noqa: E731
-        _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident),
-        _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident),
+    evaluator = lambda rr, tt, pp: _eh_near_abcd(  # noqa: E731
+        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
     )
     return _vectorized_field_pair_eval(evaluator, r, theta, phi)
 
