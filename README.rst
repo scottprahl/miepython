@@ -153,7 +153,7 @@ Citation
 
 If you use ``laserbeamsize`` in academic, instructional, or applied technical work, please cite:
 
-Prahl, S. (2026). *miepython: Pure python calculation of Mie scattering* (Version 3.0.5) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.7949263
+Prahl, S. (2026). *miepython: Pure python calculation of Mie scattering* (Version 3.1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.7949263
 
 BibTeX:
 
@@ -165,7 +165,7 @@ BibTeX:
       url     = {https://github.com/scottprahl/miepython},
       doi     = {10.5281/zenodo.7949263},
       year    = {2026},
-      version = {3.0.5},
+      version = {3.1.0},
       publisher = {Zenodo}
     }
 

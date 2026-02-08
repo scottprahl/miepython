@@ -2,9 +2,9 @@ cff-version: 1.2.0
 type: software
 message: If you use this software, please cite it as below.
 title: 'miepython: Pure python calculation of Mie scattering'
-version: 3.0.5
+version: 3.1.0
 doi: 10.5281/zenodo.7949264
-date-released: '2026-01-03'
+date-released: '2026-02-08'
 url: https://doi.org/10.5281/zenodo.7949264
 repository-code: https://github.com/scottprahl/miepython
 license: MIT
@@ -33,7 +33,7 @@ preferred-citation:
   type: software
   title: 'miepython: Pure python calculation of Mie scattering'
   year: 2026
-  version: 3.0.5
+  version: 3.1.0
   doi: 10.5281/zenodo.7949264
   url: https://doi.org/10.5281/zenodo.7949264
   authors:
