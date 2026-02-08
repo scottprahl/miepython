@@ -59,7 +59,6 @@ help:
 	@echo "  test           - Run pytest on python files"
 	@echo "  note-test      - Test all notebooks for errors"
 	@echo ""
-	@echo ""
 	@echo "Packaging Targets:"
 	@echo "  rcheck         - Distribution release checks"
 	@echo "  manifest-check - Validate MANIFEST"
