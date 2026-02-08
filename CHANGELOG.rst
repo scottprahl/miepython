@@ -1,7 +1,7 @@
 Changelog
 =========
 
-3.0.6 (02/07/2026)
+3.1.0 (02/07/2026)
 -------------------
 *   add near-field E and H field APIs, fix boundary continuity/medium handling, and expand validation tests
 *   add field calculation utilities, field module cleanup/help text improvements, and precomputed E/H reference data (via scattnlay)
