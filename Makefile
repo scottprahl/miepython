@@ -6,16 +6,12 @@ PY_VERSION      ?= 3.12
 VENV            ?= .venv
 PY              := /opt/homebrew/opt/python@$(PY_VERSION)/bin/python$(PY_VERSION)
 PYTHON          := $(VENV)/bin/python
-SERVE_PY        := $(abspath $(PYTHON))
-PIP             := $(VENV)/bin/pip
 PYPROJECT       := pyproject.toml
 
-BUILD_APPS      := lab
 DOCS_DIR        := docs
 HTML_DIR        := $(DOCS_DIR)/_build/html
 
 ROOT            := $(abspath .)
-PIP_CACHE_DIR   := $(ROOT)/.cache/pip
 OUT_ROOT        := $(ROOT)/_site
 OUT_DIR         := $(OUT_ROOT)/$(PACKAGE)
 STAGE_DIR       := $(ROOT)/.lite_src
@@ -43,7 +39,6 @@ YAMLLINT        := $(PYTHON) -m yamllint
 
 PYTEST_OPTS     := -q
 SPHINX_OPTS     := -T -E -b html -d $(DOCS_DIR)/_build/doctrees -D language=en
-NOTEBOOK_RUN    := $(PYTEST) --verbose tests/all_test_notebooks.py
 
 .PHONY: help
 help:
@@ -64,6 +59,7 @@ help:
 	@echo "  manifest-check - Validate MANIFEST"
 	@echo "  pylint-check   - Same as lint above"
 	@echo "  pyroma-check   - Validate overall packaging"
+	@echo "  black-check    - Check formatting with black"
 	@echo "  rst-check      - Validate all RST files"
 	@echo "  ruff-check     - Lint all .py and .ipynb files"
 	@echo "  yaml-check     - Validate YAML files"
@@ -89,10 +85,9 @@ $(VENV)/.ready: Makefile $(PYPROJECT)
 	@if [ ! -d "$(VENV)" ]; then \
 		"$(PY)" -m venv "$(VENV)"; \
 	fi
-	@mkdir -p "$(PIP_CACHE_DIR)"
-	@PIP_CACHE_DIR="$(PIP_CACHE_DIR)" $(PYTHON) -m pip -q install --upgrade pip wheel
+	@$(PYTHON) -m pip -q install --upgrade pip wheel
 	@echo "==> Installing miepython + dev extras"
-	@PIP_CACHE_DIR="$(PIP_CACHE_DIR)" $(PYTHON) -m pip install -e ".[dev,docs,lite]"
+	@$(PYTHON) -m pip install -e ".[dev,docs,lite]"
 	@touch "$(VENV)/.ready"
 	@echo "✅ venv ready"
 
@@ -101,31 +96,31 @@ venv: $(VENV)/.ready
 	@:
 
 .PHONY: dist
-dist: $(VENV)/.ready
+dist: venv
 	$(PYTHON) -m build
 
 .PHONY: readme_images
-readme_images: $(VENV)/.ready
+readme_images: venv
 	@echo "==> Generating README/example SVG images in docs/images"
 	@$(PYTHON) docs/images/make_readme_images.py
 	
 .PHONY: test
-test: $(VENV)/.ready
+test: venv
 	$(PYTEST) $(PYTEST_OPTS) tests
 
 .PHONY: note-test
-note-test: $(VENV)/.ready
+note-test: venv
 	$(PYTEST) --verbose tests/test_all_notebooks.py
 	@echo "✅ Notebook check complete"
 
 .PHONY: html
-html: $(VENV)/.ready
+html: venv
 	@mkdir -p "$(HTML_DIR)"
 	$(SPHINX) $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
 	@command -v open >/dev/null 2>&1 && open "$(HTML_DIR)/index.html" || true
 
 .PHONY: pylint-check
-pylint-check: $(VENV)/.ready
+pylint-check: venv
 	-@$(PYLINT) miepython/__init__.py
 	-@$(PYLINT) miepython/bessel.py
 	-@$(PYLINT) miepython/core.py
@@ -143,14 +138,14 @@ pylint-check: $(VENV)/.ready
 	-@$(PYLINT) .github/scripts/update_citation.py
 
 .PHONY: yaml-check
-yaml-check: $(VENV)/.ready
-	-@$(PYTHON) -m yamllint .github/workflows/citation.yaml
-	-@$(PYTHON) -m yamllint .github/workflows/pypi.yaml
-	-@$(PYTHON) -m yamllint .github/workflows/test.yaml
-	-@$(PYTHON) -m yamllint .readthedocs.yaml
+yaml-check: venv
+	-@$(YAMLLINT) .github/workflows/citation.yaml
+	-@$(YAMLLINT) .github/workflows/pypi.yaml
+	-@$(YAMLLINT) .github/workflows/test.yaml
+	-@$(YAMLLINT) .readthedocs.yaml
 
 .PHONY: rst-check
-rst-check: $(VENV)/.ready
+rst-check: venv
 	-@$(RSTCHECK) README.rst
 	-@$(RSTCHECK) CHANGELOG.rst
 	-@$(RSTCHECK) $(DOCS_DIR)/index.rst
@@ -158,15 +153,19 @@ rst-check: $(VENV)/.ready
 	-@$(RSTCHECK) --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
 
 .PHONY: ruff-check
-ruff-check: $(VENV)/.ready
+ruff-check: venv
 	$(RUFF) check
 
+.PHONY: black-check
+black-check: venv
+	$(BLACK) --check .
+
 .PHONY: manifest-check
-manifest-check: $(VENV)/.ready
+manifest-check: venv
 	$(CHECKMANIFEST)
 
 .PHONY: pyroma-check
-pyroma-check: $(VENV)/.ready
+pyroma-check: venv
 	$(PYROMA) -d .
 
 .PHONY: rcheck
@@ -174,6 +173,7 @@ rcheck:
 	@echo "Running all release checks..."
 	@$(MAKE) realclean
 	@$(MAKE) ruff-check
+	@$(MAKE) black-check
 	@$(MAKE) pylint-check
 	@$(MAKE) rst-check
 	@$(MAKE) manifest-check
@@ -186,7 +186,7 @@ rcheck:
 	@echo "✅ Release checks complete"
 	
 .PHONY: lite
-lite: $(VENV)/.ready $(LITE_CONFIG)
+lite: venv $(LITE_CONFIG)
 	@echo "==> Building package wheel for PyOdide"
 	@$(PYTHON) -m build
 
@@ -243,7 +243,7 @@ lite: $(VENV)/.ready $(LITE_CONFIG)
 	@echo "✅ Build complete -> $(OUT_DIR)"
 
 .PHONY: lite-serve
-lite-serve: $(VENV)/.ready
+lite-serve: venv
 	@test -d "$(OUT_DIR)" || { echo "❌ run 'make lite' first"; exit 1; }
 	@echo "Serving at"
 	@echo "   http://$(HOST):$(PORT)/$(PACKAGE)/?disableCache=1"
@@ -287,7 +287,7 @@ lite-deploy:
 	  fi
 
 .PHONY: kernelspec
-kernelspec: $(VENV)/.ready
+kernelspec: venv
 	@$(PYTHON) -m ipykernel install --user \
 	  --name miepython-venv \
 	  --display-name "Python (miepython venv)" >/dev/null
@@ -309,7 +309,6 @@ clean:
 	@find . -name '.DS_Store' -type f -delete
 	@find . -name '.ipynb_checkpoints' -type d -prune -exec rm -rf {} +
 	@find . -name '.pytest_cache' -type d -prune -exec rm -rf {} +
-	@find . -name '__pycache__' -type d -prune -exec rm -rf {} +
 	@/bin/rm -rf .cache
 	@/bin/rm -rf .ruff_cache
 	@/bin/rm -rf $(PACKAGE).egg-info
@@ -326,15 +325,12 @@ lite-clean:
 	@/bin/rm -rf ".lite_root"
 	@/bin/rm -rf "$(DOIT_DB)"
 	@/bin/rm -rf "_output"
-	@/bin/rm -rf "_site"
 
 .PHONY: realclean
 realclean: lite-clean clean
 	@echo "==> Deep cleaning: removing venv and deployment worktree"
 #	@git worktree remove "$(WORKTREE)" --force 2>/dev/null || true
-	@/bin/rm -rf .cache
 	@/bin/rm -rf .tmp
 	@/bin/rm -rf "$(WORKTREE)"
 	@/bin/rm -rf "$(VENV)"
-	@/bin/rm -rf "docs/api"
 	@/bin/rm -rf "docs/_templates"
