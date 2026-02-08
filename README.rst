@@ -57,11 +57,13 @@ The library implements the full Mie solution, including:
 - angle-resolved scattering intensities
 - Mie expansion coefficients
 - complex amplitude functions and Mueller matrices
+- E-field and H-field calculations in the near-field around a sphere
 
 The implementation is numerically stable for a wide range of size parameters and refractive indices, including lossy materials and high-index contrasts.
 
-Immediate Use in the Browser
-----------------------------
+
+JupyterLite Implementation
+--------------------------
 
 The entire package can be used **immediately** in a browser — without installation — using the JupyterLite interface:
 
@@ -109,33 +111,10 @@ A typical calculation is straightforward:
 Documentation and Examples
 --------------------------
 
-The full documentation is available as:
+The full documentation is available on ReadTheDocs:
 
-Interactive documentation (JupyterLite):
-    |lite|
-
-Static Jupyter notebooks on ReadTheDocs:
     |docs|
 
-Among other things the documentation discusses:
-
-- **Mathematical formulation of Mie theory**  
-  https://miepython.readthedocs.io/en/latest/01_theory.html
-
-- **Normalization conventions and units**  
-  https://miepython.readthedocs.io/en/latest/02_normalization.html
-
-- **Numerical stability considerations**  
-  https://miepython.readthedocs.io/en/latest/03_stability.html
-
-- **Validation against MIEV0 and other reference implementations**  
-  https://miepython.readthedocs.io/en/latest/04_validation.html
-
-- **Guidelines for parameter choices and truncation order**  
-  https://miepython.readthedocs.io/en/latest/05_truncation.html
-
-- **Physical interpretation, resonances, and comparison plots**  
-  https://miepython.readthedocs.io/en/latest/06_examples.html
 
 Representative results simple examples:
 
@@ -145,6 +124,7 @@ Representative results simple examples:
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/02.svg
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/03.svg
 .. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/04.svg
+.. image:: https://raw.githubusercontent.com/scottprahl/miepython/main/docs/images/05.svg
 
 Performance and Acceleration
 ----------------------------
