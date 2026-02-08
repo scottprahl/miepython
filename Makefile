@@ -15,6 +15,7 @@ DOCS_DIR        := docs
 HTML_DIR        := $(DOCS_DIR)/_build/html
 
 ROOT            := $(abspath .)
+PIP_CACHE_DIR   := $(ROOT)/.cache/pip
 OUT_ROOT        := $(ROOT)/_site
 OUT_DIR         := $(OUT_ROOT)/$(PACKAGE)
 STAGE_DIR       := $(ROOT)/.lite_src
@@ -51,6 +52,7 @@ help:
 	@echo "  html           - Build Sphinx HTML documentation"
 	@echo "  lab            - Start jupyterlab"
 	@echo "  speed          - Quick test of jit and no-jit speeds"
+	@echo "  readme_images  - Regenerate docs/images/*.svg from examples"
 	@echo "  venv           - Create/provision the virtual environment ($(VENV))"
 	@echo ""
 	@echo "Test Targets:"
@@ -88,9 +90,10 @@ $(VENV)/.ready: Makefile $(PYPROJECT)
 	@if [ ! -d "$(VENV)" ]; then \
 		"$(PY)" -m venv "$(VENV)"; \
 	fi
-	@$(PYTHON) -m pip -q install --upgrade pip wheel
+	@mkdir -p "$(PIP_CACHE_DIR)"
+	@PIP_CACHE_DIR="$(PIP_CACHE_DIR)" $(PYTHON) -m pip -q install --upgrade pip wheel
 	@echo "==> Installing miepython + dev extras"
-	@$(PYTHON) -m pip install -e ".[dev,docs,lite]"
+	@PIP_CACHE_DIR="$(PIP_CACHE_DIR)" $(PYTHON) -m pip install -e ".[dev,docs,lite]"
 	@touch "$(VENV)/.ready"
 	@echo "✅ venv ready"
 
@@ -101,6 +104,11 @@ venv: $(VENV)/.ready
 .PHONY: dist
 dist: $(VENV)/.ready
 	$(PYTHON) -m build
+
+.PHONY: readme_images
+readme_images: $(VENV)/.ready
+	@echo "==> Generating README/example SVG images in docs/images"
+	@$(PYTHON) docs/images/make_readme_images.py
 	
 .PHONY: test
 test: $(VENV)/.ready
@@ -208,6 +216,16 @@ lite: $(VENV)/.ready $(LITE_CONFIG)
 		/bin/rm $(STAGE_DIR)/x_*.ipynb; \
 		mkdir -p "$(STAGE_DIR)/examples"; \
 		/bin/cp $(PACKAGE)/examples/*.py "$(STAGE_DIR)/examples"; \
+		if ls docs/data/*.npy 1> /dev/null 2>&1; then \
+			echo "==> Staging near-field reference arrays into $(STAGE_DIR)/data"; \
+			mkdir -p "$(STAGE_DIR)/data"; \
+			/bin/cp docs/data/*.npy "$(STAGE_DIR)/data"; \
+		else \
+			echo "⚠️  No docs/data/*.npy files found (15_2D_fields.ipynb may fail)"; \
+		fi; \
+		if [ -f docs/data/scattnlay_reference_metadata.json ]; then \
+			/bin/cp docs/data/scattnlay_reference_metadata.json "$(STAGE_DIR)/data"; \
+		fi; \
 		echo "==> Clearing outputs from staged notebooks"; \
 		"$(PYTHON)" -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
 	else \
@@ -321,4 +339,3 @@ realclean: lite-clean clean
 	@/bin/rm -rf "$(VENV)"
 	@/bin/rm -rf "docs/api"
 	@/bin/rm -rf "docs/_templates"
-
