@@ -6,8 +6,6 @@ Releasing a new version
 # update the version in miepython/__init__.py
   git commit miepython/__init__.py -m 'update version'
   git push
-  
-# fix version in both __init__.py
 
 # update CHANGELOG.rst
   git shortlog 3.0.0..HEAD

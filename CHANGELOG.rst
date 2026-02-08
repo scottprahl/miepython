@@ -1,15 +1,16 @@
 Changelog
 =========
 
-3.0.6 (xx/xx/2026)
+3.0.6 (02/07/2026)
 -------------------
-*   put info from requirements files into pyproject.toml
-*   fix testing badge
-*   update 11_performance.ipynb to work with jupyterlite
-*   do not install numba when using jupyterlite
-*   clean up docs/conf.py
-*   move jupyter_lite_config.json out of root repo level
-*   modernize .readthedocs.yaml
+*   add near-field E and H field APIs, fix boundary continuity/medium handling, and expand validation tests
+*   add field calculation utilities, field module cleanup/help text improvements, and precomputed E/H reference data (via scattnlay)
+*   improve performance: ~20% speedups in Mie backends and faster near-field calculations; add speed benchmarks
+*   documentation updates: new/updated notebooks (boundary conditions, 2D fields, performance), clarified conventions
+*   refresh docs/README visuals and assets; add custom CSS for docs images
+*   jupyterlite/RTD updates: config moves, build modernizations, and avoid numba install in JupyterLite
+*   packaging/CI: pyproject and requirements cleanup, improved PyPI workflow, updated citation automation/config
+*   misc cleanups: remove unused files/images, minor typos, Makefile and docs config tidy-ups, CITATION.cff refresh
 
 3.0.5 (1/2/2026)
 -------------------
