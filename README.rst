@@ -159,7 +159,7 @@ BibTeX:
 
 .. code-block:: bibtex
 
-    @software{prahl_miepython_2025,
+    @software{prahl_miepython_2026,
       author  = {Scott Prahl},
       title   = {{miepython}: A Python library for Mie scattering calculations},
       url     = {https://github.com/scottprahl/miepython},
