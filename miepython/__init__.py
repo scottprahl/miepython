@@ -67,7 +67,52 @@ from ._backend import single_sphere, small_conducting_sphere, small_sphere
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
-from .field import e_far, e_near, eh_near, e_near_cartesian, h_near, h_near_cartesian, eh_near_cartesian
+
+_FIELD_IMPORT_ERROR = None
+
+def _raise_field_import_error():
+    """Raise a consistent error when optional near-field dependencies are missing."""
+    raise ModuleNotFoundError(
+        "Near-field functions require the optional dependency 'scipy'. "
+        "Install miepython with SciPy support to use e_far/e_near/h_near/eh_near."
+    ) from _FIELD_IMPORT_ERROR
+
+
+def _missing_field_function(name):
+    """Create a placeholder near-field function when SciPy is unavailable."""
+
+    def _missing(*_args, **_kwargs):
+        _raise_field_import_error()
+
+    _missing.__name__ = name
+    _missing.__qualname__ = name
+    _missing.__doc__ = f"{name} requires the optional dependency 'scipy'."
+    return _missing
+
+
+try:
+    from . import field as _field
+except ModuleNotFoundError as exc:
+    missing_module = str(getattr(exc, "name", "") or "")
+    if missing_module.startswith("scipy"):
+        _FIELD_IMPORT_ERROR = exc
+        e_far = _missing_field_function("e_far")
+        e_near = _missing_field_function("e_near")
+        h_near = _missing_field_function("h_near")
+        eh_near = _missing_field_function("eh_near")
+        e_near_cartesian = _missing_field_function("e_near_cartesian")
+        h_near_cartesian = _missing_field_function("h_near_cartesian")
+        eh_near_cartesian = _missing_field_function("eh_near_cartesian")
+    else:
+        raise
+else:
+    e_far = _field.e_far
+    e_near = _field.e_near
+    h_near = _field.h_near
+    eh_near = _field.eh_near
+    e_near_cartesian = _field.e_near_cartesian
+    h_near_cartesian = _field.h_near_cartesian
+    eh_near_cartesian = _field.eh_near_cartesian
 
 # functions exposed to the user
 __all__ = (
