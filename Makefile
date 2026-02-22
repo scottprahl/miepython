@@ -177,7 +177,6 @@ lite: $(LITE_CONFIG)
 	@/bin/rm -rf "$(STAGE_DIR)"; mkdir -p "$(STAGE_DIR)"
 	@if ls docs/*.ipynb 1> /dev/null 2>&1; then \
 		/bin/cp docs/*.ipynb "$(STAGE_DIR)"; \
-		/bin/rm $(STAGE_DIR)/x_*.ipynb; \
 		mkdir -p "$(STAGE_DIR)/examples"; \
 		/bin/cp $(PACKAGE)/examples/*.py "$(STAGE_DIR)/examples"; \
 		if ls docs/data/*.npy 1> /dev/null 2>&1; then \
