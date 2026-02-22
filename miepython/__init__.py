@@ -70,6 +70,7 @@ from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
 
 _FIELD_IMPORT_ERROR = None
 
+
 def _raise_field_import_error():
     """Raise a consistent error when optional near-field dependencies are missing."""
     raise ModuleNotFoundError(
