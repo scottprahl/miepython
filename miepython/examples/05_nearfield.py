@@ -11,7 +11,6 @@ from matplotlib.patches import Circle
 
 from miepython.field import eh_near_cartesian
 
-
 lambda0 = 1.0
 d_sphere = 2.0
 radius = d_sphere / 2.0
@@ -61,4 +60,3 @@ for ax, arr, title, cmap in (
 fig.suptitle(r"Near fields for $d=2,\ m=1.5-0.1j,\ \lambda_0=1,\ n_{env}=1$")
 # plt.savefig("05.svg", format="svg", bbox_inches="tight")
 # plt.show()
-
