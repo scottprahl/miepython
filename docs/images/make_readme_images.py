@@ -21,7 +21,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-
 EXAMPLES_DIR = ROOT / "miepython" / "examples"
 IMAGES_DIR = ROOT / "docs" / "images"
 
@@ -63,4 +62,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

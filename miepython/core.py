@@ -36,7 +36,6 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 import numpy as np
 from miepython import an_bn, cn_dn, single_sphere, _S1_S2
 
-
 # not really needed but included for clarity
 __all__ = (
     "intensities",

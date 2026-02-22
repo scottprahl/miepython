@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name
 """Run all the scripts in the examples directory."""
+
 import importlib
 import time
 import sys

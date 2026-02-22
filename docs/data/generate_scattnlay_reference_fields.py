@@ -25,7 +25,6 @@ from pathlib import Path
 import numpy as np
 from scattnlay import fieldnlay, scattnlay
 
-
 SCATTNLAY_COMMIT = "211fc8d2168deff500b67042cea952fc74c84b64"
 
 
@@ -184,10 +183,7 @@ def main() -> None:
             "files": {"X": fx, "Z": fz, "E": fe, "H": fh},
         }
 
-        print(
-            f"[{case}] wrote {fx}, {fz}, {fe}, {fh}; "
-            f"max|E|={np.max(e_abs):.6g}, max|H|={np.max(h_abs):.6g}"
-        )
+        print(f"[{case}] wrote {fx}, {fz}, {fe}, {fh}; " f"max|E|={np.max(e_abs):.6g}, max|H|={np.max(h_abs):.6g}")
 
     meta_path = data_dir / "scattnlay_reference_metadata.json"
     meta_path.write_text(json.dumps(metadata, indent=2))
