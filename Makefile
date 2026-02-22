@@ -299,3 +299,5 @@ realclean: lite-clean clean
 	@/bin/rm -rf "$(WORKTREE)"
 	@/bin/rm -rf "$(VENV)"
 	@/bin/rm -rf "docs/_templates"
+	@/bin/rm -r uv.lock
+
