@@ -13,7 +13,14 @@ from scipy.special import spherical_jn, spherical_yn, jv, yv
 
 os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
-from miepython.bessel import *
+from miepython.bessel import (
+    d_riccati_bessel_h1,
+    d_riccati_bessel_h2,
+    d_riccati_bessel_jn,
+    riccati_bessel_h1,
+    riccati_bessel_h2,
+    riccati_bessel_jn,
+)
 from miepython.util import cs
 
 
@@ -461,9 +468,9 @@ class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bt, 10))
 
         self.assertAlmostEqual(qsca, qsca_wisc, delta=1e-5)
-        for n in range(len(a)):
-            self.assertAlmostEqual(a[n].real, at[n].real, delta=0.00001)
-            self.assertAlmostEqual(a[n].imag, at[n].imag, delta=0.00001)
+        for n, a_n in enumerate(a):
+            self.assertAlmostEqual(a_n.real, at[n].real, delta=0.00001)
+            self.assertAlmostEqual(a_n.imag, at[n].imag, delta=0.00001)
             self.assertAlmostEqual(b[n].real, bt[n].real, delta=0.00001)
             self.assertAlmostEqual(b[n].imag, bt[n].imag, delta=0.00001)
 
@@ -497,9 +504,9 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
 
         self.assertAlmostEqual(qsca, qsca_wisc, delta=1e-5)
         self.assertAlmostEqual(qext, qext_wisc, delta=1e-5)
-        for n in range(len(a)):
-            self.assertAlmostEqual(a[n].real, at[n].real, delta=0.00000001)
-            self.assertAlmostEqual(a[n].imag, at[n].imag, delta=0.00000001)
+        for n, a_n in enumerate(a):
+            self.assertAlmostEqual(a_n.real, at[n].real, delta=0.00000001)
+            self.assertAlmostEqual(a_n.imag, at[n].imag, delta=0.00000001)
             self.assertAlmostEqual(b[n].real, bt[n].real, delta=0.00000001)
             self.assertAlmostEqual(b[n].imag, bt[n].imag, delta=0.00000001)
 

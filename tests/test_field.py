@@ -26,7 +26,7 @@ def test_e_near_vs_e_far(m_sphere, n_env, r, d_sphere):
     phi = np.radians(45)
 
     # Compute near and far fields
-    Er, Etheta, Ephi = e_near(
+    _Er, Etheta, Ephi = e_near(
         lambda0,
         d_sphere,
         m_sphere,
@@ -36,7 +36,7 @@ def test_e_near_vs_e_far(m_sphere, n_env, r, d_sphere):
         phi,
         include_incident=False,
     )
-    Fr, Ftheta, Fphi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+    _Fr, Ftheta, Fphi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
     #    print(abs(Etheta), abs(Ftheta))
 
     assert np.isclose(abs(Etheta), abs(Ftheta), rtol=1e-3), f"θ {Etheta}, far = {Ftheta}"

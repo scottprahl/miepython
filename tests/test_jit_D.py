@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
-from miepython.bessel import *
+from miepython.bessel import d_riccati_bessel_jn, riccati_bessel_jn
 from miepython.util import cs
 
 
@@ -53,7 +53,7 @@ def bohren_D(m, x):
     return D
 
 
-def basic_D(m, x, terms=10):
+def basic_D(m, x):
     # Riccati-Bessel functions at x and mx
     mx = x * m
     nstop = int(x + 4 * (x ** (1 / 3)) + 2)

@@ -1,14 +1,32 @@
+"""Regression tests for spherical and Riccati-Bessel helper functions."""
+
 import unittest
 import numpy as np
-from miepython.bessel import *
+from miepython.bessel import (
+    d_riccati_bessel_h1,
+    d_riccati_bessel_h2,
+    d_riccati_bessel_jn,
+    d_spherical_h1,
+    d_spherical_h2,
+    d_spherical_jn,
+    riccati_bessel_h1,
+    riccati_bessel_h2,
+    riccati_bessel_jn,
+    spherical_h1,
+    spherical_h2,
+)
 
 
 class TestBesselFunctions(unittest.TestCase):
+    """Validate Bessel-related function values against reference data."""
+
     def setUp(self):
+        """Set a shared complex argument and numerical tolerance."""
         self.z = 1.5 - 0.5j
         self.tolerance = 1e-5
 
     def test_spherical_h1(self):
+        """Check spherical Hankel function of the first kind."""
         # Expected values from WolframAlpha
         expected = [
             1.01008 + 0.258943j,
@@ -23,6 +41,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_spherical_h2(self):
+        """Check spherical Hankel function of the second kind."""
         # Expected values from WolframAlpha
         expected = [
             0.354426 + 0.146745j,
@@ -37,6 +56,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_riccati_bessel_jn(self):
+        """Check Riccati-Bessel j_n values."""
         # Expected values from WolframAlpha
         expected = [
             1.1248 - 0.0368608j,
@@ -51,6 +71,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_riccati_bessel_h1(self):
+        """Check Riccati-Bessel h_n^(1) values."""
         # Expected values from WolframAlpha
         expected = [
             1.64459 - 0.116626j,
@@ -65,6 +86,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_riccati_bessel_h2(self):
+        """Check Riccati-Bessel h_n^(2) values."""
         # Expected values from WolframAlpha
         expected = [
             0.605011 + 0.0429043j,
@@ -79,6 +101,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_spherical_jn(self):
+        """Check derivatives of spherical Bessel j_n."""
         # Expected values from WolframAlpha
         expected = [
             -0.424882 + 0.0696702j,
@@ -93,6 +116,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_spherical_h1(self):
+        """Check derivatives of spherical Hankel h_n^(1)."""
         # Expected values from WolframAlpha
         expected = [
             -0.813202 + 0.652698j,
@@ -107,6 +131,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_spherical_h2(self):
+        """Check derivatives of spherical Hankel h_n^(2)."""
         # Expected values from WolframAlpha
         expected = [
             -0.0365618 - 0.513358j,
@@ -121,6 +146,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_riccati_bessel_jn(self):
+        """Check derivatives of Riccati-Bessel j_n."""
         # Expected values from WolframAlpha
         expected = [
             0.0797651 + 0.51979j,
@@ -135,6 +161,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_riccati_bessel_h1(self):
+        """Check derivatives of Riccati-Bessel h_n^(1)."""
         # Expected values from WolframAlpha
         expected = [
             0.116626 + 1.64459j,
@@ -149,6 +176,7 @@ class TestBesselFunctions(unittest.TestCase):
             self.assertAlmostEqual(result.imag, expected[n].imag, delta=self.tolerance)
 
     def test_d_riccati_bessel_h2(self):
+        """Check derivatives of Riccati-Bessel h_n^(2)."""
         # Expected values from WolframAlpha
         expected = [
             0.0429043 - 0.605011j,
@@ -164,7 +192,10 @@ class TestBesselFunctions(unittest.TestCase):
 
 
 class TestAsymptotic(unittest.TestCase):
+    """Validate large-argument asymptotic behavior."""
+
     def setUp(self):
+        """Set a large argument for asymptotic comparisons."""
         self.z = 1000
         self.tolerance = 1e-5
 
@@ -176,6 +207,7 @@ class TestAsymptotic(unittest.TestCase):
     #             self.assertAlmostEqual(result.imag, expected.imag, delta=self.tolerance)
 
     def test_spherical_h1(self):
+        """Check h_n^(1) against the large-argument asymptotic form."""
         expected = np.exp(1j * self.z) / (1j * self.z)
         for n in range(1, 4):
             expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
