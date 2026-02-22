@@ -1,12 +1,15 @@
 PACKAGE         := miepython
 GITHUB_USER     := scottprahl
 
-# -------- venv config --------
-PY_VERSION      ?= 3.12
+PY_VERSION      ?= 3.14
+UV              ?= uv
 VENV            ?= .venv
-PY              := /opt/homebrew/opt/python@$(PY_VERSION)/bin/python$(PY_VERSION)
-PYTHON          := $(VENV)/bin/python
 PYPROJECT       := pyproject.toml
+UV_EXTRAS       := --extra dev --extra docs --extra lite
+UV_SYNC_ARGS    := --python $(PY_VERSION) $(UV_EXTRAS)
+RUN             := $(UV) run $(UV_EXTRAS)
+RM              ?= rm -f
+RMR             ?= rm -rf
 
 DOCS_DIR        := docs
 HTML_DIR        := $(DOCS_DIR)/_build/html
@@ -27,18 +30,11 @@ REMOTE          := origin
 HOST            := 127.0.0.1
 PORT            := 8000
 
-PYTEST          := $(VENV)/bin/pytest
-PYLINT          := $(VENV)/bin/pylint
-SPHINX          := $(VENV)/bin/sphinx-build
-RUFF            := $(VENV)/bin/ruff
-BLACK           := $(VENV)/bin/black
-CHECKMANIFEST   := $(VENV)/bin/check-manifest
-PYROMA          := $(PYTHON) -m pyroma
-RSTCHECK        := $(PYTHON) -m rstcheck
-YAMLLINT        := $(PYTHON) -m yamllint
-
 PYTEST_OPTS     := -q
 SPHINX_OPTS     := -T -E -b html -d $(DOCS_DIR)/_build/doctrees -D language=en
+PYLINT_TARGETS  := miepython/*.py tests/*.py .github/scripts/update_citation.py
+YAML_TARGETS    := .github/workflows/citation.yaml .github/workflows/pypi.yaml .github/workflows/test.yaml .readthedocs.yaml
+RST_TARGETS     := README.rst CHANGELOG.rst $(DOCS_DIR)/index.rst $(DOCS_DIR)/changelog.rst
 
 .PHONY: help
 help:
@@ -48,7 +44,7 @@ help:
 	@echo "  lab            - Start jupyterlab"
 	@echo "  speed          - Quick test of jit and no-jit speeds"
 	@echo "  readme_images  - Regenerate docs/images/*.svg from examples"
-	@echo "  venv           - Create/provision the virtual environment ($(VENV))"
+	@echo "  sync           - Sync uv environment with dev/docs/lite extras"
 	@echo ""
 	@echo "Test Targets:"
 	@echo "  test           - Run pytest on python files"
@@ -74,99 +70,64 @@ help:
 	@echo "  lite-clean     - Remove JupyterLite outputs"
 	@echo "  realclean      - clean + remove $(VENV)"
 
-# venv bootstrap
-$(VENV)/.ready: Makefile $(PYPROJECT)
-	@echo "==> Ensuring venv at $(VENV) using $(PY)"
-	@if [ ! -x "$(PY)" ]; then \
-		echo "❌ Homebrew Python $(PY_VERSION) not found at $(PY)"; \
-		echo "   Try: brew install python@$(PY_VERSION)"; \
-		exit 1; \
-	fi
-	@if [ ! -d "$(VENV)" ]; then \
-		"$(PY)" -m venv "$(VENV)"; \
-	fi
-	@$(PYTHON) -m pip -q install --upgrade pip wheel
-	@echo "==> Installing miepython + dev extras"
-	@$(PYTHON) -m pip install -e ".[dev,docs,lite]"
-	@touch "$(VENV)/.ready"
-	@echo "✅ venv ready"
-
 .PHONY: venv
-venv: $(VENV)/.ready
-	@:
+venv: $(PYPROJECT)
+	@echo "==> Syncing environment with uv"
+	@$(UV) sync $(UV_SYNC_ARGS)
+	@echo "✅ Environment synced"
 
 .PHONY: dist
-dist: venv
-	$(PYTHON) -m build
+dist:
+	$(RUN) python -m build
 
 .PHONY: readme_images
-readme_images: venv
+readme_images:
 	@echo "==> Generating README/example SVG images in docs/images"
-	@$(PYTHON) docs/images/make_readme_images.py
+	@$(RUN) python docs/images/make_readme_images.py
 	
 .PHONY: test
-test: venv
-	$(PYTEST) $(PYTEST_OPTS) tests
+test:
+	$(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
 
 .PHONY: note-test
-note-test: venv
-	$(PYTEST) --verbose tests/test_all_notebooks.py
+note-test:
+	$(RUN) pytest --verbose tests/test_all_notebooks.py
 	@echo "✅ Notebook check complete"
 
 .PHONY: html
-html: venv
+html:
 	@mkdir -p "$(HTML_DIR)"
-	$(SPHINX) $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
+	$(RUN) sphinx-build $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
 	@command -v open >/dev/null 2>&1 && open "$(HTML_DIR)/index.html" || true
 
 .PHONY: pylint-check
-pylint-check: venv
-	-@$(PYLINT) miepython/__init__.py
-	-@$(PYLINT) miepython/bessel.py
-	-@$(PYLINT) miepython/core.py
-	-@$(PYLINT) miepython/mie_jit.py
-	-@$(PYLINT) miepython/mie_nojit.py
-	-@$(PYLINT) miepython/monte_carlo.py
-	-@$(PYLINT) miepython/rayleigh.py
-	-@$(PYLINT) miepython/util.py
-	-@$(PYLINT) miepython/vsh.py
-	-@$(PYLINT) tests/test_all_examples.py
-	-@$(PYLINT) tests/test_all_notebooks.py
-	-@$(PYLINT) tests/test_jit.py
-	-@$(PYLINT) tests/test_nojit.py
-	-@$(PYLINT) docs/conf.py
-	-@$(PYLINT) .github/scripts/update_citation.py
+pylint-check:
+	@$(RUN) pylint $(PYLINT_TARGETS)
 
 .PHONY: yaml-check
-yaml-check: venv
-	-@$(YAMLLINT) .github/workflows/citation.yaml
-	-@$(YAMLLINT) .github/workflows/pypi.yaml
-	-@$(YAMLLINT) .github/workflows/test.yaml
-	-@$(YAMLLINT) .readthedocs.yaml
+yaml-check:
+	@$(RUN) yamllint $(YAML_TARGETS)
 
 .PHONY: rst-check
-rst-check: venv
-	-@$(RSTCHECK) README.rst
-	-@$(RSTCHECK) CHANGELOG.rst
-	-@$(RSTCHECK) $(DOCS_DIR)/index.rst
-	-@$(RSTCHECK) $(DOCS_DIR)/changelog.rst
-	-@$(RSTCHECK) --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
+rst-check:
+	-@$(RUN) rstcheck $(RST_TARGETS)
+	-@$(RUN) rstcheck --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
 
 .PHONY: ruff-check
-ruff-check: venv
-	$(RUFF) check
+ruff-check:
+	@$(RUN) ruff check
 
 .PHONY: black-check
-black-check: venv
-	$(BLACK) --check .
+black-check:
+	$(RUN) black --check .
 
 .PHONY: manifest-check
-manifest-check: venv
-	$(CHECKMANIFEST)
+manifest-check:
+	$(RUN) check-manifest
 
 .PHONY: pyroma-check
-pyroma-check: venv
-	$(PYROMA) -d .
+pyroma-check:
+	$(RUN) pyroma -d .
 
 .PHONY: rcheck
 rcheck:
@@ -186,9 +147,9 @@ rcheck:
 	@echo "✅ Release checks complete"
 	
 .PHONY: lite
-lite: venv $(LITE_CONFIG)
+lite: $(LITE_CONFIG)
 	@echo "==> Building package wheel for PyOdide"
-	@$(PYTHON) -m build
+	@$(RUN) python -m build
 
 	@echo "==> Checking for .gh-pages worktree"
 	@if [ -d "$(WORKTREE)" ]; then \
@@ -222,17 +183,17 @@ lite: venv $(LITE_CONFIG)
 		else \
 			echo "⚠️  No docs/data/*.npy files found (15_2D_fields.ipynb may fail)"; \
 		fi; \
-		if [ -f docs/data/scattnlay_reference_metadata.json ]; then \
-			/bin/cp docs/data/scattnlay_reference_metadata.json "$(STAGE_DIR)/data"; \
-		fi; \
-		echo "==> Clearing outputs from staged notebooks"; \
-		"$(PYTHON)" -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
-	else \
-		echo "⚠️  No notebooks found in docs/"; \
-	fi
+			if [ -f docs/data/scattnlay_reference_metadata.json ]; then \
+				/bin/cp docs/data/scattnlay_reference_metadata.json "$(STAGE_DIR)/data"; \
+			fi; \
+			echo "==> Clearing outputs from staged notebooks"; \
+			$(RUN) python -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
+		else \
+			echo "⚠️  No notebooks found in docs/"; \
+		fi
 
 	@echo "==> Building JupyterLite"
-	@"$(PYTHON)" -m jupyter lite build \
+	@$(RUN) python -m jupyter lite build \
 		--config="$(LITE_CONFIG)" \
 		--contents="$(STAGE_DIR)" \
 		--output-dir="$(OUT_DIR)"
@@ -243,12 +204,12 @@ lite: venv $(LITE_CONFIG)
 	@echo "✅ Build complete -> $(OUT_DIR)"
 
 .PHONY: lite-serve
-lite-serve: venv
+lite-serve:
 	@test -d "$(OUT_DIR)" || { echo "❌ run 'make lite' first"; exit 1; }
 	@echo "Serving at"
 	@echo "   http://$(HOST):$(PORT)/$(PACKAGE)/?disableCache=1"
 	@echo ""
-	"$(PYTHON)" -m http.server -d "$(OUT_ROOT)" --bind $(HOST) $(PORT)
+	$(RUN) python -m http.server -d "$(OUT_ROOT)" --bind $(HOST) $(PORT)
 
 .PHONY: lite-deploy
 lite-deploy: 
@@ -287,20 +248,20 @@ lite-deploy:
 	  fi
 
 .PHONY: kernelspec
-kernelspec: venv
-	@$(PYTHON) -m ipykernel install --user \
+kernelspec:
+	@$(RUN) python -m ipykernel install --user \
 	  --name miepython-venv \
 	  --display-name "Python (miepython venv)" >/dev/null
 
 .PHONY: lab
 lab: kernelspec
-	@echo "==> Launching JupyterLab using venv ($(PYTHON))"
-	@$(PYTHON) -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
+	@echo "==> Launching JupyterLab using uv environment"
+	@$(RUN) python -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
 
 .PHONY: speed
 speed:
-	-python tests/test_nojit_speed.py
-	-python tests/test_jit_speed.py
+	-$(RUN) python tests/test_nojit_speed.py
+	-$(RUN) python tests/test_jit_speed.py
 
 .PHONY: clean
 clean:
