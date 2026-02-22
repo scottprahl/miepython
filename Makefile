@@ -7,7 +7,9 @@ VENV            ?= .venv
 PYPROJECT       := pyproject.toml
 UV_EXTRAS       := --extra dev --extra docs --extra lite
 UV_SYNC_ARGS    := --python $(PY_VERSION) $(UV_EXTRAS)
-RUN             := $(UV) run $(UV_EXTRAS)
+RUN             := $(UV) run --extra dev
+RUN_DOCS        := $(UV) run --extra docs
+RUN_LITE        := $(UV) run --extra lite
 RM              ?= rm -f
 RMR             ?= rm -rf
 
@@ -34,7 +36,7 @@ PYTEST_OPTS     := -q
 SPHINX_OPTS     := -T -E -b html -d $(DOCS_DIR)/_build/doctrees -D language=en
 PYLINT_TARGETS  := miepython/*.py tests/*.py .github/scripts/update_citation.py
 YAML_TARGETS    := .github/workflows/citation.yaml .github/workflows/pypi.yaml .github/workflows/test.yaml .readthedocs.yaml
-RST_TARGETS     := README.rst CHANGELOG.rst $(DOCS_DIR)/index.rst $(DOCS_DIR)/changelog.rst
+RST_TARGETS     := README.rst CHANGELOG.rst $(DOCS_DIR)/changelog.rst $(DOCS_DIR)/index.rst
 
 .PHONY: help
 help:
@@ -97,7 +99,7 @@ note-test:
 .PHONY: html
 html:
 	@mkdir -p "$(HTML_DIR)"
-	$(RUN) sphinx-build $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
+	$(RUN_DOCS) sphinx-build $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
 	@command -v open >/dev/null 2>&1 && open "$(HTML_DIR)/index.html" || true
 
 .PHONY: pylint-check
@@ -110,8 +112,10 @@ yaml-check:
 
 .PHONY: rst-check
 rst-check:
-	-@$(RUN) rstcheck $(RST_TARGETS)
-	-@$(RUN) rstcheck --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
+	@for rst_file in $(RST_TARGETS); do \
+		$(RUN) rstcheck "$$rst_file"; \
+	done
+	@$(RUN) rstcheck --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
 
 .PHONY: ruff-check
 ruff-check:
@@ -193,7 +197,7 @@ lite: $(LITE_CONFIG)
 		fi
 
 	@echo "==> Building JupyterLite"
-	@$(RUN) python -m jupyter lite build \
+	@$(RUN_LITE) python -m jupyter lite build \
 		--config="$(LITE_CONFIG)" \
 		--contents="$(STAGE_DIR)" \
 		--output-dir="$(OUT_DIR)"

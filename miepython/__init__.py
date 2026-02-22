@@ -69,7 +69,6 @@ from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
 from .field import e_far, e_near, eh_near, e_near_cartesian, h_near, h_near_cartesian, eh_near_cartesian
 
-
 # functions exposed to the user
 __all__ = (
     "intensities",
@@ -93,6 +92,7 @@ __all__ = (
     "single_sphere",
     "small_sphere",
     "small_conducting_sphere",
+    "USE_JIT",
     "D_calc",
     "pi_tau",
     "_S1_S2",
