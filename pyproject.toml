@@ -13,7 +13,7 @@ miepython = ["data/*.txt"]
 name = "miepython"
 authors = [{name = "Scott Prahl", email = "scott.prahl@oit.edu"}]
 description = "Mie scattering of a plane wave by a sphere"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.rst"
 license = "MIT"
 keywords = [
@@ -35,10 +35,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -100,7 +101,7 @@ version = {attr = "miepython.__version__"}
 
 [tool.black]
 line-length = 120
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = ["py310", "py311", "py312", "py313", "py314"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
