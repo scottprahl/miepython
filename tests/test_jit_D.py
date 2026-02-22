@@ -7,7 +7,7 @@
 # pylint: disable=line-too-long
 
 import os
-import unittest
+import pytest
 import numpy as np
 
 os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
@@ -67,7 +67,7 @@ def basic_D(m, x):
     return D
 
 
-class TestD(unittest.TestCase):
+class TestD:
     def test_01_Dn(self):
         m = 1.5
         x = 1
@@ -83,8 +83,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_02_Dn(self):
         m = 1.5
@@ -101,8 +101,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_03_Dn(self):
         m = 1.5
@@ -119,8 +119,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Dt[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Dt[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Dt[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Dt[0].imag, abs=0.00000001)
 
     def test_04_Dn(self):
         m = 1.5 - 0.5j
@@ -137,8 +137,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_05_Dn(self):
         m = 1.5 - 0.5j
@@ -155,8 +155,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_06_Dn(self):
         m = 1.5 - 0.5j
@@ -173,8 +173,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_07_Dn(self):
         m = 1.5 - 15j
@@ -191,8 +191,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_08_Dn(self):
         m = 1.5 - 15j
@@ -209,8 +209,8 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_09_Dn(self):
         m = 1.5 - 15j
@@ -227,17 +227,13 @@ class TestD(unittest.TestCase):
         print(cs(Dt))
         print(cs(Dp))
         for n in range(3):
-            self.assertAlmostEqual(D[0].real, Db[0].real, delta=0.00000001)
-            self.assertAlmostEqual(D[0].imag, Db[0].imag, delta=0.00000001)
+            assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
+            assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_10_Dn(self):
         x = 62
         m = 1.28 - 1.37j
         nstop = 50
         dn = mie.D_calc(m, x, nstop)
-        self.assertAlmostEqual(dn[9].real, 0.004087, delta=0.00001)
-        self.assertAlmostEqual(dn[9].imag, 1.0002620, delta=0.00001)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert dn[9].real == pytest.approx(0.004087, abs=0.00001)
+        assert dn[9].imag == pytest.approx(1.0002620, abs=0.00001)

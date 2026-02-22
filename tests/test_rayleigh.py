@@ -81,7 +81,3 @@ def test_phase_matrix(m, case):
     phase_mie = mie.phase_matrix(m, x, mu)
 
     assert np.allclose(phase_ray, phase_mie, atol=TOLERANCE), f"Phase matrix mismatch for {case}"
-
-
-if __name__ == "__main__":
-    pytest.main()

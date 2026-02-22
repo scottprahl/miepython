@@ -7,7 +7,7 @@
 # pylint: disable=line-too-long
 
 import os
-import unittest
+import pytest
 import numpy as np
 from scipy.special import spherical_jn, spherical_yn, jv, yv
 from miepython.bessel import (
@@ -232,7 +232,7 @@ def basic_abcd(m, x, terms=10):
     return a, b, c, d
 
 
-class Test1(unittest.TestCase):
+class Test1:
     def test_09an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
         m = 8.9 - 0.69j
@@ -264,14 +264,14 @@ class Test1(unittest.TestCase):
             print("pyscat   ", cs(bp[0]))
             print("formulas ", cs(bt[0]))
 
-            self.assertAlmostEqual(a[0].real, a1[n].real, delta=1e-3)
-            self.assertAlmostEqual(a[0].imag, a1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(b[0].real, b1[n].real, delta=1e-3)
-            self.assertAlmostEqual(b[0].imag, b1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(at[0].real, a1[n].real, delta=1e-3)
-            self.assertAlmostEqual(at[0].imag, a1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(bt[0].real, b1[n].real, delta=1e-3)
-            self.assertAlmostEqual(bt[0].imag, b1[n].imag, delta=1e-3)
+            assert a[0].real == pytest.approx(a1[n].real, abs=1e-3)
+            assert a[0].imag == pytest.approx(a1[n].imag, abs=1e-3)
+            assert b[0].real == pytest.approx(b1[n].real, abs=1e-3)
+            assert b[0].imag == pytest.approx(b1[n].imag, abs=1e-3)
+            assert at[0].real == pytest.approx(a1[n].real, abs=1e-3)
+            assert at[0].imag == pytest.approx(a1[n].imag, abs=1e-3)
+            assert bt[0].real == pytest.approx(b1[n].real, abs=1e-3)
+            assert bt[0].imag == pytest.approx(b1[n].imag, abs=1e-3)
 
     def test_08an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
@@ -306,15 +306,15 @@ class Test1(unittest.TestCase):
         print("pyscat   ", cs(bp))
         print("formulas ", cs(bt))
 
-        self.assertAlmostEqual(qsca, qsca_lowan, delta=1e-3)
-        self.assertAlmostEqual(qext, qext_lowan, delta=1e-3)
-        self.assertAlmostEqual(at[0].real, a1[0].real, delta=1e-3)
-        self.assertAlmostEqual(at[0].imag, a1[0].imag, delta=1e-3)
-        self.assertAlmostEqual(bt[0].real, b1[0].real, delta=1e-3)
-        self.assertAlmostEqual(bt[0].imag, b1[0].imag, delta=1e-3)
+        assert qsca == pytest.approx(qsca_lowan, abs=1e-3)
+        assert qext == pytest.approx(qext_lowan, abs=1e-3)
+        assert at[0].real == pytest.approx(a1[0].real, abs=1e-3)
+        assert at[0].imag == pytest.approx(a1[0].imag, abs=1e-3)
+        assert bt[0].real == pytest.approx(b1[0].real, abs=1e-3)
+        assert bt[0].imag == pytest.approx(b1[0].imag, abs=1e-3)
 
 
-class Test_NonAbsorbing_An_and_Bn(unittest.TestCase):
+class Test_NonAbsorbing_An_and_Bn:
     def test_01an_bn(self):
         m = 1.5
         x = 1
@@ -335,10 +335,10 @@ class Test_NonAbsorbing_An_and_Bn(unittest.TestCase):
         print(cs(bp))
         print(cs(bt))
         for n in range(3):
-            self.assertAlmostEqual(a[0].real, at[0].real, delta=0.00000001)
-            self.assertAlmostEqual(a[0].imag, at[0].imag, delta=0.00000001)
-            self.assertAlmostEqual(b[0].real, bt[0].real, delta=0.00000001)
-            self.assertAlmostEqual(b[0].imag, bt[0].imag, delta=0.00000001)
+            assert a[0].real == pytest.approx(at[0].real, abs=0.00000001)
+            assert a[0].imag == pytest.approx(at[0].imag, abs=0.00000001)
+            assert b[0].real == pytest.approx(bt[0].real, abs=0.00000001)
+            assert b[0].imag == pytest.approx(bt[0].imag, abs=0.00000001)
 
     def test_02an_bn(self):
         m = 1.5
@@ -357,10 +357,10 @@ class Test_NonAbsorbing_An_and_Bn(unittest.TestCase):
         print(cs(bb))
         print(cs(bp))
         for n in range(3):
-            self.assertAlmostEqual(a[0].real, at[0].real, delta=0.00000001)
-            self.assertAlmostEqual(a[0].imag, at[0].imag, delta=0.00000001)
-            self.assertAlmostEqual(b[0].real, bt[0].real, delta=0.00000001)
-            self.assertAlmostEqual(b[0].imag, bt[0].imag, delta=0.00000001)
+            assert a[0].real == pytest.approx(at[0].real, abs=0.00000001)
+            assert a[0].imag == pytest.approx(at[0].imag, abs=0.00000001)
+            assert b[0].real == pytest.approx(bt[0].real, abs=0.00000001)
+            assert b[0].imag == pytest.approx(bt[0].imag, abs=0.00000001)
 
     def test_03an_bn(self):
         m = 1.5
@@ -379,10 +379,10 @@ class Test_NonAbsorbing_An_and_Bn(unittest.TestCase):
         print(cs(bp))
 
         for n in range(3):
-            self.assertAlmostEqual(a[0].real, ab[0].real, delta=0.00000001)
-            self.assertAlmostEqual(a[0].imag, ab[0].imag, delta=0.00000001)
-            self.assertAlmostEqual(b[0].real, bb[0].real, delta=0.00000001)
-            self.assertAlmostEqual(b[0].imag, bb[0].imag, delta=0.00000001)
+            assert a[0].real == pytest.approx(ab[0].real, abs=0.00000001)
+            assert a[0].imag == pytest.approx(ab[0].imag, abs=0.00000001)
+            assert b[0].real == pytest.approx(bb[0].real, abs=0.00000001)
+            assert b[0].imag == pytest.approx(bb[0].imag, abs=0.00000001)
 
     def test_05an_bn(self):
         m = 4.0 / 3.0
@@ -404,11 +404,11 @@ class Test_NonAbsorbing_An_and_Bn(unittest.TestCase):
         print(cs(bb))
         print(cs(bp))
         print(cs(bt))
-        self.assertAlmostEqual(a[0].real, 0.5311058892948411929, delta=0.00000001)
-        self.assertAlmostEqual(a[0].imag, -0.4990314856310943073, delta=0.00000001)
+        assert a[0].real == pytest.approx(0.5311058892948411929, abs=0.00000001)
+        assert a[0].imag == pytest.approx(-0.4990314856310943073, abs=0.00000001)
 
 
-class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
+class Test_Weak_Absorbing_An_and_Bn:
 
     def test_00an_bn(self):
         """See table 4 in Bohren and Huffman."""
@@ -438,10 +438,10 @@ class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bb))
 
         for n in range(5):
-            self.assertAlmostEqual(ab[n].real, a[n].real, delta=1e-5)
-            self.assertAlmostEqual(ab[n].imag, a[n].imag, delta=1e-5)
-            self.assertAlmostEqual(bb[n].real, b[n].real, delta=1e-5)
-            self.assertAlmostEqual(bb[n].imag, b[n].imag, delta=1e-5)
+            assert ab[n].real == pytest.approx(a[n].real, abs=1e-5)
+            assert ab[n].imag == pytest.approx(a[n].imag, abs=1e-5)
+            assert bb[n].real == pytest.approx(b[n].real, abs=1e-5)
+            assert bb[n].imag == pytest.approx(b[n].imag, abs=1e-5)
 
     def test_01an_bn(self):
         # Wiscombe MIEV0 Test Case 9
@@ -467,15 +467,15 @@ class Test_Weak_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bp, 10))
         print(cs(bt, 10))
 
-        self.assertAlmostEqual(qsca, qsca_wisc, delta=1e-5)
+        assert qsca == pytest.approx(qsca_wisc, abs=1e-5)
         for n, a_n in enumerate(a):
-            self.assertAlmostEqual(a_n.real, at[n].real, delta=0.00001)
-            self.assertAlmostEqual(a_n.imag, at[n].imag, delta=0.00001)
-            self.assertAlmostEqual(b[n].real, bt[n].real, delta=0.00001)
-            self.assertAlmostEqual(b[n].imag, bt[n].imag, delta=0.00001)
+            assert a_n.real == pytest.approx(at[n].real, abs=0.00001)
+            assert a_n.imag == pytest.approx(at[n].imag, abs=0.00001)
+            assert b[n].real == pytest.approx(bt[n].real, abs=0.00001)
+            assert b[n].imag == pytest.approx(bt[n].imag, abs=0.00001)
 
 
-class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
+class Test_Medium_Absorbing_An_and_Bn:
 
     def test_01an_bn(self):
         # Wiscombe MIEV0 Test Case 12
@@ -502,13 +502,13 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bp, 10))
         print(cs(bt, 10))
 
-        self.assertAlmostEqual(qsca, qsca_wisc, delta=1e-5)
-        self.assertAlmostEqual(qext, qext_wisc, delta=1e-5)
+        assert qsca == pytest.approx(qsca_wisc, abs=1e-5)
+        assert qext == pytest.approx(qext_wisc, abs=1e-5)
         for n, a_n in enumerate(a):
-            self.assertAlmostEqual(a_n.real, at[n].real, delta=0.00000001)
-            self.assertAlmostEqual(a_n.imag, at[n].imag, delta=0.00000001)
-            self.assertAlmostEqual(b[n].real, bt[n].real, delta=0.00000001)
-            self.assertAlmostEqual(b[n].imag, bt[n].imag, delta=0.00000001)
+            assert a_n.real == pytest.approx(at[n].real, abs=0.00000001)
+            assert a_n.imag == pytest.approx(at[n].imag, abs=0.00000001)
+            assert b[n].real == pytest.approx(bt[n].real, abs=0.00000001)
+            assert b[n].imag == pytest.approx(bt[n].imag, abs=0.00000001)
 
     def test_09an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
@@ -541,14 +541,14 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
             print(cs(bp[0]))
             print(cs(bt[0]))
 
-            self.assertAlmostEqual(a[0].real, a1[n].real, delta=1e-3)
-            self.assertAlmostEqual(a[0].imag, a1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(b[0].real, b1[n].real, delta=1e-3)
-            self.assertAlmostEqual(b[0].imag, b1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(at[0].real, a1[n].real, delta=1e-3)
-            self.assertAlmostEqual(at[0].imag, a1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(bt[0].real, b1[n].real, delta=1e-3)
-            self.assertAlmostEqual(bt[0].imag, b1[n].imag, delta=1e-3)
+            assert a[0].real == pytest.approx(a1[n].real, abs=1e-3)
+            assert a[0].imag == pytest.approx(a1[n].imag, abs=1e-3)
+            assert b[0].real == pytest.approx(b1[n].real, abs=1e-3)
+            assert b[0].imag == pytest.approx(b1[n].imag, abs=1e-3)
+            assert at[0].real == pytest.approx(a1[n].real, abs=1e-3)
+            assert at[0].imag == pytest.approx(a1[n].imag, abs=1e-3)
+            assert bt[0].real == pytest.approx(b1[n].real, abs=1e-3)
+            assert bt[0].imag == pytest.approx(b1[n].imag, abs=1e-3)
 
     def test_08an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
@@ -583,12 +583,12 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bp))
         print(cs(bt))
 
-        self.assertAlmostEqual(qsca, qsca_lowan, delta=1e-3)
-        self.assertAlmostEqual(qext, qext_lowan, delta=1e-3)
-        self.assertAlmostEqual(a[0].real, a1[0].real, delta=1e-3)
-        self.assertAlmostEqual(a[0].imag, a1[0].imag, delta=1e-3)
-        self.assertAlmostEqual(b[0].real, b1[0].real, delta=1e-3)
-        self.assertAlmostEqual(b[0].imag, b1[0].imag, delta=1e-3)
+        assert qsca == pytest.approx(qsca_lowan, abs=1e-3)
+        assert qext == pytest.approx(qext_lowan, abs=1e-3)
+        assert a[0].real == pytest.approx(a1[0].real, abs=1e-3)
+        assert a[0].imag == pytest.approx(a1[0].imag, abs=1e-3)
+        assert b[0].real == pytest.approx(b1[0].real, abs=1e-3)
+        assert b[0].imag == pytest.approx(b1[0].imag, abs=1e-3)
 
     def test_10an_bn(self):
         # From van de Hulst Table 28
@@ -624,24 +624,24 @@ class Test_Medium_Absorbing_An_and_Bn(unittest.TestCase):
         print(cs(bt))
 
         for n in range(3):
-            self.assertAlmostEqual(a[n].real, a1[n].real, delta=1e-3)
-            self.assertAlmostEqual(a[n].imag, a1[n].imag, delta=1e-3)
-            self.assertAlmostEqual(b[n].real, b1[n].real, delta=1e-3)
-            self.assertAlmostEqual(b[n].imag, b1[n].imag, delta=1e-3)
+            assert a[n].real == pytest.approx(a1[n].real, abs=1e-3)
+            assert a[n].imag == pytest.approx(a1[n].imag, abs=1e-3)
+            assert b[n].real == pytest.approx(b1[n].real, abs=1e-3)
+            assert b[n].imag == pytest.approx(b1[n].imag, abs=1e-3)
 
 
-class Test_Strong_Absorbing_An_and_Bn(unittest.TestCase):
+class Test_Strong_Absorbing_An_and_Bn:
     def test_07an_bn(self):
         m = 1.1 - 25j
         x = 2
         a, b = mie.an_bn(m, x, 0)
-        self.assertAlmostEqual(a[1].real, 0.324433578437, delta=0.0001)
-        self.assertAlmostEqual(a[1].imag, -0.465627763266, delta=0.0001)
-        self.assertAlmostEqual(b[1].real, 0.060464399088, delta=0.0001)
-        self.assertAlmostEqual(b[1].imag, 0.236805417045, delta=0.0001)
+        assert a[1].real == pytest.approx(0.324433578437, abs=0.0001)
+        assert a[1].imag == pytest.approx(-0.465627763266, abs=0.0001)
+        assert b[1].real == pytest.approx(0.060464399088, abs=0.0001)
+        assert b[1].imag == pytest.approx(0.236805417045, abs=0.0001)
 
 
-class TestCnDn(unittest.TestCase):
+class TestCnDn:
     """
     Test cn and dn against the results from pyscatt routine..
     """
@@ -666,8 +666,8 @@ class TestCnDn(unittest.TestCase):
         print("formulas ", cs(dt))
 
         for i in range(5):
-            self.assertAlmostEqual(c[i], cw[i], delta=1e-6)
-            self.assertAlmostEqual(d[i], dw[i], delta=1e-6)
+            assert c[i] == pytest.approx(cw[i], abs=1e-6)
+            assert d[i] == pytest.approx(dw[i], abs=1e-6)
 
     def test_02_cn_dn(self):
         m = 1.5 - 0.1j
@@ -689,8 +689,8 @@ class TestCnDn(unittest.TestCase):
         print("formulas ", cs(dt))
 
         for i in range(5):
-            self.assertAlmostEqual(c[i], cw[i], delta=1e-6)
-            self.assertAlmostEqual(d[i], dw[i], delta=1e-6)
+            assert c[i] == pytest.approx(cw[i], abs=1e-6)
+            assert d[i] == pytest.approx(dw[i], abs=1e-6)
 
     def test_03_cn_dn(self):
         m = 1.5 - 1j
@@ -712,11 +712,11 @@ class TestCnDn(unittest.TestCase):
         print("formulas ", cs(dt))
 
         for i in range(5):
-            self.assertAlmostEqual(c[i], cw[i], delta=1e-6)
-            self.assertAlmostEqual(d[i], dw[i], delta=1e-6)
+            assert c[i] == pytest.approx(cw[i], abs=1e-6)
+            assert d[i] == pytest.approx(dw[i], abs=1e-6)
 
 
-class TestAnBnCnDnLengths(unittest.TestCase):
+class TestAnBnCnDnLengths:
     """
     Unit tests for Mie coefficients cn and dn.
     """
@@ -735,20 +735,19 @@ class TestAnBnCnDnLengths(unittest.TestCase):
             c, d = mie.cn_dn(m, x, n_pole)
 
             exp = int(x + 4.05 * x**0.33333 + 2.0) + 1
-            self.assertEqual(len(a), exp, "Length mismatch for a_n with n_pole=0")
-            self.assertEqual(len(b), exp, "Length mismatch for b_n with n_pole=0")
-            self.assertEqual(len(c), exp, "Length mismatch for c_n with n_pole=0")
-            self.assertEqual(len(d), exp, "Length mismatch for d_n with n_pole=0")
-
+            assert len(a) == exp, "Length mismatch for a_n with n_pole=0"
+            assert len(b) == exp, "Length mismatch for b_n with n_pole=0"
+            assert len(c) == exp, "Length mismatch for c_n with n_pole=0"
+            assert len(d) == exp, "Length mismatch for d_n with n_pole=0"
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
 
             expected = int(x + 4.05 * x**0.33333 + 2.0) + 1
 
-            self.assertEqual(len(a), expected, "Length mismatch for a_n with n_pole=0")
-            self.assertEqual(len(b), expected, "Length mismatch for b_n with n_pole=0")
-            self.assertEqual(len(c), expected, "Length mismatch for c_n with n_pole=0")
-            self.assertEqual(len(d), expected, "Length mismatch for d_n with n_pole=0")
+            assert len(a) == expected, "Length mismatch for a_n with n_pole=0"
+            assert len(b) == expected, "Length mismatch for b_n with n_pole=0"
+            assert len(c) == expected, "Length mismatch for c_n with n_pole=0"
+            assert len(d) == expected, "Length mismatch for d_n with n_pole=0"
 
     def test_lengths_npole(self):
         """
@@ -762,17 +761,16 @@ class TestAnBnCnDnLengths(unittest.TestCase):
         for m, x, n_pole in test_cases:
             a, b = mie.an_bn(m, x, n_pole)
             c, d = mie.cn_dn(m, x, n_pole)
-            self.assertEqual(len(a), n_pole, "bad length for a_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(b), n_pole, "bad length for b_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(c), n_pole, "bad length for c_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(d), n_pole, "bad length for d_n when n_pole=%d" % n_pole)
-
+            assert len(a) == n_pole, "bad length for a_n when n_pole=%d" % n_pole
+            assert len(b) == n_pole, "bad length for b_n when n_pole=%d" % n_pole
+            assert len(c) == n_pole, "bad length for c_n when n_pole=%d" % n_pole
+            assert len(d) == n_pole, "bad length for d_n when n_pole=%d" % n_pole
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
-            self.assertEqual(len(a), n_pole, "bad length for a_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(b), n_pole, "bad length for b_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(c), n_pole, "bad length for c_n when n_pole=%d" % n_pole)
-            self.assertEqual(len(d), n_pole, "bad length for d_n when n_pole=%d" % n_pole)
+            assert len(a) == n_pole, "bad length for a_n when n_pole=%d" % n_pole
+            assert len(b) == n_pole, "bad length for b_n when n_pole=%d" % n_pole
+            assert len(c) == n_pole, "bad length for c_n when n_pole=%d" % n_pole
+            assert len(d) == n_pole, "bad length for d_n when n_pole=%d" % n_pole
 
     def test_lengths_npole_arrays(self):
         """
@@ -792,13 +790,13 @@ class TestAnBnCnDnLengths(unittest.TestCase):
 
             expected = 2
 
-            self.assertEqual(len(a), expected, "Length wrong for a with n_pole=%d" % n_pole)
-            self.assertEqual(len(b), expected, "Length wrong for b with n_pole=%d" % n_pole)
-            self.assertEqual(len(c), expected, "Length wrong for c with n_pole=%d" % n_pole)
-            self.assertEqual(len(d), expected, "Length wrong for d with n_pole=%d" % n_pole)
+            assert len(a) == expected, "Length wrong for a with n_pole=%d" % n_pole
+            assert len(b) == expected, "Length wrong for b with n_pole=%d" % n_pole
+            assert len(c) == expected, "Length wrong for c with n_pole=%d" % n_pole
+            assert len(d) == expected, "Length wrong for d with n_pole=%d" % n_pole
 
 
-class TestBoundaryConditions(unittest.TestCase):
+class TestBoundaryConditions:
     def test_boundary_conditions(self):
         """
         Test the calculated c and d coefficients using boundary conditions at the sphere surface.
@@ -875,12 +873,4 @@ class TestBoundaryConditions(unittest.TestCase):
             max_error = max(np.max(error1), np.max(error2), np.max(error3), np.max(error4))
 
             # Assert that maximum error is below the tolerance
-            self.assertLess(
-                max_error,
-                tolerance,
-                f"Boundary condition test failed with max error {max_error:.2e}",
-            )
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert max_error < tolerance, f"Boundary condition test failed with max error {max_error:.2e}"
