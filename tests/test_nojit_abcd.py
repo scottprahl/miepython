@@ -1,10 +1,4 @@
-#! /usr/bin/env python3
-# pylint: disable=invalid-name
-# pylint: disable=unused-variable
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-module-docstring
-# pylint: disable=line-too-long
+"""Regression tests for Mie coefficient helpers with JIT disabled."""
 
 import os
 import pytest
@@ -26,6 +20,7 @@ from miepython.util import cs
 
 def pyscatt_cd(m, x):
     #  http://pyscatt.readthedocs.io/en/latest/forward.html#pyscatt_cd
+    """Compute pyscatt cd."""
     if m.imag < 0:
         m = np.conjugate(m)
     mx = m * x
@@ -66,6 +61,7 @@ def pyscatt_cd(m, x):
 
 def pyscatt_ab(m, x):
     #  http://pyscatt.readthedocs.io/en/latest/forward.html#Mie_ab
+    """Compute pyscatt ab."""
     if m.imag < 0:
         m = np.conjugate(m)
     mx = m * x
@@ -201,6 +197,7 @@ def slow_cn_dn(m, x, n_pole=0):
 
 
 def basic_abcd(m, x, terms=10):
+    """Compute basic abcd."""
     n = np.arange(1, terms + 1)
     mx = m * x
     psi_n_x = riccati_bessel_jn(n, x)
@@ -233,8 +230,11 @@ def basic_abcd(m, x, terms=10):
 
 
 class Test1:
+    """Regression test cases."""
+
     def test_09an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
+        """Test 09an bn."""
         m = 8.9 - 0.69j
         xx = np.array([0.385, 0.390, 0.395])
         a1 = np.array([0.0024 + 0.0410j, 0.0027 + 0.0428j, 0.0030 + 0.0447j])
@@ -245,9 +245,9 @@ class Test1:
         for n, x in enumerate(xx):
             a, b = mie.an_bn(m, x)
             ab, bb, qsca_b = bohren_ab(m, x)
-            ap, bp, qsca_p = pyscatt_ab(m, x)
+            ap, bp, _ = pyscatt_ab(m, x)
             at, bt, _, _ = basic_abcd(m, x, 4)
-            qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+            _, qsca, _, _ = mie.efficiencies_mx(m, x)
 
             print("m=%s, x=%.4f" % (cs(m), x))
             print("Qsca %.5f %.5f" % (qsca, qsca_b))
@@ -275,6 +275,7 @@ class Test1:
 
     def test_08an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
+        """Test 08an bn."""
         m = 3.41 - 1.94j
         x = 2
         qext_lowan = 2.952
@@ -289,7 +290,7 @@ class Test1:
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_lowan, qsca, qsca_b, qsca_p))
@@ -315,12 +316,15 @@ class Test1:
 
 
 class Test_NonAbsorbing_An_and_Bn:
+    """Test cases for non absorbing an and bn behavior."""
+
     def test_01an_bn(self):
+        """Test 01an bn."""
         m = 1.5
         x = 1
         a, b = mie.an_bn(m, x)
-        ab, bb, qsca_b = bohren_ab(m, x)
-        ap, bp, qsca_p = pyscatt_ab(m, x)
+        ab, bb, _ = bohren_ab(m, x)
+        ap, bp, _ = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
         print("m=%s, x=%.4f" % (cs(m), x))
@@ -334,18 +338,19 @@ class Test_NonAbsorbing_An_and_Bn:
         print(cs(bb))
         print(cs(bp))
         print(cs(bt))
-        for n in range(3):
+        for _ in range(3):
             assert a[0].real == pytest.approx(at[0].real, abs=0.00000001)
             assert a[0].imag == pytest.approx(at[0].imag, abs=0.00000001)
             assert b[0].real == pytest.approx(bt[0].real, abs=0.00000001)
             assert b[0].imag == pytest.approx(bt[0].imag, abs=0.00000001)
 
     def test_02an_bn(self):
+        """Test 02an bn."""
         m = 1.5
         x = 0.01
         a, b = mie.an_bn(m, x)
-        ab, bb, qsca_b = bohren_ab(m, x)
-        ap, bp, qsca_p = pyscatt_ab(m, x)
+        ab, bb, _ = bohren_ab(m, x)
+        ap, bp, _ = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
         print("a m=%s, x=%.4f" % (cs(m), x))
@@ -356,18 +361,19 @@ class Test_NonAbsorbing_An_and_Bn:
         print(cs(b))
         print(cs(bb))
         print(cs(bp))
-        for n in range(3):
+        for _ in range(3):
             assert a[0].real == pytest.approx(at[0].real, abs=0.00000001)
             assert a[0].imag == pytest.approx(at[0].imag, abs=0.00000001)
             assert b[0].real == pytest.approx(bt[0].real, abs=0.00000001)
             assert b[0].imag == pytest.approx(bt[0].imag, abs=0.00000001)
 
     def test_03an_bn(self):
+        """Test 03an bn."""
         m = 1.5
         x = 10
         a, b = mie.an_bn(m, x)
-        ab, bb, qsca_b = bohren_ab(m, x)
-        ap, bp, qsca_p = pyscatt_ab(m, x)
+        ab, bb, _ = bohren_ab(m, x)
+        ap, bp, _ = pyscatt_ab(m, x)
 
         print("a m=%s, x=%.4f" % (cs(m), x))
         print(cs(a))
@@ -378,18 +384,19 @@ class Test_NonAbsorbing_An_and_Bn:
         print(cs(bb))
         print(cs(bp))
 
-        for n in range(3):
+        for _ in range(3):
             assert a[0].real == pytest.approx(ab[0].real, abs=0.00000001)
             assert a[0].imag == pytest.approx(ab[0].imag, abs=0.00000001)
             assert b[0].real == pytest.approx(bb[0].real, abs=0.00000001)
             assert b[0].imag == pytest.approx(bb[0].imag, abs=0.00000001)
 
     def test_05an_bn(self):
+        """Test 05an bn."""
         m = 4.0 / 3.0
         x = 50
         a, b = mie.an_bn(m, x)
-        ab, bb, qsca_b = bohren_ab(m, x)
-        ap, bp, qsca_p = pyscatt_ab(m, x)
+        ab, bb, _ = bohren_ab(m, x)
+        ap, bp, _ = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
         print("m=%s, x=%.4f" % (cs(m), x))
@@ -409,6 +416,7 @@ class Test_NonAbsorbing_An_and_Bn:
 
 
 class Test_Weak_Absorbing_An_and_Bn:
+    """Test cases for weak absorbing an and bn behavior."""
 
     def test_00an_bn(self):
         """See table 4 in Bohren and Huffman."""
@@ -445,6 +453,7 @@ class Test_Weak_Absorbing_An_and_Bn:
 
     def test_01an_bn(self):
         # Wiscombe MIEV0 Test Case 9
+        """Test 01an bn."""
         m = 1.330 - 0.00001j
         x = 1
         qsca_wisc = 0.093923
@@ -452,7 +461,7 @@ class Test_Weak_Absorbing_An_and_Bn:
         ab, bb, qsca_b = bohren_ab(m, x)
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_wisc, qsca, qsca_b, qsca_p))
@@ -476,9 +485,11 @@ class Test_Weak_Absorbing_An_and_Bn:
 
 
 class Test_Medium_Absorbing_An_and_Bn:
+    """Test cases for medium absorbing an and bn behavior."""
 
     def test_01an_bn(self):
         # Wiscombe MIEV0 Test Case 12
+        """Test 01an bn."""
         m = 1.5 - 1.0j
         x = 0.055
         qext_wisc = 0.101491
@@ -487,7 +498,7 @@ class Test_Medium_Absorbing_An_and_Bn:
         ab, bb, qsca_b = bohren_ab(m, x)
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_wisc, qsca, qsca_b, qsca_p))
@@ -512,6 +523,7 @@ class Test_Medium_Absorbing_An_and_Bn:
 
     def test_09an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
+        """Test 09an bn."""
         m = 8.9 - 0.69j
         xx = np.array([0.385, 0.390, 0.395])
         a1 = np.array([0.0024 + 0.0410j, 0.0027 + 0.0428j, 0.0030 + 0.0447j])
@@ -522,9 +534,9 @@ class Test_Medium_Absorbing_An_and_Bn:
         for n, x in enumerate(xx):
             a, b = mie.an_bn(m, x)
             ab, bb, qsca_b = bohren_ab(m, x)
-            ap, bp, qsca_p = pyscatt_ab(m, x)
+            ap, bp, _ = pyscatt_ab(m, x)
             at, bt, _, _ = basic_abcd(m, x, len(a))
-            qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+            _, qsca, _, _ = mie.efficiencies_mx(m, x)
 
             print("m=%s, x=%.4f" % (cs(m), x))
             print("Qsca %.5f %.5f" % (qsca, qsca_b))
@@ -552,6 +564,7 @@ class Test_Medium_Absorbing_An_and_Bn:
 
     def test_08an_bn(self):
         # From Lowan "Tables of Scattering Functions for Spherical Particles"
+        """Test 08an bn."""
         m = 3.41 - 1.94j
         x = 2
         qext_lowan = 2.952
@@ -566,7 +579,7 @@ class Test_Medium_Absorbing_An_and_Bn:
         ap, bp, qsca_p = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
 
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qsca %.5f %.5f %.5f %.5f" % (qsca_lowan, qsca, qsca_b, qsca_p))
@@ -592,6 +605,7 @@ class Test_Medium_Absorbing_An_and_Bn:
 
     def test_10an_bn(self):
         # From van de Hulst Table 28
+        """Test 10an bn."""
         m = 3.41 - 1.94j
         x = 1.3
         qext_vdh = 3.053
@@ -603,9 +617,9 @@ class Test_Medium_Absorbing_An_and_Bn:
 
         a, b = mie.an_bn(m, x)
         ab, bb, qsca_b = bohren_ab(m, x)
-        ap, bp, qsca_p = pyscatt_ab(m, x)
+        ap, bp, _ = pyscatt_ab(m, x)
         at, bt, _, _ = basic_abcd(m, x, len(a))
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         print("m=%s, x=%.4f" % (cs(m), x))
         print("Qext %.5f %.5f" % (qext_vdh, qext))
@@ -631,7 +645,10 @@ class Test_Medium_Absorbing_An_and_Bn:
 
 
 class Test_Strong_Absorbing_An_and_Bn:
+    """Test cases for strong absorbing an and bn behavior."""
+
     def test_07an_bn(self):
+        """Test 07an bn."""
         m = 1.1 - 25j
         x = 2
         a, b = mie.an_bn(m, x, 0)
@@ -647,11 +664,12 @@ class TestCnDn:
     """
 
     def test_00_cn_dn(self):
+        """Test 00 cn dn."""
         m = 1.5 - 1j
         x = 2.5
         c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
-        at, bt, ct, dt = basic_abcd(m, x)
+        _, _, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
 
         print("c")
@@ -670,11 +688,12 @@ class TestCnDn:
             assert d[i] == pytest.approx(dw[i], abs=1e-6)
 
     def test_02_cn_dn(self):
+        """Test 02 cn dn."""
         m = 1.5 - 0.1j
         x = 1
         c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
-        at, bt, ct, dt = basic_abcd(m, x)
+        _, _, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
 
         print("c")
@@ -693,11 +712,12 @@ class TestCnDn:
             assert d[i] == pytest.approx(dw[i], abs=1e-6)
 
     def test_03_cn_dn(self):
+        """Test 03 cn dn."""
         m = 1.5 - 1j
         x = 1
         c, d = mie.cn_dn(m, x, 0)
         cw, dw = slow_cn_dn(m, x)
-        at, bt, ct, dt = basic_abcd(m, x)
+        _, _, ct, dt = basic_abcd(m, x)
         cp, dp = pyscatt_cd(m, x)
 
         print("c")
@@ -797,6 +817,8 @@ class TestAnBnCnDnLengths:
 
 
 class TestBoundaryConditions:
+    """Test cases for boundary conditions behavior."""
+
     def test_boundary_conditions(self):
         """
         Test the calculated c and d coefficients using boundary conditions at the sphere surface.

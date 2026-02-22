@@ -20,10 +20,8 @@ from miepython.bessel import (
 class TestBesselFunctions:
     """Validate Bessel-related function values against reference data."""
 
-    def setup_method(self):
-        """Set a shared complex argument and numerical tolerance."""
-        self.z = 1.5 - 0.5j
-        self.tolerance = 1e-5
+    Z = 1.5 - 0.5j
+    TOLERANCE = 1e-5
 
     def test_spherical_h1(self):
         """Check spherical Hankel function of the first kind."""
@@ -36,9 +34,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = spherical_h1(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = spherical_h1(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_spherical_h2(self):
         """Check spherical Hankel function of the second kind."""
@@ -51,9 +49,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = spherical_h2(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = spherical_h2(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_riccati_bessel_jn(self):
         """Check Riccati-Bessel j_n values."""
@@ -66,9 +64,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = riccati_bessel_jn(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = riccati_bessel_jn(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_riccati_bessel_h1(self):
         """Check Riccati-Bessel h_n^(1) values."""
@@ -81,9 +79,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = riccati_bessel_h1(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = riccati_bessel_h1(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_riccati_bessel_h2(self):
         """Check Riccati-Bessel h_n^(2) values."""
@@ -96,9 +94,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = riccati_bessel_h2(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = riccati_bessel_h2(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_spherical_jn(self):
         """Check derivatives of spherical Bessel j_n."""
@@ -111,9 +109,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(0, 4):
-            result = d_spherical_jn(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_spherical_jn(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_spherical_h1(self):
         """Check derivatives of spherical Hankel h_n^(1)."""
@@ -126,9 +124,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(1, 4):
-            result = d_spherical_h1(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_spherical_h1(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_spherical_h2(self):
         """Check derivatives of spherical Hankel h_n^(2)."""
@@ -141,9 +139,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(1, 4):
-            result = d_spherical_h2(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_spherical_h2(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_riccati_bessel_jn(self):
         """Check derivatives of Riccati-Bessel j_n."""
@@ -156,9 +154,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(4):
-            result = d_riccati_bessel_jn(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_riccati_bessel_jn(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_riccati_bessel_h1(self):
         """Check derivatives of Riccati-Bessel h_n^(1)."""
@@ -171,9 +169,9 @@ class TestBesselFunctions:
         ]
 
         for n in range(1, 4):
-            result = d_riccati_bessel_h1(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_riccati_bessel_h1(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
     def test_d_riccati_bessel_h2(self):
         """Check derivatives of Riccati-Bessel h_n^(2)."""
@@ -186,24 +184,18 @@ class TestBesselFunctions:
         ]
 
         for n in range(1, 4):
-            result = d_riccati_bessel_h2(n, self.z)
-            assert result.real == pytest.approx(expected[n].real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected[n].imag, abs=self.tolerance)
+            result = d_riccati_bessel_h2(n, self.Z)
+            assert result.real == pytest.approx(expected[n].real, abs=self.TOLERANCE)
+            assert result.imag == pytest.approx(expected[n].imag, abs=self.TOLERANCE)
 
 
-class TestAsymptotic:
-    """Validate large-argument asymptotic behavior."""
-
-    def setup_method(self):
-        """Set a large argument for asymptotic comparisons."""
-        self.z = 1000
-        self.tolerance = 1e-5
-
-    def test_spherical_h1(self):
-        """Check h_n^(1) against the large-argument asymptotic form."""
-        expected = np.exp(1j * self.z) / (1j * self.z)
-        for n in range(1, 4):
-            expected = (-1j) ** n * np.exp(1j * self.z) / (1j * self.z)
-            result = spherical_h1(n, self.z)
-            assert result.real == pytest.approx(expected.real, abs=self.tolerance)
-            assert result.imag == pytest.approx(expected.imag, abs=self.tolerance)
+def test_asymptotic_spherical_h1():
+    """Check h_n^(1) against the large-argument asymptotic form."""
+    z = 1000
+    tolerance = 1e-5
+    expected = np.exp(1j * z) / (1j * z)
+    for n in range(1, 4):
+        expected = (-1j) ** n * np.exp(1j * z) / (1j * z)
+        result = spherical_h1(n, z)
+        assert result.real == pytest.approx(expected.real, abs=tolerance)
+        assert result.imag == pytest.approx(expected.imag, abs=tolerance)

@@ -1,11 +1,4 @@
-#! /usr/bin/env python3
-# pylint: disable=invalid-name
-# pylint: disable=unused-variable
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-module-docstring
-# pylint: disable=line-too-long
-# pylint: disable=consider-using-f-string
+"""Regression tests for Mie calculations with JIT disabled."""
 
 import os
 import pytest
@@ -16,8 +9,10 @@ import miepython as mie
 
 
 class TestNonAbsorbing:
+    """Test cases for non absorbing behavior."""
 
     def test_03_bh_dielectric(self):
+        """Test 03 bh dielectric."""
         m = 1.55
         lambda0 = 0.6328
         radius = 0.525
@@ -32,11 +27,12 @@ class TestNonAbsorbing:
     def test_05_wiscombe_non_absorbing(self):
 
         # MIEV0 Test Case 5
+        """Test 05 wiscombe non absorbing."""
         m = complex(0.75, 0.0)
         x = 0.099
         s1 = 1.81756e-8 - 1.64810e-4 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000007, abs=1e-6)
         assert g == pytest.approx(0.001448, abs=1e-6)
         assert qback == pytest.approx(G, abs=1e-6)
@@ -45,7 +41,7 @@ class TestNonAbsorbing:
         x = 0.101
         s1 = 2.04875e-08 - 1.74965e-04 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000008, abs=1e-6)
         assert g == pytest.approx(0.001507, abs=1e-6)
         assert qback == pytest.approx(G, abs=1e-6)
@@ -54,7 +50,7 @@ class TestNonAbsorbing:
         x = 10.0
         s1 = -1.07857e00 - 3.60881e-02 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.232265, abs=1e-6)
         assert g == pytest.approx(0.896473, abs=1e-6)
         assert qback == pytest.approx(G, abs=1e-6)
@@ -63,7 +59,7 @@ class TestNonAbsorbing:
         x = 1000.0
         s1 = 1.70578e01 + 4.84251e02 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(1.997908, abs=1e-6)
         assert g == pytest.approx(0.844944, abs=1e-6)
         assert qback == pytest.approx(G, abs=1e-6)
@@ -71,11 +67,12 @@ class TestNonAbsorbing:
     def test_05_old_wiscombe_non_absorbing(self):
 
         # OLD MIEV0 Test Case 1
+        """Test 05 old wiscombe non absorbing."""
         m = complex(1.5, 0.0)
         x = 10
         s1 = 4.322e00 + 4.868e00 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, _ = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.8820, abs=1e-4)
         assert qback == pytest.approx(G, abs=1e-4)
         # OLD MIEV0 Test Case 2
@@ -83,25 +80,26 @@ class TestNonAbsorbing:
         x = 100
         s1 = 4.077e01 + 5.175e01 * 1j
         G = abs(2 * s1 / x) ** 2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, _ = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.0944, abs=1e-4)
         assert qback == pytest.approx(G, abs=1e-4)
         # OLD MIEV0 Test Case 3
         m = complex(1.5, 0.0)
         x = 1000
         G = 4 * 2.576e06 / x**2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, _ = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.0139, abs=1e-4)
         assert qback == pytest.approx(G, abs=1e-3)
         # OLD MIEV0 Test Case 4
         m = complex(1.5, 0.0)
         x = 5000.0
         G = 4 * 2.378e08 / x**2
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, qback, _ = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.0086, abs=1e-4)
         assert qback == pytest.approx(G, abs=3e-3)
 
     def test_04_non_dielectric(self):
+        """Test 04 non dielectric."""
         m = 1.55 - 0.1j
         lambda0 = 0.6328
         radius = 0.525
@@ -115,59 +113,63 @@ class TestNonAbsorbing:
 
 
 class TestAbsorbing:
+    """Test cases for absorbing behavior."""
+
     def test_06_wiscombe_water_absorbing(self):
 
         # MIEV0 Test Case 9
+        """Test 06 wiscombe water absorbing."""
         m = complex(1.33, -0.00001)
         x = 1.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.093923, abs=1e-6)
         assert g == pytest.approx(0.184517, abs=1e-6)
         # MIEV0 Test Case 10
         m = complex(1.33, -0.00001)
         x = 100.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.096594, abs=1e-6)
         assert g == pytest.approx(0.868959, abs=1e-6)
         # MIEV0 Test Case 11
         m = complex(1.33, -0.00001)
         x = 10000.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert g == pytest.approx(0.907840, abs=1e-6)
         assert qsca == pytest.approx(1.723857, abs=1e-6)
 
     def test_07_wiscombe_absorbing(self):
 
         # MIEV0 Test Case 12
+        """Test 07 wiscombe absorbing."""
         m = 1.5 - 1j
         x = 0.055
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000011, abs=1e-6)
         assert g == pytest.approx(0.000491, abs=1e-6)
         # MIEV0 Test Case 13
         m = 1.5 - 1j
         x = 0.056
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000012, abs=1e-6)
         assert g == pytest.approx(0.000509, abs=1e-6)
         # MIEV0 Test Case 14
         m = 1.5 - 1j
         x = 1
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.6634538, abs=1e-6)
         assert g == pytest.approx(0.192136, abs=1e-6)
         # MIEV0 Test Case 15
         m = 1.5 - 1j
         x = 100
         x = 100.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(1.283697, abs=1e-3)
         assert qext == pytest.approx(2.097502, abs=1e-2)
         assert g == pytest.approx(0.850252, abs=1e-3)
         # MIEV0 Test Case 16
         m = 1.5 - 1j
         x = 10000
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(1.236575, abs=1e-6)
         assert qext == pytest.approx(2.004368, abs=1e-6)
         assert g == pytest.approx(0.846309, abs=1e-6)
@@ -175,25 +177,27 @@ class TestAbsorbing:
     def test_08_wiscombe_more_absorbing(self):
 
         # MIEV0 Test Case 17
+        """Test 08 wiscombe more absorbing."""
         m = 10.0 - 10.0j
         x = 1.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.049405, abs=1e-6)
         assert g == pytest.approx(-0.110664, abs=1e-6)
         # MIEV0 Test Case 18
         m = 10.0 - 10.0j
         x = 100.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(1.836785, abs=1e-6)
         assert g == pytest.approx(0.556215, abs=1e-6)
         # MIEV0 Test Case 19
         m = 10.0 - 10.0j
         x = 10000.0
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(1.795393, abs=1e-6)
         assert g == pytest.approx(0.548194, abs=1e-6)
 
     def test_09_single_nonmagnetic(self):
+        """Test 09 single nonmagnetic."""
         m = 1.5 - 0.5j
         x = 2.5
         qext, qsca, qback, g = mie.efficiencies_mx(m, x)
@@ -205,81 +209,85 @@ class TestAbsorbing:
 
 
 class TestPerfectlyReflecting:
+    """Test cases for perfectly reflecting behavior."""
 
     def test_11_wiscombe_perfectly_conducting(self):
-
+        """Test 11 wiscombe perfectly conducting."""
         m = -10000j
         # MIEV0 Test Case 0
         x = 0.001
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, _ = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(3.3333e-12, abs=1e-13)
         # MIEV0 Test Case 1
         x = 0.099
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000321, abs=1e-4)
         assert g == pytest.approx(-0.397357, abs=1e-3)
         # MIEV0 Test Case 2
         x = 0.101
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(0.000348, abs=1e-6)
         assert g == pytest.approx(-0.397262, abs=1e-6)
         # MIEV0 Test Case 3
         x = 100
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.008102, abs=1e-6)
         assert g == pytest.approx(0.500926, abs=1e-6)
         # MIEV0 Test Case 4
         x = 10000
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, g = mie.efficiencies_mx(m, x)
         assert qsca == pytest.approx(2.000289, abs=1e-6)
         assert g == pytest.approx(0.500070, abs=1e-6)
 
 
 class TestSmall:
+    """Test cases for small behavior."""
 
     def test_10_small_spheres(self):
         # MIEV0 Test Case 5
+        """Test 10 small spheres."""
         m = 0.75
         x = 0.099
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000007, abs=1e-6)
         assert g == pytest.approx(0.001448, abs=1e-6)
         # MIEV0 Test Case 6
         m = 0.75
         x = 0.101
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000008, abs=1e-6)
         assert g == pytest.approx(0.001507, abs=1e-6)
         m = 1.5 - 1j
         x = 0.055
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.101491, abs=1e-6)
         assert g == pytest.approx(0.000491, abs=1e-6)
         x = 0.056
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.103347, abs=1e-6)
         assert g == pytest.approx(0.000509, abs=1e-6)
         m = 1e-10 - 1e10j
         x = 0.099
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000321, abs=1e-6)
         assert g == pytest.approx(-0.397357, abs=1e-4)
         x = 0.101
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000348, abs=1e-6)
         assert g == pytest.approx(-0.397262, abs=1e-6)
         m = 0 - 1e10j
         x = 0.099
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000321, abs=1e-6)
         assert g == pytest.approx(-0.397357, abs=1e-4)
         x = 0.101
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        qext, _, _, g = mie.efficiencies_mx(m, x)
         assert qext == pytest.approx(0.000348, abs=1e-6)
         assert g == pytest.approx(-0.397262, abs=1e-4)
 
 
 class TestAngleScattering:
+    """Test cases for angle scattering behavior."""
 
     def test_12_scatter_function(self):
         """Wiscombe MIEV0 Test Case 14."""
@@ -288,7 +296,7 @@ class TestAngleScattering:
         theta = np.arange(0, 181, 30)
         mu = np.cos(theta * np.pi / 180)
 
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, _, _, _ = mie.efficiencies_mx(m, x)
         S1, S2 = mie.S1_S2(m, x, mu, norm="wiscombe")
         #        S1 *= np.sqrt(np.pi * x**2 * qext)
         #        S2 *= np.sqrt(np.pi * x**2 * qext)
@@ -329,7 +337,7 @@ class TestAngleScattering:
         theta = np.arange(0, 181, 30)
         mu = np.cos(theta * np.pi / 180)
 
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, _, _, _ = mie.efficiencies_mx(m, x)
         S1, S2 = mie.S1_S2(m, x, mu, norm="wiscombe")
 
         assert S1[0].real == pytest.approx(0.584080, abs=1e-6)
@@ -362,6 +370,7 @@ class TestAngleScattering:
         assert S2[6].imag == pytest.approx(-0.146829, abs=1e-6)
 
     def test_i_unpolarized_01(self):
+        """Test i unpolarized 01."""
         m = 1.5 - 1.5j
         x = 2
         mu = np.linspace(-1, 1, 1000)
@@ -382,6 +391,7 @@ class TestAngleScattering:
             assert total / expected[i] == pytest.approx(1.0, abs=4e-3)
 
     def test_i_par_i_per_01(self):
+        """Test i par i per 01."""
         m = 1.5 - 1.5j
         x = 2
         mu = np.linspace(-1, 1, 10000)
@@ -405,6 +415,7 @@ class TestAngleScattering:
             assert total / expected[i] == pytest.approx(1, abs=1e-3)
 
     def test_molecular_hydrogen(self):
+        """Test molecular hydrogen."""
         m = 1.00013626
         x = 0.0006403246172921872
         mu = np.linspace(-1, 1, 100)
@@ -413,6 +424,8 @@ class TestAngleScattering:
 
 
 class TestMiePhaseMatrix:
+    """Test cases for mie phase matrix behavior."""
+
     def test_phase_matrix_basic(self):
         """
         Test element (0,0).
@@ -511,11 +524,14 @@ class TestMiePhaseMatrix:
 
 
 class TestNotebookTests:
+    """Test cases for notebook tests."""
+
     def test_nb1_x(self):
+        """Test nb1 x."""
         N = 500
         m = 1.5
         x = np.linspace(0.1, 20, N)  # also in microns
-        qext, qsca, qback, g = mie.efficiencies_mx(m, x)
+        _, qsca, _, _ = mie.efficiencies_mx(m, x)
 
         assert qsca[0] == pytest.approx(2.3084093592198083e-05, abs=1e-6)
         assert qsca[100] == pytest.approx(4.105960809066763, abs=1e-6)
@@ -525,16 +541,17 @@ class TestNotebookTests:
         assert qsca[499] == pytest.approx(2.03583698038088, abs=1e-6)
 
     def test_nb1_rho(self):
+        """Test nb1 rho."""
         N = 500
         rho = np.linspace(0.1, 20, N)
 
         m = 1.5
         x15 = rho / 2 / (m - 1)
-        qext, scal5, qback, g = mie.efficiencies_mx(m, x15)
+        _, scal5, _, _ = mie.efficiencies_mx(m, x15)
 
         m = 1.1
         x11 = rho / 2 / (m - 1)
-        qext, scal1, qback, g = mie.efficiencies_mx(m, x11)
+        _, scal1, _, _ = mie.efficiencies_mx(m, x11)
 
         assert scal1[0] == pytest.approx(0.0006616369953521216, abs=1e-6)
         assert scal1[99] == pytest.approx(3.449616595439377, abs=1e-6)
@@ -550,6 +567,7 @@ class TestNotebookTests:
         assert scal5[499] == pytest.approx(2.03583698038088, abs=1e-6)
 
     def test_nb1_spheres(self):
+        """Test nb1 spheres."""
         N = 500
         m = 1.0
         r = 500  # nm
@@ -559,7 +577,7 @@ class TestNotebookTests:
         mm = m / mwater
         xx = 2 * np.pi * r * mwater / lambda0
 
-        qext, qsca, qback, g = mie.efficiencies_mx(mm, xx)
+        _, qsca, _, _ = mie.efficiencies_mx(mm, xx)
 
         assert qsca[0] == pytest.approx(1.5525047718022498, abs=1e-6)
         assert qsca[99] == pytest.approx(2.1459528526672678, abs=1e-6)
@@ -569,11 +587,12 @@ class TestNotebookTests:
         assert qsca[499] == pytest.approx(1.640006561518987, abs=1e-6)
 
     def test_nb1_mie(self):
+        """Test nb1 mie."""
         m_sphere = 1.0
         n_water = 4 / 3
         d = 1000
         lambda0 = np.linspace(300, 800)
-        qext, qsca, qback, g = mie.efficiencies(m_sphere, d, lambda0, n_water)
+        _, qsca, _, _ = mie.efficiencies(m_sphere, d, lambda0, n_water)
 
         assert qsca[0] == pytest.approx(1.5525047718022498, abs=1e-6)
         assert qsca[9] == pytest.approx(2.107970892634116, abs=1e-6)

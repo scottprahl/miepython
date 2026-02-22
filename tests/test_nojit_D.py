@@ -1,10 +1,4 @@
-#! /usr/bin/env python3
-# pylint: disable=invalid-name
-# pylint: disable=unused-variable
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
-# pylint: disable=missing-module-docstring
-# pylint: disable=line-too-long
+"""Regression tests for logarithmic-derivative helpers with JIT disabled."""
 
 import os
 import pytest
@@ -18,6 +12,7 @@ from miepython.util import cs
 
 def pymiescatt_D(m, x):
     #  http://pymiescatt.readthedocs.io/en/latest/forward.html#Mie_ab
+    """Compute pymiescatt D."""
     mx = m * x
     nmax = np.round(2 + x + 4 * (x ** (1 / 3)))
     nmx = np.round(max(nmax, np.abs(mx)) + 16)
@@ -55,6 +50,7 @@ def bohren_D(m, x):
 
 def basic_D(m, x):
     # Riccati-Bessel functions at x and mx
+    """Compute basic D."""
     mx = x * m
     nstop = int(x + 4 * (x ** (1 / 3)) + 2)
     nmx = int(max(nstop, np.abs(mx)) + 15)
@@ -68,7 +64,10 @@ def basic_D(m, x):
 
 
 class TestD:
+    """Test cases for d behavior."""
+
     def test_01_Dn(self):
+        """Test 01 Dn."""
         m = 1.5
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -82,11 +81,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_02_Dn(self):
+        """Test 02 Dn."""
         m = 1.5
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -100,11 +100,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_03_Dn(self):
+        """Test 03 Dn."""
         m = 1.5
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -118,11 +119,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Dt[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Dt[0].imag, abs=0.00000001)
 
     def test_04_Dn(self):
+        """Test 04 Dn."""
         m = 1.5 - 0.5j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -136,11 +138,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_05_Dn(self):
+        """Test 05 Dn."""
         m = 1.5 - 0.5j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -154,11 +157,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_06_Dn(self):
+        """Test 06 Dn."""
         m = 1.5 - 0.5j
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -172,11 +176,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_07_Dn(self):
+        """Test 07 Dn."""
         m = 1.5 - 15j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -190,11 +195,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_08_Dn(self):
+        """Test 08 Dn."""
         m = 1.5 - 15j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -208,11 +214,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_09_Dn(self):
+        """Test 09 Dn."""
         m = 1.5 - 15j
         x = 10
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
@@ -226,11 +233,12 @@ class TestD:
         print(cs(Db))
         print(cs(Dt))
         print(cs(Dp))
-        for n in range(3):
+        for _ in range(3):
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
     def test_10_Dn(self):
+        """Test 10 Dn."""
         x = 62
         m = 1.28 - 1.37j
         nstop = 50

@@ -42,21 +42,25 @@ def test_mie_backend_speed_compare():
     mie_jit._S1_S2_nb(np.complex128(m_ref), float(x_ref), mu, 0)
 
     def run_single_nojit():
+        """Run single nojit."""
         out = np.empty((4, n_particles), dtype=np.float64)
         for i in range(n_particles):
             out[:, i] = mie_nojit._single_sphere_py(mvals[i], float(xvals[i]), 0, True)
         return out
 
     def run_single_jit():
+        """Run single jit."""
         out = np.empty((4, n_particles), dtype=np.float64)
         for i in range(n_particles):
             out[:, i] = mie_jit._single_sphere_nb(np.complex128(mvals[i]), float(xvals[i]), 0, True)
         return out
 
     def run_s12_nojit():
+        """Run s12 nojit."""
         return mie_nojit._S1_S2_py(m_ref, x_ref, mu, 0)
 
     def run_s12_jit():
+        """Run s12 jit."""
         return mie_jit._S1_S2_nb(np.complex128(m_ref), float(x_ref), mu, 0)
 
     t_single_nojit, single_nojit = _median_runtime(run_single_nojit, repeats=3)
