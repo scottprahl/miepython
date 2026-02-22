@@ -40,9 +40,9 @@ from miepython.bessel import spherical_h1, d_spherical_jn, d_spherical_h1
 from miepython.vsh import M_odd, M_even, N_odd, N_even
 
 # Constants for testing
-lambda0 = 500e-9  # wavelength in meters
-d_sphere = 1e-6  # sphere diameter in meters
-r_boundary = d_sphere / 2
+LAMBDA0_DEFAULT = 500e-9  # wavelength in meters
+D_SPHERE_DEFAULT = 1e-6  # sphere diameter in meters
+r_boundary = D_SPHERE_DEFAULT / 2
 m_sphere = 1.5  # refractive index inside sphere
 m_env = 1.0  # refractive index of environment
 theta_test = np.pi / 4

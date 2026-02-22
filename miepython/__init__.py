@@ -62,35 +62,8 @@ Example near-field usage::
 
 """
 
-import os
-
-USE_JIT = os.environ.get("MIEPYTHON_USE_JIT", "0") == "1"
-
-if USE_JIT:
-    # pull in the jit‐compiled backends under the "private" names core.py expects
-    from .mie_jit import _an_bn_nb as an_bn
-    from .mie_jit import _cn_dn_nb as cn_dn
-    from .mie_jit import _single_sphere_nb as single_sphere
-    from .mie_jit import _small_sphere_nb as small_sphere
-    from .mie_jit import _small_conducting_sphere_nb as small_conducting_sphere
-    from .mie_jit import _pi_tau_nb as pi_tau
-    from .mie_jit import _D_calc_nb as D_calc
-    from .mie_jit import _S1_S2_nb as _S1_S2
-    from .mie_jit import _Lentz_Dn
-    from .mie_jit import _D_upwards
-    from .mie_jit import _D_downwards
-else:
-    from .mie_nojit import _an_bn_py as an_bn
-    from .mie_nojit import _cn_dn_py as cn_dn
-    from .mie_nojit import _single_sphere_py as single_sphere
-    from .mie_nojit import _small_sphere_py as small_sphere
-    from .mie_nojit import _small_conducting_sphere_py as small_conducting_sphere
-    from .mie_nojit import _pi_tau_py as pi_tau
-    from .mie_nojit import _D_calc_py as D_calc
-    from .mie_nojit import _S1_S2_py as _S1_S2
-    from .mie_nojit import _Lentz_Dn
-    from .mie_nojit import _D_upwards
-    from .mie_nojit import _D_downwards
+from ._backend import D_calc, USE_JIT, _D_downwards, _D_upwards, _Lentz_Dn, _S1_S2, an_bn, cn_dn, pi_tau
+from ._backend import single_sphere, small_conducting_sphere, small_sphere
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients

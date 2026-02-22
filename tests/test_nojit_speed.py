@@ -20,8 +20,8 @@ https://github.com/scottprahl/miepython/issues/28
 """
 
 import os
-import numpy as np
 from time import time
+import numpy as np
 
 os.environ["MIEPYTHON_USE_JIT"] = "0"  # must come before importing miepython
 import miepython as mie

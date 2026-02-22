@@ -80,9 +80,10 @@ Conventions
 
 import numpy as np
 from scipy.special import factorial2, spherical_jn
-import miepython as mie
-from miepython.bessel import spherical_h1, d_riccati_bessel_h1
-from miepython.util import spherical_vector_to_cartesian
+from ._backend import D_calc, pi_tau
+from .bessel import d_riccati_bessel_h1, spherical_h1
+from .core import S1_S2, coefficients
+from .util import spherical_vector_to_cartesian
 
 __all__ = (
     "e_near",
@@ -124,7 +125,7 @@ def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
 
     pi = np.empty(n_terms)
     tau = np.empty(n_terms)
-    mie.pi_tau(mu, pi, tau)
+    pi_tau(mu, pi, tau)
 
     n_int = np.arange(1, n_terms + 1, dtype=np.int64)
     n_arr = n_int.astype(np.float64)
@@ -142,7 +143,7 @@ def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
             n_factor1 = rho_pow / denom
             n_factor2 = (n_arr + 1.0) * rho_pow / denom
         else:
-            d_vals = mie.D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
+            d_vals = D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
             n_factor1 = jn / rho
             n_factor2 = jn * d_vals
     else:
@@ -181,7 +182,7 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     jkr = 1j * 2 * np.pi * n_env * r / lambda0
     amp = np.exp(jkr) / (-jkr)
 
-    S1, S2 = mie.S1_S2(m_rel, x, np.cos(theta), norm="wiscombe")
+    S1, S2 = S1_S2(m_rel, x, np.cos(theta), norm="wiscombe")
 
     E_r = np.zeros_like(S1, dtype=complex)
     E_theta = S2 * amp * np.cos(phi)
@@ -254,7 +255,7 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
-    a, b, c, d = mie.coefficients(m_rel, x, n_pole=n_pole, internal=True)
+    a, b, c, d = coefficients(m_rel, x, n_pole=n_pole, internal=True)
     return np.array([a, b, c, d])
 
 
