@@ -79,8 +79,8 @@ Conventions
 """
 
 import numpy as np
+from scipy.special import factorial2, spherical_jn
 import miepython as mie
-from scipy.special import spherical_jn, factorial2
 from miepython.bessel import spherical_h1, d_riccati_bessel_h1
 from miepython.util import spherical_vector_to_cartesian
 
@@ -124,7 +124,7 @@ def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
 
     pi = np.empty(n_terms)
     tau = np.empty(n_terms)
-    mie._pi_tau(mu, pi, tau)
+    mie.pi_tau(mu, pi, tau)
 
     n_int = np.arange(1, n_terms + 1, dtype=np.int64)
     n_arr = n_int.astype(np.float64)
@@ -142,7 +142,7 @@ def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
             n_factor1 = rho_pow / denom
             n_factor2 = (n_arr + 1.0) * rho_pow / denom
         else:
-            d_vals = mie._D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
+            d_vals = mie.D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
             n_factor1 = jn / rho
             n_factor2 = jn * d_vals
     else:
@@ -545,9 +545,9 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    evaluator = lambda rr, tt, pp: _e_near_abcd(  # noqa: E731
-        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
-    )
+    def evaluator(rr, tt, pp):
+        return _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
+
     return _vectorized_field_eval(evaluator, r, theta, phi)
 
 
@@ -574,9 +574,9 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    evaluator = lambda rr, tt, pp: _h_near_abcd(  # noqa: E731
-        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
-    )
+    def evaluator(rr, tt, pp):
+        return _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
+
     return _vectorized_field_eval(evaluator, r, theta, phi)
 
 
@@ -614,9 +614,9 @@ def eh_near(
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    evaluator = lambda rr, tt, pp: _eh_near_abcd(  # noqa: E731
-        abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident
-    )
+    def evaluator(rr, tt, pp):
+        return _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
+
     return _vectorized_field_pair_eval(evaluator, r, theta, phi)
 
 

@@ -73,8 +73,8 @@ if USE_JIT:
     from .mie_jit import _single_sphere_nb as single_sphere
     from .mie_jit import _small_sphere_nb as small_sphere
     from .mie_jit import _small_conducting_sphere_nb as small_conducting_sphere
-    from .mie_jit import _pi_tau_nb as _pi_tau
-    from .mie_jit import _D_calc_nb as _D_calc
+    from .mie_jit import _pi_tau_nb as pi_tau
+    from .mie_jit import _D_calc_nb as D_calc
     from .mie_jit import _S1_S2_nb as _S1_S2
     from .mie_jit import _Lentz_Dn
     from .mie_jit import _D_upwards
@@ -85,8 +85,8 @@ else:
     from .mie_nojit import _single_sphere_py as single_sphere
     from .mie_nojit import _small_sphere_py as small_sphere
     from .mie_nojit import _small_conducting_sphere_py as small_conducting_sphere
-    from .mie_nojit import _pi_tau_py as _pi_tau
-    from .mie_nojit import _D_calc_py as _D_calc
+    from .mie_nojit import _pi_tau_py as pi_tau
+    from .mie_nojit import _D_calc_py as D_calc
     from .mie_nojit import _S1_S2_py as _S1_S2
     from .mie_nojit import _Lentz_Dn
     from .mie_nojit import _D_upwards
@@ -94,15 +94,8 @@ else:
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
-from .field import (
-    e_far,
-    e_near,
-    h_near,
-    eh_near,
-    e_near_cartesian,
-    h_near_cartesian,
-    eh_near_cartesian,
-)
+from .field import e_far, e_near, eh_near, e_near_cartesian, h_near, h_near_cartesian, eh_near_cartesian
+
 
 # functions exposed to the user
 __all__ = (
@@ -127,9 +120,9 @@ __all__ = (
     "single_sphere",
     "small_sphere",
     "small_conducting_sphere",
+    "D_calc",
+    "pi_tau",
     "_S1_S2",
-    "_D_calc",
-    "_pi_tau",
     "_Lentz_Dn",
     "_D_upwards",
     "_D_downwards",
