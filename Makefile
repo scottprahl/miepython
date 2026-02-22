@@ -2,11 +2,8 @@ PACKAGE         := miepython
 GITHUB_USER     := scottprahl
 
 PY_VERSION      ?= 3.14
-UV              ?= uv
 VENV            ?= .venv
-PYPROJECT       := pyproject.toml
-UV_EXTRAS       := --extra dev --extra docs --extra lite
-UV_SYNC_ARGS    := --python $(PY_VERSION) $(UV_EXTRAS)
+UV              ?= uv
 RUN             := $(UV) run --extra dev
 RUN_DOCS        := $(UV) run --extra docs
 RUN_LITE        := $(UV) run --extra lite
@@ -15,13 +12,11 @@ RMR             ?= rm -rf
 
 DOCS_DIR        := docs
 HTML_DIR        := $(DOCS_DIR)/_build/html
-
-ROOT            := $(abspath .)
-OUT_ROOT        := $(ROOT)/_site
+OUT_ROOT        := _site
 OUT_DIR         := $(OUT_ROOT)/$(PACKAGE)
-STAGE_DIR       := $(ROOT)/.lite_src
-DOIT_DB         := $(ROOT)/.jupyterlite.doit.db
-LITE_CONFIG     := $(ROOT)/$(PACKAGE)/jupyter_lite_config.json
+STAGE_DIR       := .lite_src
+DOIT_DB         := .jupyterlite.doit.db
+LITE_CONFIG     := $(PACKAGE)/jupyter_lite_config.json
 
 # --- GitHub Pages deploy config ---
 PAGES_BRANCH    := gh-pages
@@ -34,7 +29,7 @@ PORT            := 8000
 
 PYTEST_OPTS     := 
 SPHINX_OPTS     := -T -E -b html -d $(DOCS_DIR)/_build/doctrees -D language=en
-PYLINT_TARGETS  := miepython/*.py tests/*.py .github/scripts/update_citation.py
+PYLINT_TARGETS  := $(PACKAGE)/*.py tests/*.py .github/scripts/update_citation.py
 YAML_TARGETS    := .github/workflows/citation.yaml .github/workflows/pypi.yaml .github/workflows/test.yaml .readthedocs.yaml
 RST_TARGETS     := README.rst CHANGELOG.rst $(DOCS_DIR)/changelog.rst $(DOCS_DIR)/index.rst
 
@@ -73,20 +68,17 @@ help:
 	@echo "  realclean      - clean + remove $(VENV)"
 
 .PHONY: venv
-venv: $(PYPROJECT)
-	@echo "==> Syncing environment with uv"
-	@$(UV) sync $(UV_SYNC_ARGS)
-	@echo "✅ Environment synced"
+venv:
+	@$(UV) sync --python $(PY_VERSION) --extra dev --extra docs --extra lite
 
 .PHONY: dist
 dist:
 	$(RUN) python -m build
 
 .PHONY: readme_images
-readme_images:
-	@echo "==> Generating README/example SVG images in docs/images"
-	@$(RUN) python docs/images/make_readme_images.py
-	
+readme:
+	cd docs/images && $(RUN) python make_readme_images.py
+
 .PHONY: test
 test:
 	$(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
@@ -94,7 +86,6 @@ test:
 .PHONY: note-test
 note-test:
 	$(RUN) pytest --verbose tests/test_all_notebooks.py
-	@echo "✅ Notebook check complete"
 
 .PHONY: html
 html:
@@ -112,9 +103,7 @@ yaml-check:
 
 .PHONY: rst-check
 rst-check:
-	@for rst_file in $(RST_TARGETS); do \
-		$(RUN) rstcheck "$$rst_file"; \
-	done
+	@$(RUN) rstcheck $(RST_TARGETS)
 	@$(RUN) rstcheck --ignore-directives automodapi $(DOCS_DIR)/$(PACKAGE).rst
 
 .PHONY: ruff-check
@@ -151,58 +140,23 @@ rcheck:
 	@echo "✅ Release checks complete"
 	
 .PHONY: lite
-lite: $(LITE_CONFIG)
-	@echo "==> Building package wheel for PyOdide"
-	@$(RUN) python -m build
-
-	@echo "==> Checking for .gh-pages worktree"
-	@if [ -d "$(WORKTREE)" ]; then \
-		echo "    Found .gh-pages worktree, removing..."; \
-		git worktree remove "$(WORKTREE)" --force 2>/dev/null || true; \
-		git worktree prune; \
-		$(RMR) "$(WORKTREE)"; \
-		echo "    ✓ Removed"; \
-	else \
-		echo "    No .gh-pages worktree found"; \
-	fi
-
-	@echo "==> Cleaning previous builds"
-	@$(RMR) "$(OUT_ROOT)"
-	@$(RMR) "$(DOIT_DB)"
-	@echo "    ✓ Cleaned"
-
+lite: lite-clean $(LITE_CONFIG) dist
 	@echo "==> Staging notebooks from docs -> $(STAGE_DIR)"
-	@$(RMR) "$(STAGE_DIR)"; mkdir -p "$(STAGE_DIR)"
-	@if ls docs/*.ipynb 1> /dev/null 2>&1; then \
-		/bin/cp docs/*.ipynb "$(STAGE_DIR)"; \
-		mkdir -p "$(STAGE_DIR)/examples"; \
-		/bin/cp $(PACKAGE)/examples/*.py "$(STAGE_DIR)/examples"; \
-		if ls docs/data/*.npy 1> /dev/null 2>&1; then \
-			echo "==> Staging near-field reference arrays into $(STAGE_DIR)/data"; \
-			mkdir -p "$(STAGE_DIR)/data"; \
-			/bin/cp docs/data/*.npy "$(STAGE_DIR)/data"; \
-		else \
-			echo "⚠️  No docs/data/*.npy files found (15_2D_fields.ipynb may fail)"; \
-		fi; \
-			if [ -f docs/data/scattnlay_reference_metadata.json ]; then \
-				/bin/cp docs/data/scattnlay_reference_metadata.json "$(STAGE_DIR)/data"; \
-			fi; \
-			echo "==> Clearing outputs from staged notebooks"; \
-			$(RUN) python -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb; \
-		else \
-			echo "⚠️  No notebooks found in docs/"; \
-		fi
+	mkdir -p "$(STAGE_DIR)"
+	cp $(DOCS_DIR)/*.ipynb "$(STAGE_DIR)"
+	$(RUN) python -m jupyter nbconvert --clear-output --inplace "$(STAGE_DIR)"/*.ipynb
+	mkdir -p "$(STAGE_DIR)/examples"
+	cp $(PACKAGE)/examples/*.py "$(STAGE_DIR)/examples"
+	mkdir -p "$(STAGE_DIR)/data"
+	cp docs/data/*.npy "$(STAGE_DIR)/data"
+	cp docs/data/scattnlay_reference_metadata.json "$(STAGE_DIR)/data"
 
 	@echo "==> Building JupyterLite"
-	@$(RUN_LITE) python -m jupyter lite build \
+	@$(RUN_LITE) jupyter lite build \
 		--config="$(LITE_CONFIG)" \
 		--contents="$(STAGE_DIR)" \
 		--output-dir="$(OUT_DIR)"
-
-	@echo "==> Adding .nojekyll for GitHub Pages"
-	@touch "$(OUT_DIR)/.nojekyll"
-	
-	@echo "✅ Build complete -> $(OUT_DIR)"
+	@touch "$(OUT_DIR)/.nojekyll"  # for GitHub pages
 
 .PHONY: lite-serve
 lite-serve:
@@ -248,51 +202,39 @@ lite-deploy:
 	    echo "✅ Deployed to https://$(GITHUB_USER).github.io/$(PACKAGE)/"; \
 	  fi
 
-.PHONY: kernelspec
-kernelspec:
-	@$(RUN) python -m ipykernel install --user \
-	  --name miepython-venv \
-	  --display-name "Python (miepython venv)" >/dev/null
-
 .PHONY: lab
-lab: kernelspec
-	@echo "==> Launching JupyterLab using uv environment"
-	@$(RUN) python -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
+lab:
+	@echo "==> Launching JupyterLab with uv-managed environment"
+	$(RUN) python -m jupyter lab --ServerApp.root_dir="$(CURDIR)"
 
 .PHONY: speed
 speed:
 	-$(RUN) python tests/test_nojit_speed.py
 	-$(RUN) python tests/test_jit_speed.py
 
-.PHONY: clean
-clean:
-	@echo "==> Cleaning build artifacts"	
-	@find . -name '__pycache__' -type d -exec $(RMR) {} +
-	@find . -name '.DS_Store' -type f -delete
-	@find . -name '.ipynb_checkpoints' -type d -prune -exec $(RMR) {} +
-	@find . -name '.pytest_cache' -type d -prune -exec $(RMR) {} +
-	@$(RMR) .cache
-	@$(RMR) .ruff_cache
-	@$(RMR) $(PACKAGE).egg-info
-	@$(RMR) docs/api
-	@$(RMR) docs/_build
-	@$(RMR) docs/.jupyter
-	@$(RMR) dist
-
 .PHONY: lite-clean
 lite-clean:
 	@echo "==> Cleaning JupyterLite build artifacts"
 	@$(RMR) "$(STAGE_DIR)"
 	@$(RMR) "$(OUT_ROOT)"
-	@$(RMR) ".lite_root"
 	@$(RMR) "$(DOIT_DB)"
-	@$(RMR) _output
+	@$(RMR) .cache dist $(PACKAGE).egg-info
+
+.PHONY: clean
+clean: lite-clean
+	@echo "==> Cleaning build artifacts"	
+	@find . -name '__pycache__' -type d -exec $(RMR) {} +
+	@find . -name '.DS_Store' -type f -delete
+	@find . -name '.ipynb_checkpoints' -type d -prune -exec $(RMR) {} +
+	@find . -name '.pytest_cache' -type d -prune -exec $(RMR) {} +
+	@$(RMR) .ruff_cache
+	@$(RMR) docs/api docs/_build docs/.jupyter
 
 .PHONY: realclean
-realclean: lite-clean clean
+realclean: clean
 	@echo "==> Deep cleaning: removing venv and deployment worktree"
-	@$(RMR) .tmp
-	@$(RMR) "$(WORKTREE)"
-	@$(RMR) "$(VENV)"
-	@$(RMR) docs/_templates
+	@git worktree remove "$(WORKTREE)" --force 2>/dev/null || true
+	@git worktree prune || true
+	$(RMR) "$(WORKTREE)"
+	$(RMR) .venv
 	@$(RM) uv.lock
