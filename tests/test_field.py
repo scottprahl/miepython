@@ -291,3 +291,70 @@ def test_cartesian_wrappers_match_spherical_transform(m_sphere, n_env):
     np.testing.assert_allclose(h_xyz, h_ref, rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(e_xyz2, e_ref, rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(h_xyz2, h_ref, rtol=1e-12, atol=1e-12)
+
+
+def test_no_contrast_cartesian_fields_match_incident_plane_wave():
+    """No-contrast sphere should reduce to the incident plane wave everywhere."""
+    lambda0 = 1.0
+    n_env = 1.0
+    d_sphere = 0.002
+    m_sphere = 1.0 + 0.0j
+
+    x = np.array([3.0, 0.0, 0.0, 2.0, 2.0])
+    y = np.array([0.0, 0.0, 3.0, 2.0, 2.0])
+    z = np.array([0.0, 3.0, 0.0, 0.0, 0.5])
+
+    k = 2 * np.pi * n_env / lambda0
+    phase = np.exp(1j * k * z)
+    zeros = np.zeros_like(phase)
+    e_expected = np.array([phase, zeros, zeros])
+    h_expected = np.array([zeros, phase, zeros])
+
+    e_xyz = e_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z, include_incident=True)
+    h_xyz = h_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z, include_incident=True)
+    e_xyz2, h_xyz2 = eh_near_cartesian(lambda0, d_sphere, m_sphere, n_env, x, y, z, include_incident=True)
+
+    np.testing.assert_allclose(e_xyz, e_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_xyz, h_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(e_xyz2, e_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_xyz2, h_expected, rtol=1e-12, atol=1e-12)
+
+
+def test_no_contrast_spherical_fields_match_incident_components():
+    """No-contrast spherical fields should follow standard spherical components."""
+    lambda0 = 1.0
+    n_env = 1.0
+    d_sphere = 0.002
+    m_sphere = 1.0 + 0.0j
+    x, y, z = 2.0, 2.0, 0.5
+
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+
+    k = 2 * np.pi * n_env / lambda0
+    phase = np.exp(1j * k * z)
+
+    e_expected = np.array(
+        [
+            phase * np.sin(theta) * np.cos(phi),
+            phase * np.cos(theta) * np.cos(phi),
+            -phase * np.sin(phi),
+        ]
+    )
+    h_expected = np.array(
+        [
+            phase * np.sin(theta) * np.sin(phi),
+            phase * np.cos(theta) * np.sin(phi),
+            phase * np.cos(phi),
+        ]
+    )
+
+    e_sph = e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True)
+    h_sph = h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True)
+    e_sph2, h_sph2 = eh_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True)
+
+    np.testing.assert_allclose(e_sph, e_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_sph, h_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(e_sph2, e_expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(h_sph2, h_expected, rtol=1e-12, atol=1e-12)

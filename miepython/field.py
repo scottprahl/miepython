@@ -403,7 +403,7 @@ def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
             E_the += Ei_the
             E_phi += Ei_phi
 
-    return np.array([E_rad, E_the, -E_phi])
+    return np.array([E_rad, E_the, E_phi])
 
 
 def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
@@ -460,7 +460,7 @@ def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
             H_the += Hi_the
             H_phi += Hi_phi
 
-    return np.array([H_rad, H_the, -H_phi])
+    return np.array([H_rad, H_the, H_phi])
 
 
 def _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
@@ -520,7 +520,7 @@ def _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, inclu
             h_the += h_i[1]
             h_phi += h_i[2]
 
-    return np.array([e_rad, e_the, -e_phi]), np.array([h_rad, h_the, -h_phi])
+    return np.array([e_rad, e_the, e_phi]), np.array([h_rad, h_the, h_phi])
 
 
 def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):

@@ -1,6 +1,11 @@
 Changelog
 =========
 
+3.2.0 (03/06/2026)
+-------------------
+*   fix error in E & H calculations in the near field when y≠0 (thanks @dorianherle)
+*   add regression test
+
 3.1.0 (02/07/2026)
 -------------------
 *   add near-field E and H field APIs, fix boundary continuity/medium handling, and expand validation tests
