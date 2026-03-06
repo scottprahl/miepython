@@ -81,7 +81,7 @@
         },
         "url": {
           "type": "string",
-          "format": "uri"
+          "format": "uri-reference"
         },
         "yanked": {
           "type": "boolean"

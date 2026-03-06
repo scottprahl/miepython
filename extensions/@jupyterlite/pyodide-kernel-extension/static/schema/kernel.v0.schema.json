@@ -8,8 +8,8 @@
     "pyodideUrl": {
       "description": "The path to the main pyodide.js entry point",
       "type": "string",
-      "default": "https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js",
-      "format": "uri"
+      "default": "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js",
+      "format": "uri-reference"
     },
     "disablePyPIFallback": {
       "description": "Disable the piplite behavior of falling back to https://pypi.org/pypi/",
@@ -23,7 +23,7 @@
         "type": "string"
       },
       "default": [],
-      "format": "uri"
+      "format": "uri-reference"
     },
     "loadPyodideOptions": {
       "type": "object",
