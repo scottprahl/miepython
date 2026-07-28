@@ -14,6 +14,27 @@ concurrency:                       # cancel stale CI runs on the same branch
   cancel-in-progress: true
 
 jobs:
+  # Runs the same `make lint` target a local release check does, through uv, so
+  # the set of checks lives only in the Makefile and cannot drift from CI.
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Run every static check
+        run: make lint
+
   tests:
     name: Python ${{ matrix.python-version }} – ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

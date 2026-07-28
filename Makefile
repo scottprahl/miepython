@@ -49,6 +49,9 @@ help:
 	@echo "  test-jit       - Run the suite with the numba backend"
 	@echo "  note-test      - Test all notebooks for errors"
 	@echo ""
+	@echo "Lint Targets:"
+	@echo "  lint           - Run every static check below"
+	@echo ""
 	@echo "Packaging Targets:"
 	@echo "  rcheck         - Distribution release checks"
 	@echo "  manifest-check - Validate MANIFEST"
@@ -105,6 +108,18 @@ html:
 	$(RUN_DOCS) sphinx-build $(SPHINX_OPTS) "$(DOCS_DIR)" "$(HTML_DIR)"
 	@command -v open >/dev/null 2>&1 && open "$(HTML_DIR)/index.html" || true
 
+# Every static check, in one target so CI and `make rcheck` cannot drift apart.
+.PHONY: lint
+lint:
+	@$(MAKE) ruff-check
+	@$(MAKE) black-check
+	@$(MAKE) pylint-check
+	@$(MAKE) rst-check
+	@$(MAKE) yaml-check
+	@$(MAKE) manifest-check
+	@$(MAKE) pyroma-check
+	@echo "✅ Lint checks complete"
+
 .PHONY: pylint-check
 pylint-check:
 	@$(RUN) pylint $(PYLINT_TARGETS)
@@ -138,12 +153,7 @@ pyroma-check:
 rcheck:
 	@echo "Running all release checks..."
 	@$(MAKE) realclean
-	@$(MAKE) ruff-check
-	@$(MAKE) black-check
-	@$(MAKE) pylint-check
-	@$(MAKE) rst-check
-	@$(MAKE) manifest-check
-	@$(MAKE) pyroma-check
+	@$(MAKE) lint
 	@$(MAKE) html
 	@$(MAKE) lite
 	@$(MAKE) dist

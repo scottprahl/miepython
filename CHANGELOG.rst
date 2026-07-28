@@ -125,6 +125,14 @@ unreleased
     ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
     that parametrizes over both backends.  Tests written this way need only one
     copy instead of a JIT/no-JIT pair
+*   CI now lints.  It only ran pytest, so a pull request with formatting or lint
+    errors passed clean and the checks in ``make rcheck`` were enforced on nobody.
+    A new job runs ``make lint``, the same target a release check uses, through uv,
+    so the list of checks lives in the Makefile alone and cannot drift from CI
+*   add a ``make lint`` target covering ruff, black, pylint, rstcheck, yamllint,
+    check-manifest and pyroma, and have ``make rcheck`` delegate to it.  That also
+    closes a gap: ``yaml-check`` existed but was never part of ``rcheck``, so the
+    workflow files were only ever checked by hand
 *   the ``test_jit*`` files now really exercise the numba backend.  ``_backend.py``
     binds its kernels the first time ``miepython`` is imported, so setting
     ``MIEPYTHON_USE_JIT`` inside a test module only worked when that module

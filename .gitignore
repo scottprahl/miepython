@@ -25,3 +25,7 @@ docs/api/
 
 # GitHub Pages
 .gh-pages/
+
+# Local tooling
+CLAUDE.md
+uv.lock
