@@ -646,9 +646,10 @@ class TestMultipoles:
         m = 1.5 - 0.01j
         x = 3.0
         for n in range(1, 5):
-            qext, _, _, _ = mie.efficiencies_mx(m, x, n_pole=n)
+            qext_e, _, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=True)
+            qext_m, _, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=False)
             S1, _ = mie.S1_S2(m, x, np.array([1.0]), norm="wiscombe", n_pole=n)
-            assert qext == pytest.approx(4 * S1[0].real / x**2, abs=1e-12)
+            assert qext_e + qext_m == pytest.approx(4 * S1[0].real / x**2, abs=1e-12)
 
     def test_multipole_out_of_range(self):
         """Orders outside the truncated series are rejected."""
@@ -661,3 +662,107 @@ class TestMultipoles:
             mie.S1_S2(m, x, mu, n_pole=-1)
         with pytest.raises(ValueError):
             mie.S1_S2(m, x, mu, n_pole=n_terms)
+
+
+class TestElectricMagneticMultipoles:
+    """Test the e_field selector between electric (a_n) and magnetic (b_n) multipoles."""
+
+    def test_electric_and_magnetic_closed_form(self):
+        """e_field picks a_n when True and b_n when False."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        a, b = mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)
+
+        for n in range(1, 4):
+            cn = 2 * n + 1
+            qext_e, qsca_e, qback_e, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=True)
+            qext_m, qsca_m, qback_m, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=False)
+
+            assert qext_e == pytest.approx(2 * cn * a[n - 1].real / x**2, abs=1e-12)
+            assert qext_m == pytest.approx(2 * cn * b[n - 1].real / x**2, abs=1e-12)
+            assert qsca_e == pytest.approx(2 * cn * abs(a[n - 1]) ** 2 / x**2, abs=1e-12)
+            assert qsca_m == pytest.approx(2 * cn * abs(b[n - 1]) ** 2 / x**2, abs=1e-12)
+            assert qback_e == pytest.approx((cn * abs(a[n - 1])) ** 2 / x**2, abs=1e-12)
+            assert qback_m == pytest.approx((cn * abs(b[n - 1])) ** 2 / x**2, abs=1e-12)
+
+    def test_electric_and_magnetic_differ(self):
+        """The e_field flag changes the result instead of being ignored."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        for n in range(1, 4):
+            qext_e, qsca_e, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=True)
+            qext_m, qsca_m, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=False)
+            assert qext_e != pytest.approx(qext_m, abs=1e-6)
+            assert qsca_e != pytest.approx(qsca_m, abs=1e-6)
+
+    def test_multipoles_sum_to_full_efficiencies(self):
+        """Every order and both parities add up to the complete result."""
+        for m, x in ((1.5 - 0.01j, 3.0), (1.33, 5.0), (1.5 - 0.5j, 2.0)):
+            mm = complex(np.real(m), -abs(np.imag(m)))
+            n_terms = len(mie.an_bn(mm, x, 0)[0])
+
+            qext_sum = 0.0
+            qsca_sum = 0.0
+            for n in range(1, n_terms):
+                for e_field in (True, False):
+                    qext, qsca, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=e_field)
+                    qext_sum += qext
+                    qsca_sum += qsca
+
+            qext, qsca, _, _ = mie.efficiencies_mx(m, x)
+            assert qext_sum == pytest.approx(qext, rel=1e-10)
+            assert qsca_sum == pytest.approx(qsca, rel=1e-10)
+
+    def test_lossless_qsca_matches_modulus_form(self):
+        """For a lossless sphere the qsca=qext shortcut equals 2(2n+1)|a_n|^2/x^2."""
+        m = 1.33
+        x = 5.0
+        a, b = mie.an_bn(complex(m, 0), x, 0)
+        for n in range(1, 4):
+            cn = 2 * n + 1
+            _, qsca_e, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=True)
+            _, qsca_m, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=False)
+            assert qsca_e == pytest.approx(2 * cn * abs(a[n - 1]) ** 2 / x**2, abs=1e-12)
+            assert qsca_m == pytest.approx(2 * cn * abs(b[n - 1]) ** 2 / x**2, abs=1e-12)
+
+    def test_single_multipole_asymmetry_is_zero(self):
+        """Asymmetry is exactly zero for an isolated multipole, on both code paths."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        for n in range(1, 5):
+            for e_field in (True, False):
+                _, _, _, g = mie.efficiencies_mx(m, x, n_pole=n, e_field=e_field)
+                assert g == 0.0
+
+        # the array path must not turn g into nan
+        _, _, _, g = mie.efficiencies_mx(np.array([1.5 - 0.01j, 1.33]), np.array([3.0, 2.0]), n_pole=1)
+        assert np.all(np.isfinite(g))
+        np.testing.assert_array_equal(g, np.zeros(2))
+
+    def test_single_multipole_asymmetry_matches_angular_average(self):
+        """The zero g agrees with <cos(theta)> integrated over the isolated pattern."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        a, b = mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)
+        n_terms = len(a)
+        mu = np.linspace(-1, 1, 2001)
+
+        for n in range(1, 5):
+            scale = (2 * n + 1) / (n * (n + 1))
+            i_elec = np.zeros_like(mu)
+            i_magn = np.zeros_like(mu)
+            for k, mu_k in enumerate(mu):
+                pi = np.zeros(n_terms)
+                tau = np.zeros(n_terms)
+                mie.pi_tau(mu_k, pi, tau)
+                i_elec[k] = abs(scale * a[n - 1] * pi[n - 1]) ** 2 + abs(scale * a[n - 1] * tau[n - 1]) ** 2
+                i_magn[k] = abs(scale * b[n - 1] * tau[n - 1]) ** 2 + abs(scale * b[n - 1] * pi[n - 1]) ** 2
+
+            assert np.sum(i_elec * mu) / np.sum(i_elec) == pytest.approx(0.0, abs=1e-12)
+            assert np.sum(i_magn * mu) / np.sum(i_magn) == pytest.approx(0.0, abs=1e-12)
+
+    def test_e_field_ignored_for_full_series(self):
+        """e_field has no effect when every multipole is included."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        assert mie.efficiencies_mx(m, x, n_pole=0, e_field=True) == mie.efficiencies_mx(m, x, n_pole=0, e_field=False)

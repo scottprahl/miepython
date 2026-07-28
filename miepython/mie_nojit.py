@@ -463,7 +463,9 @@ def _single_sphere_py(m, x, n_pole, e_field):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         n_pole: a non-zero value returns the contribution by the n_pole multipole
-        e_field: Electric (True) or Magnetic Field otherwise
+        e_field: selects which multipole of order n_pole contributes, the
+            electric one a_n (True) or the magnetic one b_n (False).
+            Ignored when n_pole == 0.
 
     Returns:
         qext: the total extinction efficiency
@@ -471,8 +473,6 @@ def _single_sphere_py(m, x, n_pole, e_field):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
-    _ = e_field  # currently unused in scalar aggregate efficiencies
-
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
         return 0, 0, 0, 0
@@ -513,12 +513,18 @@ def _single_sphere_py(m, x, n_pole, e_field):
         g = 4.0 * np.sum(asy1 + asy2) / qsca / x2
 
     else:
+        # isolate one multipole: the electric term a_n or the magnetic term b_n
         cn = 2.0 * n_pole + 1
-        qback = np.abs((-1) ** n_pole * cn * (a[-1] - b[-1])) ** 2 / x2
-        qext = 2.0 * cn * (a[-1].real + b[-1].real) / x2
+        coeff = a[-1] if e_field else b[-1]
+        qext = 2.0 * cn * coeff.real / x2
+        # the (-1)**n_pole and the sign of b_n drop out of the modulus
+        qback = np.abs(cn * coeff) ** 2 / x2
         qsca = qext
         if m.imag < 0:
-            qsca = 2.0 * cn * (np.abs(a[-1]) ** 2 + np.abs(b[-1]) ** 2) / x2
-        g = None
+            qsca = 2.0 * cn * np.abs(coeff) ** 2 / x2
+
+        # pi_n**2 and tau_n**2 are both even in mu, so an isolated multipole of
+        # one parity scatters symmetrically about 90 degrees and <cos(theta)>=0
+        g = 0.0
 
     return qext, qsca, qback, g

@@ -155,8 +155,11 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
             - If 0 (default), computes contributions from all multipoles.
             - If non-zero, computes contributions from the specified multipole order.
         e_field (boolean):
-            If n_pole>0, then True value returns the electric
-            multipole contribution otherwise the Magnetic field contribution
+            When n_pole>0, selects which multipole of that order contributes:
+            True gives the electric multipole a_n, False the magnetic
+            multipole b_n. The two add up to the full order-n_pole
+            contribution for qext and qsca. Ignored when n_pole is 0.
+
     Returns:
         tuple:
             qext (float or array-like):
@@ -170,7 +173,8 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
                 scattered in the exact backward direction (theta = 180 degrees).
             g (float or array-like):
                 Asymmetry parameter, representing the average cosine of the scattering
-                angle over all angles.
+                angle over all angles. This is exactly zero when n_pole > 0, because a
+                single multipole of one parity scatters symmetrically about 90 degrees.
 
     Notes:
         - Ensure m and x have compatible dimensions if passed as arrays.

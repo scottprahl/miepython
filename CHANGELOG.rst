@@ -11,6 +11,16 @@ unreleased
     returning zeros or an ``IndexError``
 *   add multipole regression tests (series sum, closed form, per-multipole
     optical theorem) and re-execute ``docs/12_multipoles.ipynb``
+*   implement the ``e_field`` argument of ``efficiencies_mx``, which was accepted
+    and documented but silently ignored. With ``n_pole > 0`` it now selects the
+    electric multipole a_n (``e_field=True``, the default) or the magnetic
+    multipole b_n (``e_field=False``). **Behavior change:** ``n_pole > 0``
+    previously returned a_n and b_n combined; that total is now
+    ``e_field=True`` plus ``e_field=False``
+*   make the two backends agree on ``g`` when ``n_pole > 0``. The no-JIT backend
+    returned ``None`` (which became ``nan`` for array input) while the JIT
+    backend returned ``0``. Both now return ``0.0``, which is the exact value:
+    an isolated multipole of one parity scatters symmetrically about 90 degrees
 
 3.2.0 (03/06/2026)
 -------------------
