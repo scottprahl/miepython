@@ -47,6 +47,7 @@ help:
 	@echo "  test           - Run pytest once per backend (no-JIT then JIT)"
 	@echo "  test-nojit     - Run the suite with the pure python backend"
 	@echo "  test-jit       - Run the suite with the numba backend"
+	@echo "  coverage       - Both backends, combined coverage report"
 	@echo "  note-test      - Test all notebooks for errors"
 	@echo ""
 	@echo "Lint Targets:"
@@ -97,6 +98,19 @@ test-nojit:
 .PHONY: test-jit
 test-jit:
 	MIEPYTHON_USE_JIT=1 $(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
+
+# Coverage needs both backends, and NUMBA_DISABLE_JIT lets coverage.py see inside
+# the njit bodies: without it mie_jit.py reports 11% however well it is tested.
+.PHONY: coverage
+coverage:
+	@$(RM) .coverage
+	MIEPYTHON_USE_JIT=0 $(RUN) pytest $(PYTEST_OPTS) tests \
+	    --cov --cov-report= --cov-fail-under=0
+	MIEPYTHON_USE_JIT=1 NUMBA_DISABLE_JIT=1 $(RUN) pytest $(PYTEST_OPTS) tests \
+	    --cov --cov-append --cov-report= --cov-fail-under=0
+	@$(RUN) coverage report
+	@$(RUN) coverage html
+	@echo "HTML report in htmlcov/index.html"
 
 .PHONY: note-test
 note-test:

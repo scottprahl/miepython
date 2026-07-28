@@ -26,6 +26,12 @@ docs/api/
 # GitHub Pages
 .gh-pages/
 
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
 # Local tooling
 CLAUDE.md
 uv.lock

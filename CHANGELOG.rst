@@ -125,6 +125,15 @@ unreleased
     ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
     that parametrizes over both backends.  Tests written this way need only one
     copy instead of a JIT/no-JIT pair
+*   measure coverage.  ``make coverage`` runs the suite once per backend and
+    combines the results, and a CI job publishes the HTML report as an artifact.
+    Naive coverage is misleading here: coverage.py cannot see inside numba's
+    compiled functions, so ``mie_jit.py`` reports 11% no matter how well it is
+    tested.  The second pass therefore sets ``NUMBA_DISABLE_JIT=1``, which runs the
+    njit bodies as plain Python and lifts that file to 96%.  The combined figure is
+    86% with branch coverage, and ``fail_under`` is set to 84 as a floor to ratchet
+    upward.  Two tests that deliberately assert numba is compiled were rewritten to
+    hold in either mode rather than being skipped, so all three modes stay green
 *   widen the CI matrix.  It covered ubuntu on Python 3.10 and 3.14 only, and
     because it also ran just two test files, most of the suite had never executed
     on the oldest supported Python.  Linux now runs every version the classifiers

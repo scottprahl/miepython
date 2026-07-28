@@ -61,6 +61,7 @@ docs = [
 dev = [
   # Testing
   "pytest",
+  "pytest-cov",
   "imageio",
   "requests",
 
@@ -131,6 +132,25 @@ pydocstyle.convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "docs/x_*.ipynb" = ["ALL"]
 "docs/11_performance.ipynb" = ["ALL"]
+
+[tool.coverage.run]
+source = ["miepython"]
+branch = true
+# the example scripts live inside the package directory but are not shipped, and
+# they run start to finish, so counting them only inflates the total
+omit = ["*/miepython/examples/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+# A floor rather than a target: raise it as coverage improves, never lower it to
+# make a run pass.  `make coverage` reaches about 86%.
+fail_under = 84
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
 
 [tool.check-manifest]
 ignore = [

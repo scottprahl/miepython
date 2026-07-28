@@ -48,8 +48,10 @@ def worst_relative(a, b):
 @pytest.mark.parametrize("name,py_name,nb_name", KERNEL_PAIRS, ids=[p[0] for p in KERNEL_PAIRS])
 def test_signatures_match(name, py_name, nb_name):
     """A call that works on one backend must work on the other."""
+    kernel = getattr(mie_jit, nb_name)
+    # njit wraps the original in a dispatcher; NUMBA_DISABLE_JIT leaves it bare
     py_sig = inspect.signature(getattr(mie_nojit, py_name))
-    nb_sig = inspect.signature(getattr(mie_jit, nb_name).py_func)
+    nb_sig = inspect.signature(getattr(kernel, "py_func", kernel))
     assert str(py_sig) == str(nb_sig), name
 
 

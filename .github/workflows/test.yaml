@@ -35,6 +35,34 @@ jobs:
           UV_PYTHON: "3.14"
         run: make lint
 
+  # Coverage needs one run per backend, plus NUMBA_DISABLE_JIT so coverage.py
+  # can see inside the njit bodies; the make target explains why.
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Measure combined coverage
+        env:
+          UV_PYTHON: "3.14"
+        run: make coverage
+
+      - name: Upload the HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 14
+
   tests:
     name: Python ${{ matrix.python-version }} – ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

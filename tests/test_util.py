@@ -103,7 +103,11 @@ class TestBackendGuard:
     def test_kernels_come_from_the_expected_module(self):
         """The bound kernels really are the numba or the python ones."""
         kind = type(miepython.single_sphere).__name__
-        assert kind == ("CPUDispatcher" if miepython.USE_JIT else "function"), kind
+        # NUMBA_DISABLE_JIT=1, which `make coverage` uses so coverage.py can see
+        # inside the njit bodies, leaves them as plain functions
+        disabled = os.environ.get("NUMBA_DISABLE_JIT", "0") == "1"
+        want = "CPUDispatcher" if (miepython.USE_JIT and not disabled) else "function"
+        assert kind == want, kind
 
     def test_conftest_filters_the_other_backend(self):
         """Filtering must stay in place, or half the suite tests the wrong code."""
