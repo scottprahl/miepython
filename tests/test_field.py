@@ -362,13 +362,20 @@ def test_no_contrast_spherical_fields_match_incident_components():
     np.testing.assert_allclose(h_sph2, h_expected, rtol=1e-12, atol=1e-12)
 
 
-def test_default_truncation_keeps_one_extra_order():
-    """The near field keeps one more term than Wiscombe's scattering criterion."""
+EXTRA_FIELD_ORDERS = 2
+
+
+def test_default_truncation_keeps_extra_orders():
+    """The near field keeps more terms than Wiscombe's scattering criterion.
+
+    The criterion is tuned for the scattered series; the field at the surface
+    converges more slowly, and past two extra orders it stops improving.
+    """
     lambda0, d_sphere, n_env = 1.0, 1.0, 1.0
     x = np.pi * d_sphere * n_env / lambda0
     abcd = _coefficients_abcd(lambda0, d_sphere, 1.5 + 0j, n_env, 0)
     for coeff in abcd:
-        assert len(coeff) == wiscombe_terms(x) + 1
+        assert len(coeff) == wiscombe_terms(x) + EXTRA_FIELD_ORDERS
 
 
 @pytest.mark.parametrize("m_sphere", [1.5 + 0j, 0.75 + 0j, 1.33 + 0j, 1.5 - 0.1j])
@@ -376,7 +383,9 @@ def test_default_path_boundary_continuity(m_sphere):
     """Tangential E is continuous to better than 1e-5 on the default abcd path.
 
     Truncating at Wiscombe's criterion instead leaves a mismatch near 1.5e-5, so
-    this also guards the extra order from being dropped again.
+    this also guards the extra orders from being dropped again.  The exact count
+    is pinned by test_default_truncation_keeps_extra_orders; this checks the
+    outcome the count is chosen for.
     """
     lambda0, d_sphere, n_env = 1.0, 1.0, 1.0
     radius = d_sphere / 2
@@ -389,4 +398,4 @@ def test_default_path_boundary_continuity(m_sphere):
 
     for comp in (1, 2):  # theta and phi are the tangential components
         scale = np.maximum(np.abs(e_out[comp]), 1e-12)
-        assert np.max(np.abs(e_in[comp] - e_out[comp]) / scale) < 8e-6
+        assert np.max(np.abs(e_in[comp] - e_out[comp]) / scale) < 5e-6

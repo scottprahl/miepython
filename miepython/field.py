@@ -257,10 +257,12 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
     m_rel = m_sphere / n_env
     if n_pole == 0:
         # Wiscombe's criterion truncates the scattered series, which converges
-        # faster than the field evaluated right at the surface.  One extra order
-        # cuts the tangential boundary mismatch about fourfold; beyond a few
-        # extra orders the high-order terms destabilise and it gets much worse.
-        n_pole = wiscombe_terms(x) + 1
+        # faster than the field evaluated right at the surface.  Now that an_bn
+        # builds psi_n stably, extra orders converge instead of diverging: the
+        # tangential boundary mismatch falls from 1.5e-5 at the criterion to
+        # 3.6e-6 with one extra order and 3.2e-6 with two, then flattens out, so
+        # two is where it stops being worth more terms.
+        n_pole = wiscombe_terms(x) + 2
     a, b, c, d = coefficients(m_rel, x, n_pole=n_pole, internal=True)
     return np.array([a, b, c, d])
 
@@ -521,8 +523,8 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         phi (float or ndarray): Azimuth angle(s) in radians.
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
             If provided, ``n_pole`` is ignored.
 
@@ -552,8 +554,8 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         phi (float or ndarray): Azimuth angle(s) in radians.
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
             If provided, ``n_pole`` is ignored.
 
@@ -594,8 +596,8 @@ def eh_near(
         phi (float or ndarray): Azimuth angle(s) in radians.
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
             If provided, ``n_pole`` is ignored.
 
@@ -636,8 +638,8 @@ def e_near_cartesian(
         z (float or ndarray): Cartesian z coordinate(s).
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
 
     Returns:
@@ -672,8 +674,8 @@ def h_near_cartesian(
         z (float or ndarray): Cartesian z coordinate(s).
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
 
     Returns:
@@ -708,8 +710,8 @@ def eh_near_cartesian(
         z (float or ndarray): Cartesian z coordinate(s).
         include_incident (bool): Include incident field for points outside sphere.
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
-            one more than Wiscombe's criterion, which converges the near field at
-            the sphere surface roughly four times closer than the criterion alone.
+            two more than Wiscombe's criterion, which converges the near field at
+            the sphere surface roughly five times closer than the criterion alone.
         abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
 
     Returns:

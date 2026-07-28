@@ -158,9 +158,11 @@ def test_field_agrees_across_the_grid(case):
     off_surface = np.abs(r - radius) > spacing / 2
     assert off_surface.sum() > 0.98 * r.size, "excluded far too many points"
 
-    # the medians sit near 6e-13; this bound is loose enough for other platforms
-    # but still fails the pre-stability implementation, which managed only 1e-11
-    assert np.median(e_err) < 5e-12
+    # the medians sit near 3.5e-14.  This bound keeps ample headroom for other
+    # platforms while still failing the pre-stability implementation, which
+    # managed only 1e-11.  The exact term count is pinned in test_field.py, so
+    # this does not need to discriminate one extra order from two.
+    assert np.median(e_err) < 1e-12
     assert np.median(h_err) < 5e-9
 
     assert np.max(e_err[off_surface]) < 2e-3

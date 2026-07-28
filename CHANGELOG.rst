@@ -153,13 +153,14 @@ unreleased
     this routine
 *   fix ``util`` exporting ``_all_`` instead of ``__all__``, and list
     ``phasor_str_scalar`` alongside the rest
-*   the near-field routines keep one more term than Wiscombe's criterion.  That
+*   the near-field routines keep two more terms than Wiscombe's criterion.  That
     criterion truncates the scattered series, which converges faster than the
     field evaluated right at the sphere surface: the tangential E and H mismatch
-    across the boundary drops from 1.5e-5 to 3.6e-6.  Two or three extra orders
-    gain little more and eight make it far worse, so exactly one is added.  The
-    scattering quantities are untouched, and ``e_far`` still uses the criterion
-    unchanged.  ``miepython.core.wiscombe_terms`` now names the term count
+    across the boundary drops from 1.5e-5 to 3.2e-6, and the median disagreement
+    with scattnlay over a 121x121 slice falls from 1.1e-11 to 3.3e-14.  Further
+    orders gain almost nothing once ``psi_n`` is computed stably, so two is where
+    it stops.  The scattering quantities are untouched, and ``e_far`` still uses
+    the criterion unchanged.  ``miepython.core.wiscombe_terms`` names the count
 *   ``pi_tau`` now fills ``tau`` for the highest order.  It had always left the
     last entry zero, which was hidden by the ``an_bn`` padding above and would
     have silently dropped a term once the padding went away.  ``n_pole`` may now
