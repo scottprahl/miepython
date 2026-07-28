@@ -21,6 +21,23 @@ unreleased
     returned ``None`` (which became ``nan`` for array input) while the JIT
     backend returned ``0``. Both now return ``0.0``, which is the exact value:
     an isolated multipole of one parity scatters symmetrically about 90 degrees
+*   fix an operator-precedence bug in the perfectly-conducting guard of ``cn_dn``.
+    ``a and b or c`` made the test true for every finite index, so ``cn_dn(0j, x)``
+    raised ``ZeroDivisionError`` and an infinite index produced ``nan``. The
+    internal coefficients are now zero for a perfect conductor, as intended
+*   drop ``fastmath`` from the numba ``_cn_dn_nb`` kernel. It implies LLVM's
+    ``ninf``, which folded the ``np.isinf`` guard to ``False`` and defeated the
+    fix above in the JIT backend. This also improves JIT/no-JIT agreement
+*   make the internal-field coefficients ``c_n`` and ``d_n`` numerically stable.
+    ``psi_n`` came from the three-term upwards recurrence, which is contaminated
+    by the growing ``chi_n`` solution once n exceeds ``|mx|``.  That is the normal
+    case for a relative index below one, where the coefficients were wrong by up
+    to 140%.  ``psi_n`` now uses Miller's downwards recurrence seeded above ``|z|``
+    and normalised against whichever of ``psi_0`` or ``psi_1`` is larger, and
+    the logarithmic derivatives take the always-stable downwards route.
+    Worst error against a direct SciPy evaluation over 7320 cases drops from
+    90 to 3e-9, and the JIT and no-JIT backends now agree to 5e-15 where they
+    previously differed by up to a factor of 39
 
 3.2.0 (03/06/2026)
 -------------------

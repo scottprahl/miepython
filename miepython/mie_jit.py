@@ -82,6 +82,75 @@ def _D_upwards(z, N, D):
         D[n] = 1 / (n / z - D[n - 1]) - n / z
 
 
+@njit((complex128, int64), cache=True)
+def _psi_downwards_nb(z, nstop):
+    """
+    Compute the Riccati-Bessel functions psi_0(z)..psi_nstop(z).
+
+    The three-term upwards recurrence
+    ``psi_{n+1} = (2n+1)/z psi_n - psi_{n-1}`` is contaminated by the growing
+    chi_n solution once n exceeds |z|, which is the normal case for psi_n(mx)
+    whenever the relative index is below one.  Miller's algorithm is used
+    instead: seed the recurrence well above |z| where psi_n is the decaying
+    solution, run it downwards, then fix the arbitrary scale against whichever
+    of psi_0 or psi_1 is larger.  sin(z) and cos(z) cannot both be small, so one
+    of those two seeds is always well conditioned.
+
+    Args:
+        z: function argument (the refractive index times the size parameter)
+        nstop: highest order needed
+
+    Returns:
+        Array of psi_k(z) for k=0 to nstop
+    """
+    abs_z = abs(z)
+    n_start = int(max(float(nstop), abs_z)) + 25 + int(1.5 * np.sqrt(abs_z))
+
+    psi = np.zeros(n_start + 2, dtype=np.complex128)
+    psi[n_start] = 1e-50
+    for n in range(n_start, 0, -1):
+        psi[n - 1] = (2 * n + 1) / z * psi[n] - psi[n + 1]
+        if abs(psi[n - 1]) > 1e200:  # keep the growing tail in range
+            for k in range(n - 1, n_start + 2):
+                psi[k] /= 1e200
+
+    sin_z = np.sin(z)
+    psi_0 = sin_z
+    psi_1 = sin_z / z - np.cos(z)
+    if abs(psi_1) > abs(psi_0):
+        scale = psi_1 / psi[1]
+    else:
+        scale = psi_0 / psi[0]
+    for k in range(n_start + 2):
+        psi[k] *= scale
+
+    return psi[: nstop + 1]
+
+
+@njit((complex128, int64), cache=True)
+def _D_calc_down_nb(z, N):
+    """
+    Compute D_1(z)..D_N(z) using only the downwards recurrence.
+
+    ``_D_calc_nb`` picks between the upwards and downwards recurrences with
+    Wiscombe's criterion, which considers the refractive index but not the number
+    of terms.  The upwards recurrence loses accuracy once N exceeds |z| (about
+    4 digits for a small sphere), and the resulting noise differs between the
+    numba and pure-python backends.  The internal-field coefficients are not on
+    the hot path, so they always take the stable route.
+
+    Args:
+        z: function argument (already multiplied by the refractive index)
+        N: highest order needed
+
+    Returns:
+        Array of logarithmic derivatives D_k(z) for k=1 to N
+    """
+    D = np.zeros(N + 1, dtype=np.complex128)
+    _D_downwards(z, N, D)
+    return D[1:]
+
+
 @njit((complex128, float64, int64), cache=True)
 def _D_calc_nb(m, x, N):
     """
@@ -194,7 +263,9 @@ def _an_bn_nb(m, x, n_pole):
     return np.conjugate(a), np.conjugate(b)
 
 
-@njit((complex128, float64, int64), fastmath=True)
+# no fastmath here: it implies LLVM's ninf, which folds the np.isinf guard below
+# to False and lets an infinite index divide by zero
+@njit((complex128, float64, int64))
 def _cn_dn_nb(m, x, n_pole):
     """
     Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
@@ -226,32 +297,27 @@ def _cn_dn_nb(m, x, n_pole):
         return c, d
 
     # no need to calculate anything when sphere is perfectly conducting
-    if m.real > 0.0 and not np.isinf(m.real) or not np.isinf(m.imag):
-        psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-        psi_n = psi_nm1 / x - np.cos(x)
+    # (m.real <= 0 or an infinite index): there is no internal field, so c and d
+    # stay zero.  The `and` chain must not be mixed with `or` here, otherwise the
+    # test is true for every finite index and m=0 divides by zero below.
+    if m.real > 0.0 and not np.isinf(m.real) and not np.isinf(m.imag):
+        sin_x = np.sin(x)
+        cos_x = np.cos(x)
 
-        psi_nm1_mx = np.sin(mx)  # nm1 = n-1 = 0
-        psi_n_mx = psi_nm1_mx / mx - np.cos(mx)
+        # xi is the growing solution, so seeding it and running upwards is stable
+        xi_nm1 = np.complex128(sin_x + 1j * cos_x)
+        xi_n = np.complex128((sin_x / x - cos_x) + 1j * (cos_x / x + sin_x))
 
-        xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
-        xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
-
-        Dmx = _D_calc_nb(np.complex128(m), x, nstop + 1)
-        Dx = _D_calc_nb(np.complex128(1), x, nstop + 1)
+        psi_x = _psi_downwards_nb(np.complex128(x), nstop + 1)
+        psi_mx = _psi_downwards_nb(np.complex128(mx), nstop + 1)
+        Dmx = _D_calc_down_nb(np.complex128(mx), nstop + 1)
+        Dx = _D_calc_down_nb(np.complex128(x), nstop + 1)
 
         for n in range(1, nstop + 1):
-            common = (psi_n / psi_n_mx) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
+            common = (psi_x[n] / psi_mx[n]) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
 
             c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
             d[n - 1] = common / ((Dmx[n - 1] / m + n / x) * xi_n - xi_nm1)
-
-            psi = (2 * n + 1) * psi_n / x - psi_nm1
-            psi_nm1 = psi_n
-            psi_n = psi
-
-            psi_mx = (2 * n + 1) * psi_n_mx / mx - psi_nm1_mx
-            psi_nm1_mx = psi_n_mx
-            psi_n_mx = psi_mx
 
             xi = (2 * n + 1) * xi_n / x - xi_nm1
             xi_nm1 = xi_n

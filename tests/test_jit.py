@@ -3,9 +3,15 @@
 import os
 import pytest
 import numpy as np
+from scipy.special import spherical_jn
 
 os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
+from miepython.mie_jit import _psi_downwards_nb as psi_downwards
+
+# imported after miepython so that the backend selected above is the one
+# under test; this module imports miepython itself
+from test_jit_abcd import slow_cn_dn  # pylint: disable=wrong-import-order
 
 
 class TestNonAbsorbing:
@@ -760,3 +766,108 @@ class TestElectricMagneticMultipoles:
         m = 1.5 - 0.01j
         x = 3.0
         assert mie.efficiencies_mx(m, x, n_pole=0, e_field=True) == mie.efficiencies_mx(m, x, n_pole=0, e_field=False)
+
+
+class TestConductingInternalCoefficients:
+    """Test that cn_dn returns no internal field for a perfectly conducting sphere."""
+
+    def test_conducting_sphere_has_no_internal_field(self):
+        """Internal coefficients are zero when the index signals a perfect conductor."""
+        for m in (complex(0.0, 0.0), complex(0.0, 100.0), complex(0.0, -100.0)):
+            c, d = mie.cn_dn(m, 1.0, 0)
+            np.testing.assert_array_equal(c, np.zeros_like(c))
+            np.testing.assert_array_equal(d, np.zeros_like(d))
+
+    def test_infinite_index_has_no_internal_field(self):
+        """An infinite index is guarded instead of producing nan."""
+        for m in (complex(np.inf, 0.0), complex(1.5, -np.inf), complex(np.inf, -np.inf)):
+            c, d = mie.cn_dn(m, 1.0, 0)
+            assert np.all(np.isfinite(c.view(float)))
+            assert np.all(np.isfinite(d.view(float)))
+            np.testing.assert_array_equal(c, np.zeros_like(c))
+            np.testing.assert_array_equal(d, np.zeros_like(d))
+
+    def test_dielectric_sphere_still_computed(self):
+        """The guard does not suppress ordinary spheres."""
+        for m in (complex(1.5, 0.0), complex(1.5, -0.1), complex(1.33, -1e-8)):
+            c, d = mie.cn_dn(m, 1.0, 0)
+            assert np.any(c != 0)
+            assert np.any(d != 0)
+
+    def test_conducting_coefficients_via_public_api(self):
+        """coefficients(internal=True) is zero for the internal terms only."""
+        a, b, c, d = mie.coefficients(complex(0.0, 100.0), 1.0, internal=True)
+        assert np.any(a != 0) or np.any(b != 0)
+        np.testing.assert_array_equal(c, np.zeros_like(c))
+        np.testing.assert_array_equal(d, np.zeros_like(d))
+
+    def test_internal_coefficients_match_reference(self):
+        """cn_dn agrees with a direct scipy evaluation, including m < 1."""
+        for m, x in [
+            (complex(1.5, -0.01), 5.0),
+            (complex(1.5, -0.01), 20.0),
+            (complex(1.5, -0.5), 10.0),
+            (complex(0.75, 0.0), 1.0),
+            (complex(0.75, 0.0), 20.0),
+            (complex(0.75, -0.01), 20.0),
+            (complex(1.05, 0.0), 15.0),
+            (complex(1.33, 0.0), 0.1),
+        ]:
+            c, d = mie.cn_dn(m, x, 0)
+            c_ref, d_ref = slow_cn_dn(m, x, 0)
+            k = min(len(c), len(c_ref))
+            keep = np.abs(c_ref[:k]) > 1e-200
+            np.testing.assert_allclose(c[:k][keep], c_ref[:k][keep], rtol=1e-8)
+            keep = np.abs(d_ref[:k]) > 1e-200
+            np.testing.assert_allclose(d[:k][keep], d_ref[:k][keep], rtol=1e-8)
+
+    def test_internal_coefficients_stable_below_unit_index(self):
+        """The psi ratio stays accurate when the order runs past |mx|."""
+        # m < 1 puts every order above |mx|, which the old three-term
+        # recurrence for psi_n(mx) could not survive
+        m = complex(0.75, 0.0)
+        x = 20.0
+        c, _ = mie.cn_dn(m, x, 0)
+        c_ref, _ = slow_cn_dn(m, x, 0)
+        k = min(len(c), len(c_ref))
+        keep = np.abs(c_ref[:k]) > 1e-200
+        rel = np.max(np.abs(c[:k][keep] - c_ref[:k][keep]) / np.abs(c_ref[:k][keep]))
+        assert rel < 1e-10
+
+    def test_internal_coefficients_at_sin_zeros(self):
+        """Accuracy survives the orders where sin(x) or sin(mx) vanishes."""
+        # x = n*pi happens whenever the diameter is a multiple of the wavelength,
+        # and m*x = n*pi is the matching hazard on the internal argument
+        cases = [
+            (complex(1.5, 0.0), np.pi),
+            (complex(1.5, 0.0), 2 * np.pi),
+            (complex(2.5, 0.0), 2 * np.pi),  # m*x = 5*pi
+            (complex(2.0, 0.0), 1.5 * np.pi),  # m*x = 3*pi
+            (complex(0.5, 0.0), 4 * np.pi),  # m*x = 2*pi and m < 1
+        ]
+        for m, x in cases:
+            c, d = mie.cn_dn(m, x, 0)
+            c_ref, d_ref = slow_cn_dn(m, x, 0)
+            k = min(len(c), len(c_ref))
+            keep = np.abs(c_ref[:k]) > 1e-200
+            np.testing.assert_allclose(c[:k][keep], c_ref[:k][keep], rtol=1e-7)
+            keep = np.abs(d_ref[:k]) > 1e-200
+            np.testing.assert_allclose(d[:k][keep], d_ref[:k][keep], rtol=1e-7)
+
+    def test_psi_downwards_matches_scipy(self):
+        """The Riccati-Bessel helper agrees with scipy for real and complex z."""
+        for z in (0.1 + 0j, np.pi + 0j, 20.0 + 0j, 15.0 - 3.0j, 2.0 - 8.0j, 0.5 + 0j):
+            nstop = 30
+            got = psi_downwards(np.complex128(z), nstop)
+            n = np.arange(0, nstop + 1)
+            ref = z * spherical_jn(n, z)
+
+            # orders 1.. are tested relatively, right down into the underflowing
+            # tail, because the downward recurrence carries relative accuracy
+            keep = np.abs(ref[1:]) > 1e-250
+            np.testing.assert_allclose(got[1:][keep], ref[1:][keep], rtol=1e-9)
+
+            # psi_0 = sin(z) is a cancellation artifact at the zeros of sine, where
+            # scipy and sin(z) disagree at the 1e-16 level, so it gets an absolute
+            # bound instead
+            assert abs(got[0] - ref[0]) <= 1e-13 * np.max(np.abs(ref))
