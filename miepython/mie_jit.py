@@ -191,8 +191,8 @@ def _an_bn_nb(m, x, n_pole):
     formula. The length of the arrays is chosen so that the error when the series
     is summed is around 1e-6.
 
-    If n_pole>0, then the array sizes will be n_pole+1. This is useful when
-    trying to isolate the behavior of a particular multipole.
+    If n_pole>0, then the arrays hold exactly n_pole terms, orders 1 to n_pole.
+    This is useful when trying to isolate the behavior of a particular multipole.
 
     To support resonance calculations, one can specify the number of terms
     to be calculated.  In general, using too few or too many terms increases the
@@ -205,7 +205,8 @@ def _an_bn_nb(m, x, n_pole):
         n_pole: the number of An and Bn terms (0 does autosizing)
 
     Returns:
-        a, b: arrays of Mie coefficents An and Bn
+        a, b: arrays of Mie coefficents An and Bn, one entry per order,
+        with no padding.  ``_cn_dn`` returns the same number of terms.
     """
     # make sure sign of imaginary part is negative
     m_re = m.real
@@ -214,14 +215,14 @@ def _an_bn_nb(m, x, n_pole):
         m_im = -m_im
     m = complex(m_re, m_im)
 
-    # make sure array size is large enough
+    # Wiscombe's truncation: the series is summed through order n_terms
     if n_pole == 0:
-        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+        n_terms = int(x + 4.05 * x**0.33333 + 2.0)
     else:
-        nstop = n_pole + 1
+        n_terms = n_pole
 
-    a = np.zeros(nstop, dtype=np.complex128)
-    b = np.zeros(nstop, dtype=np.complex128)
+    a = np.zeros(n_terms, dtype=np.complex128)
+    b = np.zeros(n_terms, dtype=np.complex128)
     if x <= 0:
         return a, b
 
@@ -231,9 +232,9 @@ def _an_bn_nb(m, x, n_pole):
     xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
 
     if m.real > 0.0:
-        D = _D_calc_nb(m, x, nstop + 1)
+        D = _D_calc_nb(m, x, n_terms + 2)
 
-        for n in range(1, nstop):
+        for n in range(1, n_terms + 1):
             temp = D[n - 1] / m + n / x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
             temp = D[n - 1] * m + n / x
@@ -246,7 +247,7 @@ def _an_bn_nb(m, x, n_pole):
             psi_n = psi
 
     else:
-        for n in range(1, nstop):
+        for n in range(1, n_terms + 1):
             a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
             b[n - 1] = psi_n / xi_n
             xi = (2 * n + 1) * xi_n / x - xi_nm1
@@ -254,10 +255,6 @@ def _an_bn_nb(m, x, n_pole):
             xi_n = xi
             psi_nm1 = psi_n
             psi_n = xi_n.real
-
-    if n_pole != 0:
-        a = a[:-1]
-        b = b[:-1]
 
     return np.conjugate(a), np.conjugate(b)
 
@@ -287,13 +284,14 @@ def _cn_dn_nb(m, x, n_pole):
     m = complex(m_re, m_im)
     mx = m * x
 
+    # same truncation as _an_bn_nb so the internal and external series match
     if n_pole == 0:
-        nstop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+        n_terms = int(x + 4.05 * x**0.33333 + 2.0)
     else:
-        nstop = n_pole + 1
+        n_terms = n_pole
 
-    c = np.zeros(nstop, dtype=np.complex128)
-    d = np.zeros(nstop, dtype=np.complex128)
+    c = np.zeros(n_terms, dtype=np.complex128)
+    d = np.zeros(n_terms, dtype=np.complex128)
     if x <= 0:
         return c, d
 
@@ -309,12 +307,12 @@ def _cn_dn_nb(m, x, n_pole):
         xi_nm1 = np.complex128(sin_x + 1j * cos_x)
         xi_n = np.complex128((sin_x / x - cos_x) + 1j * (cos_x / x + sin_x))
 
-        psi_x = _psi_downwards_nb(np.complex128(x), nstop + 1)
-        psi_mx = _psi_downwards_nb(np.complex128(mx), nstop + 1)
-        Dmx = _D_calc_down_nb(np.complex128(mx), nstop + 1)
-        Dx = _D_calc_down_nb(np.complex128(x), nstop + 1)
+        psi_x = _psi_downwards_nb(np.complex128(x), n_terms + 1)
+        psi_mx = _psi_downwards_nb(np.complex128(mx), n_terms + 1)
+        Dmx = _D_calc_down_nb(np.complex128(mx), n_terms + 2)
+        Dx = _D_calc_down_nb(np.complex128(x), n_terms + 2)
 
-        for n in range(1, nstop + 1):
+        for n in range(1, n_terms + 1):
             common = (psi_x[n] / psi_mx[n]) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
 
             c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
@@ -324,9 +322,6 @@ def _cn_dn_nb(m, x, n_pole):
             xi_nm1 = xi_n
             xi_n = xi
 
-    if n_pole != 0:
-        c = c[:-1]
-        d = d[:-1]
     return np.conjugate(c), np.conjugate(d)
 
 
@@ -364,6 +359,9 @@ def _pi_tau_nb(mu, pi, tau):
         pi[n] = ((2 * n + 1) * mu * temp - (n + 1) * pi_nm2) / n
         pi_nm2 = temp
 
+    # each pass sets tau one order behind pi, so the highest order is still due
+    tau[n_terms - 1] = n_terms * mu * pi[n_terms - 1] - (n_terms + 1) * pi_nm2
+
 
 @njit((complex128, float64, float64[:], int64), cache=True)
 def _S1_S2_nb(m, x, mu, n_pole):
@@ -386,8 +384,8 @@ def _S1_S2_nb(m, x, mu, n_pole):
     """
     a, b = _an_bn_nb(m, x, 0)
     N = len(a)
-    if n_pole < 0 or n_pole >= N:
-        raise ValueError("n_pole must be 0 (all terms) or a multipole order in 1.." + str(N - 1))
+    if n_pole < 0 or n_pole > N:
+        raise ValueError("n_pole must be 0 (all terms) or a multipole order in 1.." + str(N))
 
     pi = np.zeros(N)
     tau = np.zeros(N)

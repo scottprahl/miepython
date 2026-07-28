@@ -53,6 +53,15 @@ unreleased
     perfectly-conducting guard above, its reassociation degraded the exact
     lossless identity by roughly six times relative to the pure-python backend.
     Costs about 10% on a large sweep of size parameters
+*   ``an_bn`` no longer pads a zero onto the end of ``a`` and ``b``, and ``cn_dn``
+    no longer computes one order more than ``an_bn``.  Both now return exactly
+    Wiscombe's number of terms with every entry a real coefficient, so the
+    internal and external series share one truncation.  The retained ``a_n`` and
+    ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
+*   ``pi_tau`` now fills ``tau`` for the highest order.  It had always left the
+    last entry zero, which was hidden by the ``an_bn`` padding above and would
+    have silently dropped a term once the padding went away.  ``n_pole`` may now
+    address the highest order, which the old bounds check rejected
 
 3.2.0 (03/06/2026)
 -------------------

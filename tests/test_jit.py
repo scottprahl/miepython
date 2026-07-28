@@ -3,7 +3,7 @@
 import os
 import pytest
 import numpy as np
-from scipy.special import spherical_jn
+from scipy.special import spherical_jn, lpmv
 
 os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
@@ -610,7 +610,7 @@ class TestMultipoles:
         m = 1.5 - 0.01j
         x = 3.0
         mu = np.linspace(-1, 1, 11)
-        n_max = len(mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)[0]) - 1
+        n_max = len(mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)[0])
 
         S1_sum = np.zeros_like(mu, dtype=complex)
         S2_sum = np.zeros_like(mu, dtype=complex)
@@ -661,7 +661,7 @@ class TestMultipoles:
         with pytest.raises(ValueError):
             mie.S1_S2(m, x, mu, n_pole=-1)
         with pytest.raises(ValueError):
-            mie.S1_S2(m, x, mu, n_pole=n_terms)
+            mie.S1_S2(m, x, mu, n_pole=n_terms + 1)
 
 
 class TestElectricMagneticMultipoles:
@@ -897,3 +897,68 @@ class TestConductingInternalCoefficients:
             # scipy and sin(z) disagree at the 1e-16 level, so it gets an absolute
             # bound instead
             assert abs(got[0] - ref[0]) <= 1e-13 * np.max(np.abs(ref))
+
+
+class TestSeriesTruncation:
+    """Test that every returned coefficient is a real term, with no padding."""
+
+    def test_no_trailing_zero(self):
+        """The last a_n and b_n are genuine coefficients, not padding."""
+        for m, x in ((complex(1.5, -0.1), 5.0), (complex(1.33, 0.0), 1.0), (complex(2.0, -0.5), 20.0)):
+            a, b = mie.an_bn(m, x, 0)
+            assert a[-1] != 0
+            assert b[-1] != 0
+
+    def test_internal_and_external_series_same_length(self):
+        """a_n/b_n and c_n/d_n must be truncated at the same order."""
+        for m, x in ((complex(1.5, -0.1), 5.0), (complex(1.33, 0.0), 1.0), (complex(2.0, -0.5), 20.0)):
+            a, b = mie.an_bn(m, x, 0)
+            c, d = mie.cn_dn(m, x, 0)
+            assert len(a) == len(b) == len(c) == len(d)
+            assert len(a) == int(x + 4.05 * x**0.33333 + 2.0)
+
+    def test_pi_tau_fills_every_order(self):
+        """pi_tau must set tau for the highest order too."""
+        mu = 0.3
+        for n_terms in (1, 2, 5, 12):
+            pi = np.zeros(n_terms)
+            tau = np.zeros(n_terms)
+            mie.pi_tau(mu, pi, tau)
+            assert tau[-1] != 0
+            # closed forms: tau_1 = mu, tau_2 = 3(2mu^2 - 1), pi_1 = 1, pi_2 = 3mu
+            assert pi[0] == pytest.approx(1.0)
+            assert tau[0] == pytest.approx(mu)
+            if n_terms >= 2:
+                assert pi[1] == pytest.approx(3 * mu)
+                assert tau[1] == pytest.approx(3 * (2 * mu**2 - 1))
+
+    def test_pi_tau_matches_legendre(self):
+        """pi_n and tau_n agree with the Legendre function and its derivative."""
+        n_terms = 10
+        n = np.arange(1, n_terms + 1)
+        for theta in (0.3, 1.1, np.pi / 2, 2.2, 2.9):
+            mu = np.cos(theta)
+            pi = np.zeros(n_terms)
+            tau = np.zeros(n_terms)
+            mie.pi_tau(mu, pi, tau)
+
+            # pi_n = P_n^1(cos theta) / sin theta
+            # atol matters at theta=pi/2 where some pi_n vanish
+            np.testing.assert_allclose(pi, -lpmv(1, n, mu) / np.sin(theta), rtol=1e-10, atol=1e-12)
+
+            # tau_n = d/dtheta P_n^1(cos theta), by central difference
+            h = 1e-6
+            plus = -lpmv(1, n, np.cos(theta + h))
+            minus = -lpmv(1, n, np.cos(theta - h))
+            np.testing.assert_allclose(tau, (plus - minus) / (2 * h), rtol=1e-6, atol=1e-6)
+
+    def test_highest_multipole_is_usable(self):
+        """n_pole may address the highest order now that nothing is padding."""
+        m, x = complex(1.5, -0.01), 3.0
+        n_max = len(mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)[0])
+        mu = np.array([0.4])
+        s1, s2 = mie.S1_S2(m, x, mu, norm="wiscombe", n_pole=n_max)
+        assert np.all(np.isfinite(s1)) and np.all(np.isfinite(s2))
+        assert s1[0] != 0
+        with pytest.raises(ValueError):
+            mie.S1_S2(m, x, mu, n_pole=n_max + 1)

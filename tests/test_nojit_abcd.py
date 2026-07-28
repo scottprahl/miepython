@@ -161,7 +161,7 @@ def slow_cn_dn(m, x, n_pole=0):
         cn, dn: Arrays of c_n and d_n coefficients.
     """
     if n_pole == 0:
-        n_stop = int(x + 4.05 * x**0.33333 + 2.0) + 1
+        n_stop = int(x + 4.05 * x**0.33333 + 2.0)
     else:
         n_stop = n_pole + 1
 
@@ -754,7 +754,7 @@ class TestAnBnCnDnLengths:
             a, b = mie.an_bn(m, x, n_pole)
             c, d = mie.cn_dn(m, x, n_pole)
 
-            exp = int(x + 4.05 * x**0.33333 + 2.0) + 1
+            exp = int(x + 4.05 * x**0.33333 + 2.0)
             assert len(a) == exp, "Length mismatch for a_n with n_pole=0"
             assert len(b) == exp, "Length mismatch for b_n with n_pole=0"
             assert len(c) == exp, "Length mismatch for c_n with n_pole=0"
@@ -762,7 +762,7 @@ class TestAnBnCnDnLengths:
         for m, x, n_pole in test_cases:
             a, b, c, d = mie.coefficients(m, x, n_pole, internal=True)
 
-            expected = int(x + 4.05 * x**0.33333 + 2.0) + 1
+            expected = int(x + 4.05 * x**0.33333 + 2.0)
 
             assert len(a) == expected, "Length mismatch for a_n with n_pole=0"
             assert len(b) == expected, "Length mismatch for b_n with n_pole=0"
