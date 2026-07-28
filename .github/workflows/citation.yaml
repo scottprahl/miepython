@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Need full history so we can push back to the branch
           fetch-depth: 0
@@ -21,7 +21,7 @@ jobs:
           ref: ${{ github.event.release.target_commitish || github.ref }}
 
       - name: Install python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: 3.14
 
