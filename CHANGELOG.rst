@@ -67,6 +67,35 @@ unreleased
     dividing by ``x`` in the other differed by one ulp, and the psi recurrence
     amplified that to 2.6e-7 between the backends on significant coefficients.
     They now agree to 1e-13
+*   ``an_bn`` builds ``psi_n`` with Miller's downwards recurrence, the same
+    treatment ``cn_dn`` already had, and builds ``xi_n`` as ``psi_n + i*chi_n``
+    from an upwards ``chi_n`` recurrence.  The upwards ``psi_n`` recurrence was
+    accurate enough inside Wiscombe's truncation but lost all relative accuracy
+    beyond it -- about 1e-6 at the last kept order, and 1e10 or worse a few orders
+    later -- so asking for extra terms returned noise.  Requesting more orders now
+    converges instead: the near-field boundary mismatch at W+8 terms improves from
+    4.7e-2 to 3.1e-6, and it keeps improving to W+16 rather than diverging.
+    Building ``xi_n`` from the same ``psi_n`` preserves the lossless identity
+    ``Re(a_n) == |a_n|**2`` at 5.6e-16.  Within the standard truncation nothing
+    moves by more than 1e-11, so this is headroom rather than a correction.  The
+    pure-python backend costs about 7% more for a large sweep; numba is unchanged.
+    ``xi_n`` itself was already fine: it is dominated by the growing ``chi_n``
+    solution, for which the upwards recurrence is the stable direction, and it
+    matches SciPy to 1e-15 even twenty orders past the truncation
+*   assert the scattnlay comparison instead of only plotting it.  The reference
+    arrays under ``docs/data`` were used solely by ``docs/15_2D_fields.ipynb``,
+    which printed relative errors without checking them, so a near-field
+    regression was invisible; the median error improved 19x during this release
+    and nothing would have noticed either that or its reversal.
+    ``tests/test_scattnlay_reference.py`` now checks the scalar efficiencies,
+    which are inlined like the existing MIEV0 values and need no data files, and
+    compares both 121x121 field grids point by point.  Grid points that land
+    exactly on the sphere surface are excluded, since the radial E component is
+    discontinuous there and the two codes may put them on opposite sides
+*   ``docs/15_2D_fields.ipynb`` reads the reference arrays from ``docs/data``
+    rather than downloading them from the published branch, so ``make note-test``
+    works offline and checks the working tree instead of the last release.  Its
+    stored error figures were also stale and have been refreshed
 *   collapse the per-backend test files.  ``test_jit.py``/``test_nojit.py`` and
     ``test_jit_abcd.py``/``test_nojit_abcd.py`` became ``test_mie.py`` and
     ``test_abcd.py`` for the high-level API, which needs one copy because

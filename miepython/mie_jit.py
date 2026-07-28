@@ -230,42 +230,50 @@ def _an_bn_nb(m, x, n_pole=0):
     if x <= 0:
         return a, b
 
-    # group the arithmetic exactly as _an_bn_py does.  The psi recurrence is mildly
-    # unstable, so multiplying by a precomputed 1/x here and dividing by x there
-    # amplified a one-ulp difference into 2.6e-7 between the two backends.
+    # group the arithmetic exactly as _an_bn_py does: multiplying by a precomputed
+    # 1/x here and dividing by x there differed by one ulp, which the recurrences
+    # amplified into 2.6e-7 between the two backends.
     inv_x = 1.0 / x
-    psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-    psi_n = psi_nm1 * inv_x - np.cos(x)
-    xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
-    xi_n = np.complex128(psi_n + 1j * (np.cos(x) * inv_x + np.sin(x)))
+    sin_x = np.sin(x)
+    cos_x = np.cos(x)
+
+    # psi comes from Miller's downwards recurrence.  The upwards one is fine while
+    # n stays below x, which is all Wiscombe's truncation needs, but its relative
+    # accuracy is already down to about 1e-6 at n = n_terms and it collapses
+    # completely past that, so a caller asking for extra orders used to get noise.
+    psi = _psi_downwards_nb(np.complex128(x), n_terms).real
+
+    # chi is the growing solution, so its upwards recurrence is the stable one.
+    # Building xi as psi + i*chi keeps xi exactly consistent with the psi above,
+    # which the lossless identity Re(a_n) == |a_n|**2 depends on.
+    chi_nm1 = cos_x
+    chi_n = cos_x * inv_x + sin_x
 
     if m.real > 0.0:
         D = _D_calc_nb(m, x, n_terms + 2)
 
         for n in range(1, n_terms + 1):
             n_over_x = n * inv_x
+            xi_nm1 = psi[n - 1] + 1j * chi_nm1
+            xi_n = psi[n] + 1j * chi_n
             temp = D[n - 1] / m + n_over_x
-            a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
+            a[n - 1] = (temp * psi[n] - psi[n - 1]) / (temp * xi_n - xi_nm1)
             temp = D[n - 1] * m + n_over_x
-            b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            two_np1_over_x = (2 * n + 1) * inv_x
-            psi = two_np1_over_x * psi_n - psi_nm1
-            xi = two_np1_over_x * xi_n - xi_nm1
-            xi_nm1 = xi_n
-            xi_n = xi
-            psi_nm1 = psi_n
-            psi_n = psi
+            b[n - 1] = (temp * psi[n] - psi[n - 1]) / (temp * xi_n - xi_nm1)
+            chi = (2 * n + 1) * inv_x * chi_n - chi_nm1
+            chi_nm1 = chi_n
+            chi_n = chi
 
     else:
         for n in range(1, n_terms + 1):
             n_over_x = n * inv_x
-            a[n - 1] = (n_over_x * psi_n - psi_nm1) / (n_over_x * xi_n - xi_nm1)
-            b[n - 1] = psi_n / xi_n
-            xi = (2 * n + 1) * inv_x * xi_n - xi_nm1
-            xi_nm1 = xi_n
-            xi_n = xi
-            psi_nm1 = psi_n
-            psi_n = xi_n.real
+            xi_nm1 = psi[n - 1] + 1j * chi_nm1
+            xi_n = psi[n] + 1j * chi_n
+            a[n - 1] = (n_over_x * psi[n] - psi[n - 1]) / (n_over_x * xi_n - xi_nm1)
+            b[n - 1] = psi[n] / xi_n
+            chi = (2 * n + 1) * inv_x * chi_n - chi_nm1
+            chi_nm1 = chi_n
+            chi_n = chi
 
     return np.conjugate(a), np.conjugate(b)
 
