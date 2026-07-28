@@ -117,9 +117,9 @@ def _psi_downwards_py(z, nstop):
 
     The three-term upwards recurrence
     ``psi_{n+1} = (2n+1)/z psi_n - psi_{n-1}`` is contaminated by the growing
-    chi_n solution once n exceeds |z|, which is the normal case for psi_n(mx)
+    chi_n solution once n exceeds ``|z|``, which is the normal case for psi_n(mx)
     whenever the relative index is below one.  Miller's algorithm is used
-    instead: seed the recurrence well above |z| where psi_n is the decaying
+    instead: seed the recurrence well above ``|z|`` where psi_n is the decaying
     solution, run it downwards, then fix the arbitrary scale against whichever
     of psi_0 or psi_1 is larger.  sin(z) and cos(z) cannot both be small, so one
     of those two seeds is always well conditioned.
@@ -158,7 +158,7 @@ def _D_calc_down_py(z, N):
 
     ``_D_calc_py`` picks between the upwards and downwards recurrences with
     Wiscombe's criterion, which considers the refractive index but not the number
-    of terms.  The upwards recurrence loses accuracy once N exceeds |z| (about
+    of terms.  The upwards recurrence loses accuracy once N exceeds ``|z|`` (about
     4 digits for a small sphere), and the resulting noise differs between the
     numba and pure-python backends.  The internal-field coefficients are not on
     the hot path, so they always take the stable route.
@@ -188,7 +188,7 @@ def _D_calc_py(m, x, N):
 
     Wiscombe's criterion used to pick between the upwards and downwards
     recurrences from the refractive index alone.  The upwards recurrence is
-    contaminated once N passes |mx|, which is the case for every small sphere,
+    contaminated once N passes ``|mx|``, which is the case for every small sphere,
     and it left the Mie coefficients wrong by as much as 1% near m=1.  The
     downwards recurrence is stable everywhere, and the criterion already chose it
     for most large spheres, so always taking it costs little.  ``_D_upwards`` is
