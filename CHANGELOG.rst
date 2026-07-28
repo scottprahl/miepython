@@ -125,6 +125,62 @@ unreleased
     ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
     that parametrizes over both backends.  Tests written this way need only one
     copy instead of a JIT/no-JIT pair
+*   test ``monte_carlo.py``, which had no tests at all, and drop the unreachable
+    index clamp in ``generate_mie_costheta``: ``numpy.random.random`` draws from
+    [0, 1), so the index can never run off the table.  A test forces the largest
+    float below one to show that.  The sampler is checked against physics rather
+    than against itself: the mean of the drawn cosines reproduces the asymmetry
+    parameter g, computed by a completely separate path, and the empirical
+    distribution follows the inverse-transform table.  With this the whole package
+    is covered, so ``fail_under`` is now 100
+*   record that ``cdf`` overshoots one.  It sums ``i_unpolarized / num`` instead of
+    multiplying by the true spacing 2/(num-1), so the last value is about
+    1 + 1.3/num: at the num=20 of ``docs/06_random_deviates.ipynb`` the cumulative
+    distribution reaches 1.067 even though the docstring promises a maximum of 1.
+    A test pins the 1/num convergence so the quadrature cannot quietly change
+*   test the kernel paths an ordinary Mie call never reaches, taking both
+    ``mie_jit.py`` and ``mie_nojit.py`` to 100%.  ``_D_upwards`` is kept for
+    comparison but ``D_calc`` no longer selects it, so it is now checked against
+    SciPy where it is valid and against ``_D_downwards``.  Also covered: the
+    overflow rescale inside ``_psi_downwards``, which a small argument triggers and
+    which the normalisation afterwards has to undo exactly; ``cn_dn`` for a sphere
+    of no size; and the ``m=0`` shorthand for a perfect conductor, now shown to be
+    identical to passing ``1-10000j``.  Every module except ``monte_carlo.py`` is
+    fully covered, with no partial branches left anywhere
+*   test the scattered-only fields and the explicit term count in ``field.py``,
+    taking it to 100%.  Nothing had ever called a near-field routine with
+    ``include_incident=False`` for H, or passed ``n_pole`` at all.  Outside the
+    sphere the total field minus the scattered field is now checked against an
+    incident plane wave written out independently of miepython, and inside the
+    sphere ``include_incident`` is confirmed to make no difference
+*   test the array dispatch and error paths in ``core.py``, taking it to 100%.
+    The ``RuntimeError`` for mismatched ``m`` and ``x`` lengths, the one for array
+    input without ``n_pole``, the ``internal`` variants of ``coefficients`` and the
+    mixed scalar-and-array calls were all untested, as was the rejection of an
+    unknown normalization.  Every array result is now checked against the
+    equivalent scalar calls
+*   fix ``S1_S2`` rejecting a list or an integer array of angles under numba.  The
+    kernel is declared for ``float64[:]``, so ``S1_S2(m, x, [0, 1])`` worked with the
+    JIT off and raised ``TypeError`` with it on; ``core.py`` now coerces the angles
+    once, at the boundary, so both backends take the same arguments
+*   test the missing-SciPy path in ``__init__.py`` and the remaining parts of
+    ``rayleigh.py``, taking them from 52% and 72% to 100%; the total reaches 95%.
+    The SciPy fallback is what keeps the package usable in JupyterLite and had never
+    been exercised: the tests re-import the package behind an import hook, check the
+    placeholders name themselves and chain the original error, and confirm that a
+    failure other than SciPy still propagates.  ``rayleigh``'s physical-units
+    wrappers, all thirteen normalization spellings and its error paths were also
+    untested
+*   record that ``rayleigh``'s normalization closes only to O(x**2): ``qsca`` in
+    ``efficiencies_mx`` stops at x**4 while the ``a1`` used by ``S1_S2`` carries an
+    x**5 term, so the 'one' normalization integrates to 1 + 0.07 x**2 rather than 1.
+    A test pins that order so extending one expansion without the other shows up
+*   test ``vsh.py`` and ``util.py``, which the new coverage run showed at 60% and
+    55%.  Both are now at 100% branch coverage, and the total rises from 86% to
+    91%.  The four ``M_*_array``/``N_*_array`` helpers, the ``deg=True`` angle
+    paths and the small-argument series in ``N_base`` had no tests at all.  One of
+    the new tests checks ``vsh.py`` against ``field.py``, which holds a second copy
+    of the same vector spherical harmonics, so the two can no longer drift apart
 *   measure coverage.  ``make coverage`` runs the suite once per backend and
     combines the results, and a CI job publishes the HTML report as an artifact.
     Naive coverage is misleading here: coverage.py cannot see inside numba's

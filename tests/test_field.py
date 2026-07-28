@@ -399,3 +399,109 @@ def test_default_path_boundary_continuity(m_sphere):
     for comp in (1, 2):  # theta and phi are the tangential components
         scale = np.maximum(np.abs(e_out[comp]), 1e-12)
         assert np.max(np.abs(e_in[comp] - e_out[comp]) / scale) < 5e-6
+
+
+# ---------------------------------------------------------------------------
+# The scattered-only fields and an explicitly requested term count
+# ---------------------------------------------------------------------------
+
+FIELD_LAMBDA0 = 1.0
+FIELD_D = 1.0
+FIELD_N_ENV = 1.0
+FIELD_M = 1.5 - 0.05j
+
+
+def _angles():
+    """A ring of points that avoids the poles and the azimuth seam."""
+    theta = np.linspace(0.2, np.pi - 0.2, 7)
+    phi = np.linspace(0.1, 2 * np.pi - 0.1, 7)
+    return theta, phi
+
+
+def _incident_plane_wave(theta, phi, r):
+    """The incident wave written out independently of miepython."""
+    k = 2 * np.pi * FIELD_N_ENV / FIELD_LAMBDA0
+    amp = np.exp(1j * k * r * np.cos(theta))
+    e_inc = np.array([amp * np.sin(theta) * np.cos(phi), amp * np.cos(theta) * np.cos(phi), -amp * np.sin(phi)])
+    h_inc = np.array([amp * np.sin(theta) * np.sin(phi), amp * np.cos(theta) * np.sin(phi), amp * np.cos(phi)])
+    return e_inc, h_inc
+
+
+@pytest.mark.parametrize("which", ["E", "H"])
+def test_total_minus_scattered_is_the_incident_wave(which):
+    """Outside the sphere the total field is the scattered plus incident field."""
+    theta, phi = _angles()
+    r = np.full_like(theta, 1.4)  # comfortably outside
+    fn = e_near if which == "E" else h_near
+    total = fn(FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi, include_incident=True)
+    scattered = fn(FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi, include_incident=False)
+
+    e_inc, h_inc = _incident_plane_wave(theta, phi, r)
+    expected = e_inc if which == "E" else h_inc
+    np.testing.assert_allclose(total - scattered, expected, rtol=1e-10, atol=1e-14)
+
+
+def test_eh_near_scattered_matches_the_separate_calls():
+    """The combined call must agree with the individual ones when incident is off."""
+    theta, phi = _angles()
+    r = np.full_like(theta, 1.4)
+    args = (FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi)
+    e_both, h_both = eh_near(*args, include_incident=False)
+    np.testing.assert_allclose(e_both, e_near(*args, include_incident=False), rtol=1e-12, atol=1e-300)
+    np.testing.assert_allclose(h_both, h_near(*args, include_incident=False), rtol=1e-12, atol=1e-300)
+
+
+def test_include_incident_is_irrelevant_inside_the_sphere():
+    """There is no incident field to add inside; the internal field stands alone."""
+    theta, phi = _angles()
+    r = np.full_like(theta, 0.3)  # inside
+    args = (FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi)
+    for fn in (e_near, h_near):
+        np.testing.assert_array_equal(fn(*args, include_incident=True), fn(*args, include_incident=False))
+    e_on, h_on = eh_near(*args, include_incident=True)
+    e_off, h_off = eh_near(*args, include_incident=False)
+    np.testing.assert_array_equal(e_on, e_off)
+    np.testing.assert_array_equal(h_on, h_off)
+
+
+def test_explicit_term_count_reproduces_the_default():
+    """Asking for the number of terms the default picks must change nothing."""
+    theta, phi = _angles()
+    r = np.full_like(theta, 1.4)
+    args = (FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi)
+    x = np.pi * FIELD_D * FIELD_N_ENV / FIELD_LAMBDA0
+    explicit = wiscombe_terms(x) + EXTRA_FIELD_ORDERS
+
+    for fn in (e_near, h_near):
+        np.testing.assert_array_equal(fn(*args, n_pole=explicit), fn(*args))
+    e_exp, h_exp = eh_near(*args, n_pole=explicit)
+    e_def, h_def = eh_near(*args)
+    np.testing.assert_array_equal(e_exp, e_def)
+    np.testing.assert_array_equal(h_exp, h_def)
+
+
+def test_too_few_terms_gives_a_visibly_different_field():
+    """A deliberately short series must not silently match the converged one."""
+    theta, phi = _angles()
+    r = np.full_like(theta, 1.4)
+    args = (FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, r, theta, phi)
+    truncated = e_near(*args, n_pole=2)
+    converged = e_near(*args)
+    assert np.max(np.abs(truncated - converged)) > 1e-3
+
+
+def test_cartesian_wrappers_take_a_term_count_too():
+    """The Cartesian entry points must pass n_pole through as well."""
+    u = np.linspace(-1.3, 1.3, 5)
+    grid_x, grid_z = np.meshgrid(u, u)
+    grid_y = np.zeros_like(grid_x)
+    x = np.pi * FIELD_D * FIELD_N_ENV / FIELD_LAMBDA0
+    explicit = wiscombe_terms(x) + EXTRA_FIELD_ORDERS
+    args = (FIELD_LAMBDA0, FIELD_D, FIELD_M, FIELD_N_ENV, grid_x, grid_y, grid_z)
+
+    np.testing.assert_array_equal(e_near_cartesian(*args, n_pole=explicit), e_near_cartesian(*args))
+    np.testing.assert_array_equal(h_near_cartesian(*args, n_pole=explicit), h_near_cartesian(*args))
+    e_exp, h_exp = eh_near_cartesian(*args, n_pole=explicit)
+    e_def, h_def = eh_near_cartesian(*args)
+    np.testing.assert_array_equal(e_exp, e_def)
+    np.testing.assert_array_equal(h_exp, h_def)

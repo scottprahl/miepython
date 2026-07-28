@@ -838,3 +838,104 @@ class TestDegenerateSpheres:
             value = mie.i_unpolarized(1.5 - 0.01j, 2.0, mu, norm=norm)
             assert np.all(np.isfinite(value))
             assert np.all(value > 0)
+
+
+class TestArrayDispatchAndErrors:
+    """Test core.py's array handling and the errors it is supposed to raise."""
+
+    def test_wiscombe_terms_matches_the_criterion(self):
+        """The named helper must agree with the expression the kernels inline."""
+        for x in (0.1, 1.0, 6.2832, 20.0, 200.0):
+            assert mie.core.wiscombe_terms(x) == int(x + 4.05 * x**0.33333 + 2.0)
+        # and with the number of coefficients actually returned
+        for x in (0.5, 5.0, 50.0):
+            assert len(mie.an_bn(complex(1.5, -0.01), x, 0)[0]) == mie.core.wiscombe_terms(x)
+
+    def test_coefficients_rejects_mismatched_array_lengths(self):
+        """Two arrays of different length cannot be paired up."""
+        with pytest.raises(RuntimeError, match="same length"):
+            mie.coefficients(np.array([1.5, 1.4, 1.3]), np.array([2.0, 3.0]), n_pole=2)
+
+    def test_coefficients_requires_n_pole_for_arrays(self):
+        """Array input has no single term count to fall back on."""
+        with pytest.raises(RuntimeError, match="n_pole must be"):
+            mie.coefficients(np.array([1.5, 1.4]), np.array([2.0, 3.0]))
+
+    @pytest.mark.parametrize("internal,expected_rows", [(False, 2), (True, 4)])
+    def test_coefficients_array_shapes(self, internal, expected_rows):
+        """The internal flag decides whether c and d come back with a and b."""
+        m_arr = np.array([1.5 - 0.01j, 1.4 - 0.02j])
+        x_arr = np.array([2.0, 3.0])
+        got = mie.coefficients(m_arr, x_arr, n_pole=3, internal=internal)
+        assert np.shape(got) == (expected_rows, 2, 3)
+
+    @pytest.mark.parametrize("internal", [False, True])
+    def test_coefficients_array_matches_scalar_calls(self, internal):
+        """Each row must be what the scalar call gives for that pair."""
+        m_arr = np.array([1.5 - 0.01j, 1.4 - 0.02j])
+        x_arr = np.array([2.0, 3.0])
+        stacked = mie.coefficients(m_arr, x_arr, n_pole=3, internal=internal)
+        for i, (m_one, x_one) in enumerate(zip(m_arr, x_arr)):
+            single = mie.coefficients(m_one, x_one, n_pole=3, internal=internal)
+            for row in range(stacked.shape[0]):
+                np.testing.assert_allclose(stacked[row][i], single[row], rtol=1e-13)
+
+    def test_coefficients_broadcasts_a_scalar_against_an_array(self):
+        """One scalar and one array is allowed; the scalar is reused."""
+        x_arr = np.array([2.0, 3.0])
+        by_array = mie.coefficients(1.5, x_arr, n_pole=3)
+        for i, x_one in enumerate(x_arr):
+            np.testing.assert_allclose(by_array[0][i], mie.coefficients(1.5, x_one, n_pole=3)[0], rtol=1e-13)
+
+        m_arr = np.array([1.5 - 0.01j, 1.4 - 0.02j])
+        by_index = mie.coefficients(m_arr, 2.0, n_pole=3)
+        for i, m_one in enumerate(m_arr):
+            np.testing.assert_allclose(by_index[0][i], mie.coefficients(m_one, 2.0, n_pole=3)[0], rtol=1e-13)
+
+    def test_efficiencies_mx_rejects_mismatched_array_lengths(self):
+        """Same rule for the efficiencies."""
+        with pytest.raises(RuntimeError, match="same length"):
+            mie.efficiencies_mx(np.array([1.5, 1.4, 1.3]), np.array([2.0, 3.0]))
+
+    @pytest.mark.parametrize(
+        "m_in,x_in",
+        [
+            (np.array([1.5 - 0.01j, 1.4 - 0.02j]), 2.0),
+            (1.5 - 0.01j, np.array([2.0, 3.0])),
+            (np.array([1.5 - 0.01j, 1.4 - 0.02j]), np.array([2.0, 3.0])),
+        ],
+        ids=["array m", "array x", "both arrays"],
+    )
+    def test_efficiencies_mx_array_matches_scalar_calls(self, m_in, x_in):
+        """Every mix of scalar and array must agree with the scalar calls."""
+        qext, qsca, qback, g = mie.efficiencies_mx(m_in, x_in)
+        assert len(qext) == len(qsca) == len(qback) == len(g) == 2
+        for i in range(2):
+            m_one = m_in[i] if np.ndim(m_in) else m_in
+            x_one = x_in[i] if np.ndim(x_in) else x_in
+            want = mie.efficiencies_mx(m_one, x_one)
+            for got, expected in zip((qext[i], qsca[i], qback[i], g[i]), want):
+                assert got == pytest.approx(expected, rel=1e-13)
+
+    def test_unknown_normalization_is_rejected(self):
+        """A misspelt normalization must list the valid choices."""
+        with pytest.raises(ValueError, match="normalization must be one of"):
+            mie.S1_S2(1.5, 2.0, np.array([0.5]), norm="nonsense")
+
+    @pytest.mark.parametrize("norm", ["albedo", "one", "4pi", "qext", "qsca", "wiscombe", "bohren"])
+    def test_normalization_aliases_and_case_are_accepted(self, norm):
+        """The lookup lowercases, so capitalised spellings must work too."""
+        mu = np.linspace(-1, 1, 5)
+        lower = mie.i_unpolarized(1.5 - 0.01j, 2.0, mu, norm=norm)
+        upper = mie.i_unpolarized(1.5 - 0.01j, 2.0, mu, norm=norm.upper())
+        np.testing.assert_allclose(upper, lower, rtol=1e-13)
+
+    @pytest.mark.parametrize("norm", ["albedo", "wiscombe"])
+    def test_sign_of_the_imaginary_index_does_not_matter(self, norm):
+        """The convention is m = n - ik, so a positive imaginary part is conjugated."""
+        mu = np.linspace(-1, 1, 5)
+        physical, flipped = 1.5 - 0.1j, 1.5 + 0.1j
+        np.testing.assert_allclose(
+            mie.S1_S2(flipped, 2.0, mu, norm=norm), mie.S1_S2(physical, 2.0, mu, norm=norm), rtol=1e-13
+        )
+        np.testing.assert_allclose(mie.efficiencies_mx(flipped, 2.0), mie.efficiencies_mx(physical, 2.0), rtol=1e-13)

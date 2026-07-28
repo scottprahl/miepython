@@ -16,6 +16,7 @@ import inspect
 import numpy as np
 import pytest
 
+import miepython
 from miepython import mie_jit, mie_nojit
 
 # (label, pure-python kernel, numba kernel).  The tolerances further down sit just
@@ -191,3 +192,23 @@ def test_agrees_over_a_random_sweep():
     nb_s1, nb_s2 = mie_jit._S1_S2_nb(np.complex128(m_ref), float(x_ref), mu, 0)
     np.testing.assert_allclose(nb_s1, py_s1, rtol=1e-10, atol=1e-12)
     np.testing.assert_allclose(nb_s2, py_s2, rtol=1e-10, atol=1e-12)
+
+
+@pytest.mark.parametrize("kind", ["list", "tuple", "int array", "float array", "scalar"])
+def test_angle_argument_accepts_the_same_types_on_both_backends(kind):
+    """S1_S2 must not accept an argument on one backend and reject it on the other.
+
+    The numba kernel is declared for float64[:], so a Python list or an integer
+    array used to raise TypeError with the JIT on while numpy quietly accepted it.
+    """
+    angles = {
+        "list": [0.0, 0.5, 1.0],
+        "tuple": (0.0, 0.5, 1.0),
+        "int array": np.array([0, 1]),
+        "float array": np.array([0.0, 0.5, 1.0]),
+        "scalar": 0.5,
+    }[kind]
+    s1, s2 = miepython.S1_S2(1.5, 2.0, angles, norm="wiscombe")
+    assert np.all(np.isfinite(s1)) and np.all(np.isfinite(s2))
+    assert np.shape(s1) == np.shape(s2)
+    assert np.ndim(s1) == 1, "a scalar angle still yields a length-one array"

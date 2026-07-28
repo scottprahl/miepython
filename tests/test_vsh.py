@@ -38,6 +38,8 @@ import pytest
 from scipy.special import spherical_jn
 from miepython.bessel import spherical_h1, d_spherical_jn, d_spherical_h1
 from miepython.vsh import M_odd, M_even, N_odd, N_even
+from miepython import vsh
+from miepython.field import _vsh_components_base  # the duplicate implementation
 
 # Constants for testing
 LAMBDA0_DEFAULT = 500e-9  # wavelength in meters
@@ -291,3 +293,105 @@ def test_vector_spherical_harmonics2(m_index):
 #     dN_dr_outside = radial_derivative(N_even, r_boundary + delta, [theta_test, phi_test, m_sphere])
 #
 #     np.testing.assert_allclose(dN_dr_inside, dN_dr_outside, atol=1e-9)
+
+
+# ---------------------------------------------------------------------------
+# The array helpers, the degree-valued angles, and the small-argument branch
+# ---------------------------------------------------------------------------
+
+LAMBDA0 = 0.8
+D_SPHERE = 1.0
+N_TERMS = 4
+
+
+@pytest.mark.parametrize("r,label", [(0.3, "inside"), (0.9, "inside"), (1.7, "outside")])
+@pytest.mark.parametrize("m_index", [1.5 + 0j, 1.33 - 0.1j])
+def test_array_helpers_match_the_scalar_ones(r, label, m_index):
+    """M_*_array and N_*_array must stack exactly what the scalar versions give."""
+    theta, phi = np.radians(37.0), np.radians(58.0)
+    pairs = (
+        (vsh.M_odd_array, vsh.M_odd),
+        (vsh.M_even_array, vsh.M_even),
+        (vsh.N_odd_array, vsh.N_odd),
+        (vsh.N_even_array, vsh.N_even),
+    )
+    for array_fn, scalar_fn in pairs:
+        got = array_fn(N_TERMS, LAMBDA0, D_SPHERE, m_index, r, theta, phi)
+        want = np.array([scalar_fn(n, LAMBDA0, D_SPHERE, m_index, r, theta, phi) for n in range(1, N_TERMS + 1)]).T
+        assert got.shape == (3, N_TERMS), f"{array_fn.__name__} {label}"
+        np.testing.assert_allclose(
+            got, want, rtol=1e-12, atol=1e-300, err_msg=f"{array_fn.__name__} disagrees with {scalar_fn.__name__}"
+        )
+
+
+@pytest.mark.parametrize("n", [1, 2, 3, 5])
+def test_degrees_and_radians_agree(n):
+    """deg=True must be the same curve, just labelled differently."""
+    degrees = np.array([5.0, 37.0, 90.0, 143.0, 175.0])
+    radians = np.radians(degrees)
+    np.testing.assert_allclose(vsh.mie_pi(n, degrees, deg=True), vsh.mie_pi(n, radians), rtol=1e-12)
+    np.testing.assert_allclose(vsh.mie_tau(n, degrees, deg=True), vsh.mie_tau(n, radians), rtol=1e-12)
+
+
+def test_pi_and_tau_avoid_the_poles():
+    """The +-1 guard keeps the division by sin(theta) finite at the poles."""
+    for n in (1, 2, 4):
+        for theta in (0.0, np.pi):
+            assert np.isfinite(vsh.mie_pi(n, theta))
+            assert np.isfinite(vsh.mie_tau(n, theta))
+        both = vsh.mie_pi(n, np.array([0.0, np.pi]))
+        assert np.all(np.isfinite(both))
+
+
+@pytest.mark.parametrize("n", [1, 2, 3])
+def test_small_argument_branch_is_continuous(n):
+    """N_base switches formula at |rho| = 0.01; the two must agree there."""
+    m_index = 1.5 + 0j
+    # kr chosen so |rho| lands just either side of the threshold
+    kr_below = 0.0099 / abs(m_index)
+    kr_above = 0.0101 / abs(m_index)
+    theta = np.radians(50.0)
+    below = vsh.N_base(n, m_index, kr_below, theta, inside=True)
+    above = vsh.N_base(n, m_index, kr_above, theta, inside=True)
+    assert np.all(np.isfinite(below)) and np.all(np.isfinite(above))
+    # a 2% step in argument must not move the result by more than a few percent
+    for lo, hi in zip(below, above):
+        if abs(hi) > 1e-250:
+            assert abs(lo - hi) / abs(hi) < 0.05, f"discontinuity at n={n}"
+
+
+@pytest.mark.parametrize("r", [0.0002, 0.0005])  # |m*kr| stays under 0.01
+def test_small_argument_branch_is_actually_taken(r):
+    """A tiny radius must reach the series expansion and stay finite."""
+    m_index = 1.5 + 0j
+    kr = 2 * np.pi * r / LAMBDA0
+    assert abs(m_index * kr) < 0.01, "test no longer exercises the small-argument path"
+    for n in (1, 2, 3):
+        out = vsh.N_base(n, m_index, kr, np.radians(40.0), inside=True)
+        assert np.all(np.isfinite(out))
+
+
+@pytest.mark.parametrize("r,inside", [(0.3, True), (1.7, False)])
+def test_vsh_module_agrees_with_the_field_module(r, inside):
+    """vsh.py and field.py hold two copies of this maths; they must not drift."""
+    sphere_index, env_index = 1.5 + 0j, 1.0
+    theta = np.radians(63.0)
+    m_index = np.conjugate(sphere_index) if inside else env_index
+
+    m_the, m_phi, n_rad, n_the, n_phi = _vsh_components_base(N_TERMS, LAMBDA0, D_SPHERE, m_index, r, theta)
+
+    kr = 2 * np.pi * r / LAMBDA0
+    rho = m_index * kr
+    for i, n in enumerate(range(1, N_TERMS + 1)):
+        _, mb_the, mb_phi = vsh.M_base(n, rho, theta, inside)
+        nb_rad, nb_the, nb_phi = vsh.N_base(n, m_index, kr, theta, inside)
+        # field.py builds pi and tau from the kernel recurrence, vsh.py from lpmv,
+        # so allow a little more room than pure round-off
+        for label, want, got in (
+            ("M_theta", mb_the, m_the[i]),
+            ("M_phi", mb_phi, m_phi[i]),
+            ("N_r", nb_rad, n_rad[i]),
+            ("N_theta", nb_the, n_the[i]),
+            ("N_phi", nb_phi, n_phi[i]),
+        ):
+            np.testing.assert_allclose(got, want, rtol=1e-9, atol=1e-300, err_msg=f"{label} n={n} r={r}")

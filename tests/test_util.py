@@ -115,3 +115,83 @@ class TestBackendGuard:
         assert conftest.JIT_PREFIX == "test_jit"
         assert conftest.NOJIT_PREFIX == "test_nojit"
         assert callable(conftest.pytest_collection_modifyitems)
+
+
+class TestComplexFormatting:
+    """Test the complex-number formatting helpers.
+
+    These are exported but currently have no callers inside the package, so
+    nothing else would notice if they broke.
+    """
+
+    def test_cs_scalar_sign_follows_the_imaginary_part(self):
+        """The sign is carried by the separator, and the magnitude printed bare."""
+        assert util.cs_scalar(1.5 + 0.1j) == "( 1.50000 + 0.10000j)"
+        assert util.cs_scalar(1.5 - 0.1j) == "( 1.50000 - 0.10000j)"
+
+    def test_cs_scalar_digit_count(self):
+        """N sets the number of decimals."""
+        assert util.cs_scalar(1.5 + 0.25j, 2) == "( 1.50 + 0.25j)"
+        assert util.cs_scalar(1.5 + 0.25j, 1) == "( 1.5 + 0.2j)"
+
+    def test_cs_scalar_negative_n_switches_to_exponential(self):
+        """A negative N asks for exponential notation with abs(N) digits."""
+        assert util.cs_scalar(1.5e-8 - 2e-9j, -3) == "( 1.500e-08 - 2.000e-09j)"
+        # the sign branch is duplicated inside the exponential form, so check both
+        assert util.cs_scalar(1.5e-8 + 2e-9j, -3) == "( 1.500e-08 + 2.000e-09j)"
+
+    def test_cs_scalar_without_parentheses(self):
+        """include_parens=False is what cs_vector uses to build its own."""
+        assert util.cs_scalar(1.5 - 0.1j, 5, include_parens=False) == " 1.50000 - 0.10000j"
+
+    def test_cs_vector_joins_with_one_pair_of_parentheses(self):
+        """A tuple becomes a single parenthesised, comma-separated list."""
+        text = util.cs_vector((1 + 1j, 2 - 2j))
+        assert text.startswith("(") and text.endswith(")")
+        assert text.count("(") == 1 and text.count(")") == 1
+        assert text.count(",") == 1
+        assert "+ 1.00000j" in text and "- 2.00000j" in text
+
+    def test_cs_dispatches_on_scalar_or_sequence(self):
+        """Both a lone number and an iterable of them are handled."""
+        assert util.cs(1 + 1j) == "( 1.00000 + 1.00000j)"
+        joined = util.cs([1 + 1j, 2 - 2j])
+        assert joined == "( 1.00000 + 1.00000j), ( 2.00000 - 2.00000j)"
+        assert not joined.endswith(", ")
+
+    def test_phasor_of_a_complex_number(self):
+        """A complex value prints as magnitude and angle in degrees."""
+        text = util.phasor_str_scalar(1 + 1j)
+        assert "∠" in text
+        magnitude, angle = text.split("∠")
+        assert float(magnitude) == pytest.approx(np.sqrt(2), abs=5e-3)
+        assert float(angle.rstrip("°")) == pytest.approx(45.0, abs=5e-3)
+
+    def test_phasor_of_a_positive_real_number(self):
+        """A real value is special cased to avoid a meaningless angle."""
+        assert util.phasor_str_scalar(2.0).split("∠")[1].strip() == "0°"
+
+    def test_phasor_negative_n_switches_to_exponential(self):
+        """A negative N asks for exponential notation."""
+        text = util.phasor_str_scalar(1 + 1j, -3)
+        assert "e+00" in text
+        magnitude, angle = text.split("∠")
+        assert float(magnitude) == pytest.approx(np.sqrt(2), rel=1e-3)
+        assert float(angle.rstrip("°")) == pytest.approx(45.0, rel=1e-3)
+
+    def test_phasor_str_dispatches_on_scalar_or_sequence(self):
+        """phasor_str handles a lone number and an iterable of them."""
+        single = util.phasor_str(1 + 1j)
+        assert single == util.phasor_str_scalar(1 + 1j)
+        joined = util.phasor_str([1 + 1j, 2 - 2j])
+        assert joined.count("∠") == 2
+        assert not joined.endswith(", ")
+
+    def test_spherical_vector_round_trip(self):
+        """A vector converted to Cartesian keeps its length."""
+        rng = np.random.default_rng(3)
+        for _ in range(20):
+            r, theta, phi = rng.uniform(0.2, 2), rng.uniform(0.1, np.pi - 0.1), rng.uniform(0, 2 * np.pi)
+            v = rng.normal(size=3)
+            xyz = util.spherical_vector_to_cartesian(v[0], v[1], v[2], r, theta, phi)
+            assert np.linalg.norm(xyz) == pytest.approx(np.linalg.norm(v))

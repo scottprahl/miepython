@@ -143,9 +143,9 @@ omit = ["*/miepython/examples/*"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
-# A floor rather than a target: raise it as coverage improves, never lower it to
-# make a run pass.  `make coverage` reaches about 86%.
-fail_under = 84
+# The whole package is covered, so hold it there.  Never lower this to make a run
+# pass; add the test the new code needs instead.
+fail_under = 100
 exclude_also = [
     "if TYPE_CHECKING:",
     "raise NotImplementedError",

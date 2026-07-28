@@ -111,12 +111,10 @@ def generate_mie_costheta(mu_cdf):
     Returns:
        The cosine of the scattering angle
     """
-    # the following should be equivalent to these four lines
-    # index = np.random.randint(0, high=len(mu_cdf))
+    # np.random.random() draws from [0, 1), so int(r * num) never reaches num and
+    # index + 1 stays inside the table.  No clamp is needed.
     num = len(mu_cdf) - 1
     index = int(np.random.random() * num)
-    if index >= num:
-        index = num - 1
 
     x = mu_cdf[index]
     x += (mu_cdf[index + 1] - mu_cdf[index]) * np.random.random()

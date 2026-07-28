@@ -342,11 +342,11 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
-    if np.isscalar(mu):
-        mu_array = np.array([mu], dtype=float)
-        S1, S2 = _S1_S2(m, x, mu_array, n_pole)
-    else:
-        S1, S2 = _S1_S2(m, x, mu, n_pole)
+    # The numba kernel is declared for float64[:], so a list or an integer array
+    # would be rejected there while numpy accepted it.  Coercing here keeps both
+    # backends callable with exactly the same arguments.
+    mu_array = np.atleast_1d(np.asarray(mu, dtype=float))
+    S1, S2 = _S1_S2(m, x, mu_array, n_pole)
 
     normalization = normalization_factor(m, x, norm)
 

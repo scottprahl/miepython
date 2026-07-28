@@ -391,3 +391,79 @@ class TestCnDn:
         for i in range(5):
             assert c[i] == pytest.approx(cx[i], abs=1e-6)
             assert d[i] == pytest.approx(dx[i], abs=1e-6)
+
+
+class TestKernelEdges:
+    """Test the kernel paths the ordinary Mie calls never reach."""
+
+    def test_d_upwards_is_still_correct_where_it_is_valid(self, kernels):
+        """``_D_upwards`` is retained for comparison, so it must still work.
+
+        ``D_calc`` no longer selects it, because it loses accuracy once the order
+        passes |z|.  Below that it is fine, and this pins that so the function is
+        not left to rot.
+        """
+        z = np.complex128(40.0)
+        n_max = 20  # comfortably under |z|
+        upward = np.zeros(n_max + 1, dtype=np.complex128)
+        kernels.D_upwards(z, n_max, upward)
+
+        n = np.arange(1, n_max)
+        exact = spherical_jn(n - 1, z) / spherical_jn(n, z) - n / z
+        np.testing.assert_allclose(upward[1:n_max], exact, rtol=1e-11)
+
+    def test_d_upwards_and_d_downwards_agree_below_the_argument(self, kernels):
+        """The two recurrences must give the same answer where both are valid."""
+        z = np.complex128(40.0)
+        n_max = 20
+        upward = np.zeros(n_max + 1, dtype=np.complex128)
+        downward = np.zeros(n_max + 1, dtype=np.complex128)
+        kernels.D_upwards(z, n_max, upward)
+        kernels.D_downwards(z, n_max, downward)
+        np.testing.assert_allclose(upward[1:n_max], downward[1:n_max], rtol=1e-10)
+
+    def test_lentz_seeds_the_downward_recurrence(self, kernels):
+        """Lentz's continued fraction must match the ratio it stands in for."""
+        for z in (np.complex128(12.0), np.complex128(8.0 - 3.0j)):
+            for order in (5, 15):
+                got = kernels.Lentz_Dn(z, order)
+                want = spherical_jn(order - 1, z) / spherical_jn(order, z) - order / z
+                assert got == pytest.approx(want, rel=1e-9), (z, order)
+
+    @pytest.mark.parametrize("z,nstop", [(1e-3, 100), (1e-2, 60)])
+    def test_psi_downwards_rescales_without_losing_accuracy(self, kernels, z, nstop):
+        """A small argument makes the downward recurrence overflow unless rescaled.
+
+        psi grows on the way down from its tiny seed; for these inputs it passes
+        1e200 and the guard divides the tail back into range.  The normalisation
+        afterwards has to undo that exactly.
+        """
+        psi = kernels.psi_downwards(np.complex128(z), nstop)
+        assert np.all(np.isfinite(psi))
+
+        orders = np.arange(nstop + 1)
+        reference = z * spherical_jn(orders, z)
+        live = np.abs(reference) > 1e-300
+        rel = np.abs(psi[live] - reference[live]) / np.abs(reference[live])
+        assert np.max(rel) < 1e-11
+
+    def test_cn_dn_returns_zeros_for_a_sphere_of_no_size(self, kernels):
+        """There is no interior to have a field in."""
+        c, d = kernels.cn_dn(complex(1.5, -0.1), 0.0, 0)
+        assert len(c) == len(d) > 0
+        np.testing.assert_array_equal(c, np.zeros_like(c))
+        np.testing.assert_array_equal(d, np.zeros_like(d))
+
+    @pytest.mark.parametrize("x", [0.1, 1.0, 5.0])
+    def test_zero_index_means_perfectly_conducting(self, kernels, x):
+        """m=0 is a shorthand the kernel turns into a very large imaginary index."""
+        as_zero = kernels.single_sphere(complex(0.0, 0.0), x, 0, True)
+        as_conductor = kernels.single_sphere(complex(1.0, -10000.0), x, 0, True)
+        np.testing.assert_allclose(as_zero, as_conductor, rtol=1e-12)
+
+        # 1-10000j is a very good conductor rather than a perfect one, so a little
+        # absorption remains.  It is roughly constant in absolute terms, which is
+        # why this is not phrased as a relative tolerance: at x=0.1 qext itself is
+        # only 3e-4 and the same 6e-8 of absorption is 2e-4 of it.
+        qext, qsca = as_zero[0], as_zero[1]
+        assert 0 <= qext - qsca < 1e-6
