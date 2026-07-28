@@ -380,7 +380,11 @@ def test_vsh_module_agrees_with_the_field_module(r, inside):
     theta = np.radians(63.0)
     m_index = np.conjugate(sphere_index) if inside else env_index
 
-    m_the, m_phi, n_rad, n_the, n_phi = _vsh_components_base(N_TERMS, LAMBDA0, D_SPHERE, m_index, r, theta)
+    # field.py evaluates a batch of points at once, so hand it a batch of one and
+    # read row 0 back out
+    m_the, m_phi, n_rad, n_the, n_phi = _vsh_components_base(
+        N_TERMS, LAMBDA0, m_index, np.array([r]), np.array([theta]), inside
+    )
 
     kr = 2 * np.pi * r / LAMBDA0
     rho = m_index * kr
@@ -390,10 +394,10 @@ def test_vsh_module_agrees_with_the_field_module(r, inside):
         # field.py builds pi and tau from the kernel recurrence, vsh.py from lpmv,
         # so allow a little more room than pure round-off
         for label, want, got in (
-            ("M_theta", mb_the, m_the[i]),
-            ("M_phi", mb_phi, m_phi[i]),
-            ("N_r", nb_rad, n_rad[i]),
-            ("N_theta", nb_the, n_the[i]),
-            ("N_phi", nb_phi, n_phi[i]),
+            ("M_theta", mb_the, m_the[0, i]),
+            ("M_phi", mb_phi, m_phi[0, i]),
+            ("N_r", nb_rad, n_rad[0, i]),
+            ("N_theta", nb_the, n_the[0, i]),
+            ("N_phi", nb_phi, n_phi[0, i]),
         ):
             np.testing.assert_allclose(got, want, rtol=1e-9, atol=1e-300, err_msg=f"{label} n={n} r={r}")

@@ -81,7 +81,7 @@ Conventions
 import numpy as np
 from scipy.special import factorial2, spherical_jn
 from ._backend import D_calc, pi_tau
-from .bessel import d_riccati_bessel_h1, spherical_h1
+from .bessel import spherical_h1
 from .core import S1_S2, coefficients, wiscombe_terms
 from .util import cartesian_to_spherical, spherical_vector_to_cartesian
 
@@ -97,62 +97,94 @@ __all__ = (
 
 
 def _sum_two_scaled_terms(scale, coeff1, values1, scale1, coeff2, values2, scale2):
-    """Return ``sum(scale * (scale1*coeff1*values1 + scale2*coeff2*values2))``."""
-    return np.sum(scale * (scale1 * coeff1 * values1 + scale2 * coeff2 * values2))
+    """Sum ``scale * (scale1*coeff1*values1 + scale2*coeff2*values2)`` over multipoles.
+
+    ``values1`` and ``values2`` are shaped ``(n_points, n_terms)`` and the other
+    arguments broadcast along the order axis, so the multipole series is summed away
+    and one value per point comes back.
+    """
+    return np.sum(scale * (scale1 * coeff1 * values1 + scale2 * coeff2 * values2), axis=-1)
 
 
-def _vsh_components_base(n_terms, lambda0, d_sphere, m_index, r, theta):
-    """Compute shared VSH base components for one spatial point.
+def _vsh_components_base(n_terms, lambda0, m_index, r, theta, inside):
+    """Compute shared VSH base components for a batch of points.
+
+    Every point in one call must lie on the same side of the sphere surface: a single
+    ``inside`` flag chooses the radial function and a single ``m_index`` the medium
+    for the whole batch.  ``_near_fields`` groups the points that way before calling.
 
     Args:
         n_terms (int): Number of multipole terms.
         lambda0 (float): Vacuum wavelength.
-        d_sphere (float): Sphere diameter.
-        m_index (complex): Refractive index at the evaluation point.
-        r (float): Radial coordinate.
-        theta (float): Polar angle in radians.
+        m_index (complex): Refractive index at the evaluation points.
+        r (ndarray): Radial coordinates, shape ``(n_points,)``.
+        theta (ndarray): Polar angles in radians, shape ``(n_points,)``.
+        inside (bool): True when the points lie inside the sphere.
 
     Returns:
         tuple[ndarray, ndarray, ndarray, ndarray, ndarray]:
-            ``(M_theta_base, M_phi_base, N_r_base, N_theta_base, N_phi_base)``
-            for multipole orders ``1..n_terms``.
+            ``(M_theta_base, M_phi_base, N_r_base, N_theta_base, N_phi_base)``, each
+            shaped ``(n_points, n_terms)`` for multipole orders ``1..n_terms``.
     """
-    mu = float(np.cos(theta))
-    if mu >= 1.0:
-        mu = 0.999999
-    elif mu <= -1.0:
-        mu = -0.999999
+    mu = np.cos(theta)
+    # the Legendre recurrence is 0/0 exactly at the poles, so nudge mu off them --
+    # and only there, leaving every other value untouched
+    mu = np.where(mu >= 1.0, 0.999999, mu)
+    mu = np.where(mu <= -1.0, -0.999999, mu)
 
-    pi = np.empty(n_terms)
-    tau = np.empty(n_terms)
-    pi_tau(mu, pi, tau)
+    n_points = r.size
+    pi = np.empty((n_points, n_terms))
+    tau = np.empty((n_points, n_terms))
+    for k in range(n_points):
+        # the kernel writes one point at a time; rows of a C-ordered array are the
+        # contiguous 1-D buffers it expects
+        pi_tau(float(mu[k]), pi[k], tau[k])
 
     n_int = np.arange(1, n_terms + 1, dtype=np.int64)
     n_arr = n_int.astype(np.float64)
-    rho = 2 * np.pi * m_index * r / lambda0
-    kr = 2 * np.pi * r / lambda0
-    inside = r < d_sphere / 2
+    r_col = r[:, np.newaxis]
+    rho = 2 * np.pi * m_index * r_col / lambda0
+    kr = 2 * np.pi * r_col / lambda0
 
     if inside:
         jn = spherical_jn(n_int, rho)
         m_factor = jn
 
-        if np.abs(rho) < 0.01:
-            rho_pow = rho ** np.arange(0, n_terms)
+        n_factor1 = np.empty((n_points, n_terms), dtype=np.complex128)
+        n_factor2 = np.empty((n_points, n_terms), dtype=np.complex128)
+
+        # near the origin jn/rho and D_n both lose their meaning, so those points
+        # take the leading-order series instead; the split is per point
+        small = np.abs(rho[:, 0]) < 0.01
+        if small.any():
+            rho_pow = rho[small] ** np.arange(0, n_terms)
             denom = factorial2(2 * n_int + 1)
-            n_factor1 = rho_pow / denom
-            n_factor2 = (n_arr + 1.0) * rho_pow / denom
-        else:
-            d_vals = D_calc(np.complex128(m_index), float(kr), n_terms + 1)[:n_terms]
-            n_factor1 = jn / rho
-            n_factor2 = jn * d_vals
+            n_factor1[small] = rho_pow / denom
+            n_factor2[small] = (n_arr + 1.0) * rho_pow / denom
+
+        large = ~small
+        if large.any():
+            # D_calc is a scalar kernel, so the logarithmic derivative is still one
+            # call per point; only points inside the sphere need it at all
+            d_vals = np.empty((int(np.count_nonzero(large)), n_terms), dtype=np.complex128)
+            for k, kr_k in enumerate(kr[large, 0]):
+                d_vals[k] = D_calc(np.complex128(m_index), float(kr_k), n_terms + 1)[:n_terms]
+            n_factor1[large] = jn[large] / rho[large]
+            n_factor2[large] = jn[large] * d_vals
     else:
-        h1 = spherical_h1(n_int, rho)
+        # xi'_n needs h1 at orders n-1, n and n+1, so evaluating orders 0..n_terms+1
+        # in one call and slicing costs a quarter of what four separate calls do --
+        # and h1 at order n is then shared instead of computed twice.
+        h_all = spherical_h1(np.arange(0, n_terms + 2, dtype=np.int64), rho)
+        h1 = h_all[:, 1 : n_terms + 1]
         m_factor = h1
         n_factor1 = h1 / rho
-        n_factor2 = d_riccati_bessel_h1(n_int, rho) / rho
+        # d_riccati_bessel_h1 written out on the cached values; identical arithmetic,
+        # and tests/test_field.py pins it against that function so the two cannot drift
+        d_xi = 0.5 * (rho * h_all[:, 0:n_terms] + h1 - rho * h_all[:, 2 : n_terms + 2])
+        n_factor2 = d_xi / rho
 
-    sin_theta = np.sin(theta)
+    sin_theta = np.sin(theta)[:, np.newaxis]
     M_theta_base = pi * m_factor
     M_phi_base = tau * m_factor
     N_r_base = n_arr * (n_arr + 1.0) * sin_theta * pi * n_factor1
@@ -267,56 +299,118 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
     return np.array([a, b, c, d])
 
 
-def _vectorized_field_eval(evaluator, r, theta, phi):
-    """Evaluate a spherical-field callback on scalar or broadcasted inputs.
+def _near_fields(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, want_e, want_h):
+    """Evaluate the near fields at every requested point.
+
+    The points are split once into those inside the sphere and those outside, and each
+    group is evaluated as a batch.  That grouping is what makes the work vectorizable:
+    the two sides use different radial functions and different media, but within a
+    side every point does the same arithmetic, so the multipole series becomes a sum
+    over the last axis of a ``(n_points, n_terms)`` array.
 
     Args:
-        evaluator (callable): Callable that accepts scalar ``(r, theta, phi)``
-            and returns a complex 3-vector.
+        abcd (ndarray): Mie coefficients ``[a, b, c, d]``.
+        lambda0 (float): Vacuum wavelength.
+        d_sphere (float): Sphere diameter.
+        m_sphere (complex): Sphere refractive index.
+        n_env (float): Refractive index of the surrounding medium.
         r (float or ndarray): Radial coordinate(s).
         theta (float or ndarray): Polar angle(s) in radians.
         phi (float or ndarray): Azimuth angle(s) in radians.
+        include_incident (bool): Include incident field outside the sphere.
+        want_e (bool): Compute the electric field.
+        want_h (bool): Compute the magnetic field.
 
     Returns:
-        ndarray: Complex array with shape ``(3, ...)``.
+        tuple[ndarray or None, ndarray or None]: ``(E, H)`` in spherical components,
+            each shaped ``(3,) + broadcast_shape`` or None when not requested.
     """
-    rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
+    a, b, c, d = abcd
 
-    if rr.ndim == 0:
-        return evaluator(float(rr), float(tt), float(pp))
+    n_terms = len(a)
+    nn = np.arange(1, n_terms + 1)
+    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
 
-    out = np.empty((3,) + rr.shape, dtype=complex)
-    for idx in np.ndindex(rr.shape):
-        out[(slice(None),) + idx] = evaluator(float(rr[idx]), float(tt[idx]), float(pp[idx]))
-    return out
+    rr, tt, pp = np.broadcast_arrays(
+        np.asarray(r, dtype=float),
+        np.asarray(theta, dtype=float),
+        np.asarray(phi, dtype=float),
+    )
+    shape = rr.shape
+    r_flat = rr.reshape(-1)
+    theta_flat = tt.reshape(-1)
+    phi_flat = pp.reshape(-1)
 
+    e_out = np.empty((3, r_flat.size), dtype=complex) if want_e else None
+    h_out = np.empty((3, r_flat.size), dtype=complex) if want_h else None
 
-def _vectorized_field_pair_eval(evaluator, r, theta, phi):
-    """Evaluate an ``(E, H)`` callback on scalar or broadcasted inputs.
+    is_inside = r_flat < d_sphere / 2
+    for inside in (True, False):
+        group = is_inside if inside else ~is_inside
+        if not group.any():
+            continue
 
-    Args:
-        evaluator (callable): Callable that accepts scalar ``(r, theta, phi)``
-            and returns a tuple ``(E, H)``, each a complex 3-vector.
-        r (float or ndarray): Radial coordinate(s).
-        theta (float or ndarray): Polar angle(s) in radians.
-        phi (float or ndarray): Azimuth angle(s) in radians.
+        # miepython coefficients follow the n-ik convention and are conjugated
+        # internally; use conjugated sphere index so internal fields are consistent.
+        m_index = np.conjugate(m_sphere) if inside else n_env
+        M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
+            n_terms, lambda0, m_index, r_flat[group], theta_flat[group], inside
+        )
 
-    Returns:
-        tuple[ndarray, ndarray]: Tuple ``(E, H)`` with each array shaped
-            ``(3, ...)``.
-    """
-    rr, tt, pp = np.broadcast_arrays(np.asarray(r), np.asarray(theta), np.asarray(phi))
+        cos_phi = np.cos(phi_flat[group])[:, np.newaxis]
+        sin_phi = np.sin(phi_flat[group])[:, np.newaxis]
+        zero = np.zeros_like(M_the_base, dtype=np.complex128)
 
-    if rr.ndim == 0:
-        return evaluator(float(rr), float(tt), float(pp))
+        if want_e:
+            # the electric field pairs the odd magnetic modes with the even electric ones
+            M_odd_rad, M_odd_the, M_odd_phi = zero, cos_phi * M_the_base, -sin_phi * M_phi_base
+            N_even_rad, N_even_the, N_even_phi = (
+                cos_phi * N_r_base,
+                cos_phi * N_the_base,
+                -sin_phi * N_phi_base,
+            )
+            if inside:
+                e_rad = _sum_two_scaled_terms(scale, c, M_odd_rad, 1.0 + 0.0j, d, N_even_rad, -1.0j)
+                e_the = _sum_two_scaled_terms(scale, c, M_odd_the, 1.0 + 0.0j, d, N_even_the, -1.0j)
+                e_phi = _sum_two_scaled_terms(scale, c, M_odd_phi, 1.0 + 0.0j, d, N_even_phi, -1.0j)
+            else:
+                e_rad = _sum_two_scaled_terms(scale, a, N_even_rad, 1.0j, b, M_odd_rad, -1.0 + 0.0j)
+                e_the = _sum_two_scaled_terms(scale, a, N_even_the, 1.0j, b, M_odd_the, -1.0 + 0.0j)
+                e_phi = _sum_two_scaled_terms(scale, a, N_even_phi, 1.0j, b, M_odd_phi, -1.0 + 0.0j)
+                if include_incident:
+                    e_i = _incident_e_spherical(lambda0, n_env, r_flat[group], theta_flat[group], phi_flat[group])
+                    e_rad += e_i[0]
+                    e_the += e_i[1]
+                    e_phi += e_i[2]
+            e_out[:, group] = np.array([e_rad, e_the, e_phi])
 
-    e_out = np.empty((3,) + rr.shape, dtype=complex)
-    h_out = np.empty((3,) + rr.shape, dtype=complex)
-    for idx in np.ndindex(rr.shape):
-        e_val, h_val = evaluator(float(rr[idx]), float(tt[idx]), float(pp[idx]))
-        e_out[(slice(None),) + idx] = e_val
-        h_out[(slice(None),) + idx] = h_val
-    return e_out, h_out
+        if want_h:
+            # and the magnetic field the other way round
+            M_even_rad, M_even_the, M_even_phi = zero, -sin_phi * M_the_base, -cos_phi * M_phi_base
+            N_odd_rad, N_odd_the, N_odd_phi = (
+                sin_phi * N_r_base,
+                sin_phi * N_the_base,
+                cos_phi * N_phi_base,
+            )
+            if inside:
+                m_rel = np.conjugate(m_sphere / n_env)
+                h_rad = m_rel * _sum_two_scaled_terms(scale, d, M_even_rad, -1.0 + 0.0j, c, N_odd_rad, -1.0j)
+                h_the = m_rel * _sum_two_scaled_terms(scale, d, M_even_the, -1.0 + 0.0j, c, N_odd_the, -1.0j)
+                h_phi = m_rel * _sum_two_scaled_terms(scale, d, M_even_phi, -1.0 + 0.0j, c, N_odd_phi, -1.0j)
+            else:
+                h_rad = _sum_two_scaled_terms(scale, b, N_odd_rad, 1.0j, a, M_even_rad, 1.0 + 0.0j)
+                h_the = _sum_two_scaled_terms(scale, b, N_odd_the, 1.0j, a, M_even_the, 1.0 + 0.0j)
+                h_phi = _sum_two_scaled_terms(scale, b, N_odd_phi, 1.0j, a, M_even_phi, 1.0 + 0.0j)
+                if include_incident:
+                    h_i = _incident_h_spherical(lambda0, n_env, r_flat[group], theta_flat[group], phi_flat[group])
+                    h_rad += h_i[0]
+                    h_the += h_i[1]
+                    h_phi += h_i[2]
+            h_out[:, group] = np.array([h_rad, h_the, h_phi])
+
+    e_final = e_out.reshape((3,) + shape) if want_e else None
+    h_final = h_out.reshape((3,) + shape) if want_h else None
+    return e_final, h_final
 
 
 def _spherical_components_to_cartesian(field_sph, r, theta, phi):
@@ -333,181 +427,6 @@ def _spherical_components_to_cartesian(field_sph, r, theta, phi):
     """
     fx, fy, fz = spherical_vector_to_cartesian(field_sph[0], field_sph[1], field_sph[2], r, theta, phi)
     return np.array([fx, fy, fz])
-
-
-def _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
-    """Evaluate near-field electric components with precomputed coefficients.
-
-    Args:
-        abcd (ndarray): Mie coefficients ``[a, b, c, d]``.
-        lambda0 (float): Vacuum wavelength.
-        d_sphere (float): Sphere diameter.
-        m_sphere (complex): Sphere refractive index.
-        n_env (float): Refractive index of the surrounding medium.
-        r (float): Radial coordinate.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuth angle in radians.
-        include_incident (bool): Include incident field outside the sphere.
-
-    Returns:
-        ndarray: Spherical electric components ``[E_r, E_theta, E_phi]``.
-    """
-    a, b, c, d = abcd
-
-    N = len(a)
-    nn = np.arange(1, N + 1)
-    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
-
-    inside = r < d_sphere / 2
-    # miepython coefficients follow the n-ik convention and are conjugated
-    # internally; use conjugated sphere index so internal fields are consistent.
-    m_index = np.conjugate(m_sphere) if inside else n_env
-
-    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
-        N, lambda0, d_sphere, m_index, r, theta
-    )
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-    M_rad = np.zeros(N, dtype=np.complex128)
-    M_the = cos_phi * M_the_base
-    M_phi = -sin_phi * M_phi_base
-    N_rad = cos_phi * N_r_base
-    N_the = cos_phi * N_the_base
-    N_phi = -sin_phi * N_phi_base
-
-    if inside:
-        E_rad = _sum_two_scaled_terms(scale, c, M_rad, 1.0 + 0.0j, d, N_rad, -1.0j)
-        E_the = _sum_two_scaled_terms(scale, c, M_the, 1.0 + 0.0j, d, N_the, -1.0j)
-        E_phi = _sum_two_scaled_terms(scale, c, M_phi, 1.0 + 0.0j, d, N_phi, -1.0j)
-    else:
-        E_rad = _sum_two_scaled_terms(scale, a, N_rad, 1.0j, b, M_rad, -1.0 + 0.0j)
-        E_the = _sum_two_scaled_terms(scale, a, N_the, 1.0j, b, M_the, -1.0 + 0.0j)
-        E_phi = _sum_two_scaled_terms(scale, a, N_phi, 1.0j, b, M_phi, -1.0 + 0.0j)
-
-        if include_incident:
-            Ei_rad, Ei_the, Ei_phi = _incident_e_spherical(lambda0, n_env, r, theta, phi)
-            E_rad += Ei_rad
-            E_the += Ei_the
-            E_phi += Ei_phi
-
-    return np.array([E_rad, E_the, E_phi])
-
-
-def _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
-    """Evaluate near-field magnetic components with precomputed coefficients.
-
-    Args:
-        abcd (ndarray): Mie coefficients ``[a, b, c, d]``.
-        lambda0 (float): Vacuum wavelength.
-        d_sphere (float): Sphere diameter.
-        m_sphere (complex): Sphere refractive index.
-        n_env (float): Refractive index of the surrounding medium.
-        r (float): Radial coordinate.
-        theta (float): Polar angle in radians.
-        phi (float): Azimuth angle in radians.
-        include_incident (bool): Include incident field outside the sphere.
-
-    Returns:
-        ndarray: Spherical magnetic components ``[H_r, H_theta, H_phi]``.
-    """
-    a, b, c, d = abcd
-
-    N = len(a)
-    nn = np.arange(1, N + 1)
-    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
-
-    inside = r < d_sphere / 2
-    m_index = np.conjugate(m_sphere) if inside else n_env
-
-    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
-        N, lambda0, d_sphere, m_index, r, theta
-    )
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-    M_rad = np.zeros(N, dtype=np.complex128)
-    M_the = -sin_phi * M_the_base
-    M_phi = -cos_phi * M_phi_base
-    N_rad = sin_phi * N_r_base
-    N_the = sin_phi * N_the_base
-    N_phi = cos_phi * N_phi_base
-
-    if inside:
-        m_rel = np.conjugate(m_sphere / n_env)
-        H_rad = m_rel * _sum_two_scaled_terms(scale, d, M_rad, -1.0 + 0.0j, c, N_rad, -1.0j)
-        H_the = m_rel * _sum_two_scaled_terms(scale, d, M_the, -1.0 + 0.0j, c, N_the, -1.0j)
-        H_phi = m_rel * _sum_two_scaled_terms(scale, d, M_phi, -1.0 + 0.0j, c, N_phi, -1.0j)
-    else:
-        H_rad = _sum_two_scaled_terms(scale, b, N_rad, 1.0j, a, M_rad, 1.0 + 0.0j)
-        H_the = _sum_two_scaled_terms(scale, b, N_the, 1.0j, a, M_the, 1.0 + 0.0j)
-        H_phi = _sum_two_scaled_terms(scale, b, N_phi, 1.0j, a, M_phi, 1.0 + 0.0j)
-
-        if include_incident:
-            Hi_rad, Hi_the, Hi_phi = _incident_h_spherical(lambda0, n_env, r, theta, phi)
-            H_rad += Hi_rad
-            H_the += Hi_the
-            H_phi += Hi_phi
-
-    return np.array([H_rad, H_the, H_phi])
-
-
-def _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident):
-    """Evaluate electric and magnetic near fields with shared VSH work."""
-    a, b, c, d = abcd
-
-    N = len(a)
-    nn = np.arange(1, N + 1)
-    scale = 1j**nn * (2 * nn + 1) / ((nn + 1) * nn)
-
-    inside = r < d_sphere / 2
-    m_index = np.conjugate(m_sphere) if inside else n_env
-    M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
-        N, lambda0, d_sphere, m_index, r, theta
-    )
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-
-    M_odd_rad = np.zeros(N, dtype=np.complex128)
-    M_odd_the = cos_phi * M_the_base
-    M_odd_phi = -sin_phi * M_phi_base
-    N_even_rad = cos_phi * N_r_base
-    N_even_the = cos_phi * N_the_base
-    N_even_phi = -sin_phi * N_phi_base
-
-    M_even_rad = np.zeros(N, dtype=np.complex128)
-    M_even_the = -sin_phi * M_the_base
-    M_even_phi = -cos_phi * M_phi_base
-    N_odd_rad = sin_phi * N_r_base
-    N_odd_the = sin_phi * N_the_base
-    N_odd_phi = cos_phi * N_phi_base
-
-    if inside:
-        e_rad = _sum_two_scaled_terms(scale, c, M_odd_rad, 1.0 + 0.0j, d, N_even_rad, -1.0j)
-        e_the = _sum_two_scaled_terms(scale, c, M_odd_the, 1.0 + 0.0j, d, N_even_the, -1.0j)
-        e_phi = _sum_two_scaled_terms(scale, c, M_odd_phi, 1.0 + 0.0j, d, N_even_phi, -1.0j)
-
-        m_rel = np.conjugate(m_sphere / n_env)
-        h_rad = m_rel * _sum_two_scaled_terms(scale, d, M_even_rad, -1.0 + 0.0j, c, N_odd_rad, -1.0j)
-        h_the = m_rel * _sum_two_scaled_terms(scale, d, M_even_the, -1.0 + 0.0j, c, N_odd_the, -1.0j)
-        h_phi = m_rel * _sum_two_scaled_terms(scale, d, M_even_phi, -1.0 + 0.0j, c, N_odd_phi, -1.0j)
-    else:
-        e_rad = _sum_two_scaled_terms(scale, a, N_even_rad, 1.0j, b, M_odd_rad, -1.0 + 0.0j)
-        e_the = _sum_two_scaled_terms(scale, a, N_even_the, 1.0j, b, M_odd_the, -1.0 + 0.0j)
-        e_phi = _sum_two_scaled_terms(scale, a, N_even_phi, 1.0j, b, M_odd_phi, -1.0 + 0.0j)
-        h_rad = _sum_two_scaled_terms(scale, b, N_odd_rad, 1.0j, a, M_even_rad, 1.0 + 0.0j)
-        h_the = _sum_two_scaled_terms(scale, b, N_odd_the, 1.0j, a, M_even_the, 1.0 + 0.0j)
-        h_phi = _sum_two_scaled_terms(scale, b, N_odd_phi, 1.0j, a, M_even_phi, 1.0 + 0.0j)
-
-        if include_incident:
-            e_i = _incident_e_spherical(lambda0, n_env, r, theta, phi)
-            h_i = _incident_h_spherical(lambda0, n_env, r, theta, phi)
-            e_rad += e_i[0]
-            e_the += e_i[1]
-            e_phi += e_i[2]
-            h_rad += h_i[0]
-            h_the += h_i[1]
-            h_phi += h_i[2]
-
-    return np.array([e_rad, e_the, e_phi]), np.array([h_rad, h_the, h_phi])
 
 
 def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
@@ -535,10 +454,19 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    def evaluator(rr, tt, pp):
-        return _e_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
-
-    return _vectorized_field_eval(evaluator, r, theta, phi)
+    return _near_fields(
+        abcd,
+        lambda0,
+        d_sphere,
+        m_sphere,
+        n_env,
+        r,
+        theta,
+        phi,
+        include_incident,
+        want_e=True,
+        want_h=False,
+    )[0]
 
 
 def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
@@ -566,10 +494,19 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    def evaluator(rr, tt, pp):
-        return _h_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
-
-    return _vectorized_field_eval(evaluator, r, theta, phi)
+    return _near_fields(
+        abcd,
+        lambda0,
+        d_sphere,
+        m_sphere,
+        n_env,
+        r,
+        theta,
+        phi,
+        include_incident,
+        want_e=False,
+        want_h=True,
+    )[1]
 
 
 def eh_near(
@@ -608,10 +545,19 @@ def eh_near(
     if abcd is None:
         abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
 
-    def evaluator(rr, tt, pp):
-        return _eh_near_abcd(abcd, lambda0, d_sphere, m_sphere, n_env, rr, tt, pp, include_incident)
-
-    return _vectorized_field_pair_eval(evaluator, r, theta, phi)
+    return _near_fields(
+        abcd,
+        lambda0,
+        d_sphere,
+        m_sphere,
+        n_env,
+        r,
+        theta,
+        phi,
+        include_incident,
+        want_e=True,
+        want_h=True,
+    )
 
 
 def e_near_cartesian(

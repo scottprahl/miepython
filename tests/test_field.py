@@ -13,6 +13,7 @@ from miepython.field import (
     eh_near_cartesian,
     _coefficients_abcd,
 )
+from miepython.bessel import d_riccati_bessel_h1, spherical_h1
 from miepython.core import wiscombe_terms
 from miepython.util import spherical_vector_to_cartesian
 
@@ -505,3 +506,99 @@ def test_cartesian_wrappers_take_a_term_count_too():
     e_def, h_def = eh_near_cartesian(*args)
     np.testing.assert_array_equal(e_exp, e_def)
     np.testing.assert_array_equal(h_exp, h_def)
+
+
+class TestBatchedEvaluation:
+    """Test the vectorized point evaluation against the guarantees it has to keep.
+
+    ``field.py`` used to walk the grid one point at a time, calling into scipy for
+    each; it now groups the points by side of the sphere surface and evaluates each
+    group as a batch.  The physics is unchanged, so what needs pinning is that
+    batching cannot alter a result: every point must come back with exactly the value
+    it would have had on its own, whatever else it was evaluated alongside.
+    """
+
+    ARGS = (1.0, 1.0, 1.5 + 0.0j, 1.0)  # lambda0, d_sphere, m_sphere, n_env
+
+    def test_a_batch_agrees_with_the_same_points_one_at_a_time(self):
+        """The strongest statement available: grouping changes nothing, bit for bit."""
+        # straddle the surface, include both poles and the exact boundary radius
+        r = np.array([0.05, 0.2, 0.499999, 0.5, 0.500001, 0.9, 3.0, 0.3])
+        theta = np.array([0.0, np.pi, 0.4, 1.2, np.pi / 2, 2.9, 0.7, 1.9])
+        phi = np.array([0.0, 1.0, -2.0, 3.0, 0.5, -1.5, 2.5, 0.25])
+
+        batch_e, batch_h = eh_near(*self.ARGS, r, theta, phi)
+        for k in range(r.size):
+            one_e, one_h = eh_near(*self.ARGS, r[k], theta[k], phi[k])
+            np.testing.assert_array_equal(batch_e[:, k], one_e, err_msg=f"E at point {k}")
+            np.testing.assert_array_equal(batch_h[:, k], one_h, err_msg=f"H at point {k}")
+
+    def test_order_within_a_batch_does_not_matter(self):
+        """Points are regrouped internally, so the answer must not follow the input order."""
+        r = np.array([0.1, 2.0, 0.4, 1.1, 0.49, 0.51])
+        theta = np.linspace(0.2, 2.8, r.size)
+        phi = np.linspace(-3.0, 3.0, r.size)
+
+        straight = e_near(*self.ARGS, r, theta, phi)
+        flip = np.arange(r.size)[::-1]
+        reversed_out = e_near(*self.ARGS, r[flip], theta[flip], phi[flip])
+        np.testing.assert_array_equal(reversed_out[:, ::-1], straight)
+
+    @pytest.mark.parametrize(
+        "radii, description",
+        [
+            (np.array([0.1, 0.2, 0.3]), "every point inside"),
+            (np.array([1.1, 1.2, 1.3]), "every point outside"),
+            (np.array([0.1, 1.2]), "one point on each side"),
+        ],
+    )
+    def test_single_sided_batches_work(self, radii, description):
+        """One of the two groups is empty in the first two cases and must be skipped."""
+        theta = np.full_like(radii, 0.9)
+        phi = np.full_like(radii, 0.4)
+        e_out = e_near(*self.ARGS, radii, theta, phi)
+        assert e_out.shape == (3, radii.size), description
+        assert np.all(np.isfinite(e_out))
+
+    @pytest.mark.parametrize("shape", [(4,), (2, 3), (2, 2, 2)])
+    def test_input_shape_is_preserved(self, shape):
+        """Flattening happens internally and must not show through."""
+        rng = np.random.default_rng(4)
+        x, y, z = (rng.uniform(-2.0, 2.0, size=shape) for _ in range(3))
+        e_xyz, h_xyz = eh_near_cartesian(*self.ARGS, x, y, z)
+        assert e_xyz.shape == (3,) + shape
+        assert h_xyz.shape == (3,) + shape
+
+    def test_a_scalar_point_still_returns_three_components(self):
+        """Scalars must not acquire a length-one point axis."""
+        e_out = e_near(*self.ARGS, 0.9, 0.7, 0.3)
+        assert e_out.shape == (3,)
+        h_out = h_near(*self.ARGS, 0.2, 0.7, 0.3)
+        assert h_out.shape == (3,)
+
+    def test_eh_near_matches_e_near_and_h_near(self):
+        """The combined call shares the harmonics, so it must not diverge from either."""
+        r = np.array([0.2, 0.45, 0.6, 2.5])
+        theta = np.array([0.3, 1.4, 2.2, 0.8])
+        phi = np.array([0.1, -1.1, 2.0, 0.6])
+        e_both, h_both = eh_near(*self.ARGS, r, theta, phi)
+        np.testing.assert_array_equal(e_both, e_near(*self.ARGS, r, theta, phi))
+        np.testing.assert_array_equal(h_both, h_near(*self.ARGS, r, theta, phi))
+
+
+def test_the_inlined_riccati_derivative_matches_bessel_py():
+    """``_vsh_components_base`` writes out ``d_riccati_bessel_h1`` to reuse cached values.
+
+    Evaluating h1 once over orders 0..n+1 and slicing is far cheaper than four
+    separate scipy calls, but it means the formula for xi'_n now lives in two places.
+    This is the test that stops them drifting: the inlined expression must agree with
+    ``bessel.d_riccati_bessel_h1`` exactly, not approximately.
+    """
+    n_terms = 6
+    n_int = np.arange(1, n_terms + 1, dtype=np.int64)
+    rho = np.array([0.3, 1.0, 4.5, 12.0, 40.0])[:, np.newaxis]
+
+    h_all = spherical_h1(np.arange(0, n_terms + 2, dtype=np.int64), rho)
+    inlined = 0.5 * (rho * h_all[:, 0:n_terms] + h_all[:, 1 : n_terms + 1] - rho * h_all[:, 2 : n_terms + 2])
+
+    np.testing.assert_array_equal(inlined, d_riccati_bessel_h1(n_int, rho))
