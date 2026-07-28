@@ -25,6 +25,28 @@ unreleased
     and returns a length-one array, except in ``phase_matrix``, which squeezes it
     away.  ``docs/01_basics.ipynb`` demonstrates the first half deliberately, so
     both are now stated in the docstrings and pinned by tests
+*   fix ``make readme_images``, which had never worked: ``.PHONY`` declared that name
+    but the rule below it was written ``readme:``, so the advertised command failed
+    with "No rule to make target" while an undocumented ``make readme`` did the job
+*   drop ``sync`` from ``make help``.  No such target exists; the one that syncs the
+    environment is ``venv``, and it was not listed at all.  Also corrected
+    ``pylint-check``, described as "Same as lint above" when it runs pylint alone, and
+    moved the individual check targets out of the packaging section into the lint one
+    where they belong
+*   check the Makefile's help text against the rules it defines, so a target cannot be
+    advertised, or declared phony, without existing.  These four bugs were all of the
+    same kind -- the help block is a pile of ``@echo`` lines with nothing tying it to
+    the rules underneath -- and nothing could have caught them
+*   generate the README figures reproducibly.  matplotlib stamps each SVG with the
+    current time and names clip paths and glyphs from a random salt, so re-running
+    ``make readme_images`` produced files differing on a hundred lines even when the
+    figures were pixel-for-pixel identical.  There was no way to tell "a plot changed"
+    from "matplotlib rolled different ids".  Fixing ``svg.hashsalt`` and passing
+    ``metadata={"Date": None}`` makes repeated runs byte-identical, and the committed
+    images are regenerated once against that
+*   point the README license badge at ``blob/main`` rather than ``blob/master``.  There
+    is no master branch; the link worked only because GitHub silently redirects
+
 *   evaluate the near fields for every point at once instead of one point at a time.
     ``field.py`` walked the grid with ``np.ndindex`` and called into
     ``scipy.special`` separately for each point, so a 41x41 slice spent 0.4 s almost

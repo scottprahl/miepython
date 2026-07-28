@@ -15,7 +15,7 @@
    :alt: DOI
 
 .. |license| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
-   :target: https://github.com/scottprahl/miepython/blob/master/LICENSE.txt
+   :target: https://github.com/scottprahl/miepython/blob/main/LICENSE.txt
    :alt: License
 
 .. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yaml/badge.svg

@@ -36,12 +36,12 @@ RST_TARGETS     := README.rst CHANGELOG.rst $(DOCS_DIR)/changelog.rst $(DOCS_DIR
 .PHONY: help
 help:
 	@echo "Build Targets:"
+	@echo "  venv           - Sync uv environment with dev/docs/lite extras"
 	@echo "  dist           - Build sdist+wheel locally"
 	@echo "  html           - Build Sphinx HTML documentation"
 	@echo "  lab            - Start jupyterlab"
 	@echo "  speed          - Quick test of jit and no-jit speeds"
 	@echo "  readme_images  - Regenerate docs/images/*.svg from examples"
-	@echo "  sync           - Sync uv environment with dev/docs/lite extras"
 	@echo ""
 	@echo "Test Targets:"
 	@echo "  test           - Run pytest once per backend (no-JIT then JIT)"
@@ -51,17 +51,17 @@ help:
 	@echo "  note-test      - Test all notebooks for errors"
 	@echo ""
 	@echo "Lint Targets:"
-	@echo "  lint           - Run every static check below"
+	@echo "  lint           - Run every check below; this is what CI runs"
+	@echo "  ruff-check     - Lint all .py and .ipynb files"
+	@echo "  black-check    - Check formatting with black"
+	@echo "  pylint-check   - Lint the package, tests and CI scripts"
+	@echo "  rst-check      - Validate all RST files"
+	@echo "  yaml-check     - Validate YAML files"
+	@echo "  manifest-check - Validate MANIFEST"
+	@echo "  pyroma-check   - Validate overall packaging"
 	@echo ""
 	@echo "Packaging Targets:"
 	@echo "  rcheck         - Distribution release checks"
-	@echo "  manifest-check - Validate MANIFEST"
-	@echo "  pylint-check   - Same as lint above"
-	@echo "  pyroma-check   - Validate overall packaging"
-	@echo "  black-check    - Check formatting with black"
-	@echo "  rst-check      - Validate all RST files"
-	@echo "  ruff-check     - Lint all .py and .ipynb files"
-	@echo "  yaml-check     - Validate YAML files"
 	@echo ""
 	@echo "JupyterLite Targets:"
 	@echo "  lite           - Build JupyterLite site into $(OUT_DIR)"
@@ -82,7 +82,7 @@ dist:
 	$(RUN) python -m build
 
 .PHONY: readme_images
-readme:
+readme_images:
 	cd docs/images && $(RUN) python make_readme_images.py
 
 # The backend is chosen when miepython is first imported, so one pytest process

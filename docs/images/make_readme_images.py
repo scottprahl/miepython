@@ -4,6 +4,13 @@
 This runs each numbered example script in ``miepython/examples`` and saves the
 last matplotlib figure as ``docs/images/NN.svg`` where ``NN`` is the two-digit
 prefix from the example filename (for example, ``01_dielectric.py`` -> ``01.svg``).
+
+The output is written reproducibly: matplotlib otherwise stamps each SVG with the
+current time and names its clip paths and glyphs from a random salt, so re-running
+this script produced a file that differed on a hundred lines even when nothing about
+the figure had changed.  That made ``git diff`` useless here -- there was no way to
+tell "the plots moved" from "matplotlib rolled different ids".  Fixing the salt and
+dropping the date means a diff appears only when a figure really is different.
 """
 
 from __future__ import annotations
@@ -21,6 +28,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+# any fixed value will do; it only has to stay the same from run to run
+matplotlib.rcParams["svg.hashsalt"] = "miepython"
+
 EXAMPLES_DIR = ROOT / "miepython" / "examples"
 IMAGES_DIR = ROOT / "docs" / "images"
 
@@ -37,7 +47,8 @@ def _save_last_figure(svg_path: Path) -> None:
         raise RuntimeError(f"No matplotlib figure produced for {svg_path.name}")
 
     fig = plt.figure(fig_numbers[-1])
-    fig.savefig(svg_path, format="svg", bbox_inches="tight")
+    # Date=None omits the <dc:date> stamp, which would otherwise change every run
+    fig.savefig(svg_path, format="svg", bbox_inches="tight", metadata={"Date": None})
 
 
 def main() -> None:
