@@ -7,8 +7,12 @@ import pathlib
 
 import pytest
 
-examples = list(pathlib.Path("miepython/examples").glob("*.py"))
-ids = [p.as_posix() for p in examples]
+# anchored on this file, not the working directory, so a run started from
+# somewhere else cannot silently collect zero examples
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
+examples = sorted((REPO_ROOT / "miepython" / "examples").glob("*.py"))
+assert examples, f"no example scripts found under {REPO_ROOT / 'miepython' / 'examples'}"
+ids = [p.name for p in examples]
 
 
 @pytest.mark.parametrize("path", examples, ids=ids)

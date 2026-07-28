@@ -29,10 +29,10 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
-        run: uv python install 3.14
-
       - name: Run every static check
+        env:
+          # uv would otherwise pick any interpreter satisfying requires-python
+          UV_PYTHON: "3.14"
         run: make lint
 
   tests:
@@ -42,8 +42,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # every supported Python on Linux, since version problems are cheap to
+        # catch there and the classifiers promise 3.10 through 3.14
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          # numba holds the platform-specific half of this package, so check
+          # both ends of the range on the other operating systems too
+          - os: macos-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.10"
+          - os: windows-latest
+            python-version: "3.14"
 
     steps:
       - name: Checkout sources

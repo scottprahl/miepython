@@ -10,7 +10,6 @@ Original script is GPL 3.0 licensed so this one is too. See
     https://github.com/alchemyst/Dynamics-and-Control/test_all_notebooks.py
 """
 
-import os.path
 import pathlib
 import pytest
 import nbformat
@@ -18,12 +17,14 @@ import nbconvert.preprocessors
 
 # Default search path is the current directory
 # searchpath = pathlib.Path('.')
-searchpath = pathlib.Path("docs/")  # all notebooks are in here
+# anchored on this file rather than the working directory
+searchpath = pathlib.Path(__file__).resolve().parent.parent / "docs"
 
 # Read patterns from .testignore file
 ignores = ""
-if os.path.exists(".testignore"):
-    with open(".testignore", encoding="utf-8") as ff:
+testignore = searchpath.parent / ".testignore"
+if testignore.exists():
+    with open(testignore, encoding="utf-8") as ff:
         ignores = [line.strip() for line in ff if line.strip()]
 
 # Ignore hidden folders (startswith('.')) and files matching ignore patterns

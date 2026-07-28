@@ -125,6 +125,16 @@ unreleased
     ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
     that parametrizes over both backends.  Tests written this way need only one
     copy instead of a JIT/no-JIT pair
+*   widen the CI matrix.  It covered ubuntu on Python 3.10 and 3.14 only, and
+    because it also ran just two test files, most of the suite had never executed
+    on the oldest supported Python.  Linux now runs every version the classifiers
+    promise, 3.10 through 3.14, and macOS and Windows run both ends of that range,
+    since numba holds the platform-specific half of the package.  numba 0.66 ships
+    wheels for all of those combinations
+*   discover example scripts and notebooks relative to the test file rather than
+    the working directory.  ``test_all_examples.py`` globbed a relative path, so a
+    run started anywhere but the repository root collected nothing and reported
+    success; it now asserts that it found something
 *   CI now lints.  It only ran pytest, so a pull request with formatting or lint
     errors passed clean and the checks in ``make rcheck`` were enforced on nobody.
     A new job runs ``make lint``, the same target a release check uses, through uv,
