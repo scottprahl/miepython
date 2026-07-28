@@ -10,10 +10,12 @@ Currently, only the n=1 mode is tested.
 
 Tested Functions:
 -----------------
-- `M_odd(n, k, d_sphere, r, theta, phi)`: Computes the nth odd magnetic VSH.
-- `M_even(n, k, d_sphere, r, theta, phi)`: Computes the nth even magnetic VSH.
-- `N_odd(n, k, d_sphere, r, theta, phi)`: Computes the nth odd electric VSH.
-- `N_even(n, k, d_sphere, r, theta, phi)`: Computes the nth even electric VSH.
+All four share the signature `(n, lambda0, d_sphere, m_index, r, theta, phi)`.
+
+- `M_odd`: Computes the nth odd magnetic VSH.
+- `M_even`: Computes the nth even magnetic VSH.
+- `N_odd`: Computes the nth odd electric VSH.
+- `N_even`: Computes the nth even electric VSH.
 
 Conventions:
 ------------

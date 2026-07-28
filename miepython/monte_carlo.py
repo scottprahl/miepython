@@ -1,5 +1,35 @@
 """
-Monte Carlo and Mie scattering.
+Sample scattering angles from the Mie phase function.
+
+Monte Carlo photon transport needs a random exit direction distributed according to
+the phase function.  This module builds the inverse-transform table that provides
+one: ``mu_with_uniform_cdf`` returns angles spaced so that equal steps along the
+cumulative distribution are equally likely, and ``generate_mie_costheta`` draws from
+that table.  ``docs/06_random_deviates.ipynb`` works through the whole procedure.
+
+Importing
+---------
+
+This module is *not* imported with the package, because it imports ``miepython``
+itself and doing so from ``miepython/__init__.py`` would be circular.  Ask for it by
+name::
+
+    import numpy as np
+    import miepython.monte_carlo as mc
+
+    m, x = 1.33, 2.0                              # a water droplet
+    mu, cdf = mc.mu_with_uniform_cdf(m, x, 500)   # 500-entry lookup table
+
+    rng = np.random.default_rng(12345)
+    cosines = [mc.generate_mie_costheta(mu, rng=rng) for _ in range(10000)]
+
+Build the table once and reuse it: it costs a full Mie calculation, while each draw
+off it costs one random number.  The number of table entries sets how finely the
+phase function is resolved, so strongly forward-scattering spheres need more of
+them.
+
+Passing ``rng`` keeps the draws reproducible without disturbing the process-wide
+``numpy.random``; omitting it falls back to that global generator.
 """
 
 import numpy as np
@@ -96,7 +126,7 @@ def mu_with_uniform_cdf(m, x, num):
     return [mu, cdf_values]
 
 
-def generate_mie_costheta(mu_cdf):
+def generate_mie_costheta(mu_cdf, rng=None):
     """
     Generate a new scattering angle using a cdf.
 
@@ -107,16 +137,37 @@ def generate_mie_costheta(mu_cdf):
 
     Args:
        mu_cdf: a cumulative distribution function
+       rng: optional source of randomness, anything with a ``random()`` method
+           such as ``numpy.random.default_rng()``.  Omitting it uses the process
+           wide ``numpy.random``, whose stream a caller cannot control without
+           reseeding the whole program, so pass a generator when reproducibility
+           matters.
 
     Returns:
        The cosine of the scattering angle
+
+    Examples:
+        Draw a reproducible angle without disturbing the global stream:
+
+        >>> import numpy as np
+        >>> import miepython.monte_carlo as mc
+        >>> mu, cdf = mc.mu_with_uniform_cdf(1.33, 1.7, 50)
+        >>> rng = np.random.default_rng(42)
+        >>> first = mc.generate_mie_costheta(mu, rng=rng)
+        >>> bool(-1.0 <= first <= 1.0)
+        True
+        >>> bool(first == mc.generate_mie_costheta(mu, rng=np.random.default_rng(42)))
+        True
     """
-    # np.random.random() draws from [0, 1), so int(r * num) never reaches num and
+    if rng is None:
+        rng = np.random
+
+    # rng.random() draws from [0, 1), so int(r * num) never reaches num and
     # index + 1 stays inside the table.  No clamp is needed.
     num = len(mu_cdf) - 1
-    index = int(np.random.random() * num)
+    index = int(rng.random() * num)
 
     x = mu_cdf[index]
-    x += (mu_cdf[index + 1] - mu_cdf[index]) * np.random.random()
+    x += (mu_cdf[index + 1] - mu_cdf[index]) * rng.random()
 
     return x

@@ -192,3 +192,55 @@ class TestSampling:
             samples = draw(mu, 20000, seed=num)
             assert samples.min() >= mu[0]
             assert samples.max() <= mu[-1]
+
+
+class TestInjectedGenerator:
+    """Test drawing from a caller-supplied generator instead of the global one."""
+
+    def test_a_generator_makes_draws_reproducible(self):
+        """Two identically seeded generators must give the same stream."""
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, X_DROPLET, 50)
+        first = [mc.generate_mie_costheta(mu, rng=np.random.default_rng(42)) for _ in range(5)]
+        again = [mc.generate_mie_costheta(mu, rng=np.random.default_rng(42)) for _ in range(5)]
+        assert first == again
+
+        shared = np.random.default_rng(7)
+        stream = [mc.generate_mie_costheta(mu, rng=shared) for _ in range(20)]
+        shared = np.random.default_rng(7)
+        assert stream == [mc.generate_mie_costheta(mu, rng=shared) for _ in range(20)]
+        assert len(set(stream)) > 1, "a shared generator should advance, not repeat"
+
+    def test_different_seeds_give_different_draws(self):
+        """Otherwise the generator is not being consulted."""
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, X_DROPLET, 50)
+        one = [mc.generate_mie_costheta(mu, rng=np.random.default_rng(1)) for _ in range(5)]
+        two = [mc.generate_mie_costheta(mu, rng=np.random.default_rng(2)) for _ in range(5)]
+        assert one != two
+
+    def test_passing_a_generator_leaves_the_global_stream_alone(self):
+        """The point of the argument: no reseeding the whole program."""
+        np.random.seed(3)
+        expected = np.random.random(4)
+        np.random.seed(3)
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, X_DROPLET, 20)
+        for _ in range(50):
+            mc.generate_mie_costheta(mu, rng=np.random.default_rng(9))
+        np.testing.assert_array_equal(np.random.random(4), expected)
+
+    def test_omitting_the_generator_still_uses_the_global_one(self):
+        """The old call signature must keep working."""
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, X_DROPLET, 20)
+        with seeded(17):
+            from_default = [mc.generate_mie_costheta(mu) for _ in range(5)]
+        with seeded(17):
+            explicit = [mc.generate_mie_costheta(mu, rng=np.random) for _ in range(5)]
+        assert from_default == explicit
+
+    def test_an_injected_generator_samples_the_same_distribution(self):
+        """Swapping the source of randomness must not change the physics."""
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, 2.0, 500)
+        rng = np.random.default_rng(2024)
+        samples = np.array([mc.generate_mie_costheta(mu, rng=rng) for _ in range(200000)])
+        g = mie.efficiencies_mx(M_WATER, 2.0)[3]
+        assert samples.mean() == pytest.approx(g, abs=5e-3)
+        assert samples.min() >= -1.0 and samples.max() <= 1.0

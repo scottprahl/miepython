@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from .core import normalization_factor as core_normalization_factor
+
 __all__ = (
     "efficiencies_mx",
     "efficiencies",
@@ -62,7 +64,10 @@ def efficiencies(m, d, lambda0, n_env=1.0):
 
 def normalization_factor(m, x, norm_str):
     """
-    Figure out scattering function normalization.
+    Figure out scattering function normalization for a small sphere.
+
+    The rules are the same as for the full Mie solution, so they live in
+    ``miepython.core``; only the efficiencies feeding them are the Rayleigh ones.
 
     Args:
         m: complex index of refraction of sphere
@@ -72,47 +77,7 @@ def normalization_factor(m, x, norm_str):
     Returns:
         scaling factor needed for scattering function
     """
-    factor = None
-    norm = norm_str.lower()
-
-    if norm in ["bohren"]:
-        factor = 1 / 2
-
-    elif norm in ["wiscombe"]:
-        factor = 1
-
-    elif norm in ["qsca", "scattering_efficiency"]:
-        factor = x * np.sqrt(np.pi)
-
-    else:
-        qext, qsca, _, _ = efficiencies_mx(m, x)
-
-        # every remaining choice divides by qext or qsca
-        if qext <= 0 or qsca <= 0:
-            raise ValueError(
-                "normalization %r needs a sphere that scatters, but qext=%g and qsca=%g. "
-                "A sphere of zero size, or one whose index matches its surroundings, has "
-                "no scattering to normalize against. Use norm='wiscombe', 'bohren' or "
-                "'qsca' if an unnormalized amplitude is what you want." % (norm_str, qext, qsca)
-            )
-
-        if norm in ["a", "albedo"]:
-            factor = x * np.sqrt(np.pi * qext)
-
-        if norm in ["1", "one", "unity"]:
-            factor = x * np.sqrt(qsca * np.pi)
-
-        if norm in ["four_pi", "4pi"]:
-            factor = x * np.sqrt(qsca / 4)
-
-        if norm in ["qext", "extinction_efficiency"]:
-            factor = x * np.sqrt(qsca * np.pi / qext)
-
-    if factor is None:
-        raise ValueError(
-            "normalization must be one of 'albedo' (default), 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe'"
-        )
-    return factor
+    return core_normalization_factor(m, x, norm_str, efficiency_source=efficiencies_mx)
 
 
 def S1_S2(m, x, mu, norm="albedo"):

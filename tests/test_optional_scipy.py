@@ -105,6 +105,35 @@ def test_with_scipy_present_the_real_functions_are_exported():
         assert getattr(miepython, name) is getattr(miepython_field, name), name
 
 
+def test_rayleigh_is_still_reachable_without_scipy():
+    """It needs only NumPy, so the guard must not take it down with the rest."""
+    with reimported_without("scipy") as mie_noscipy:
+        qext, qsca, _, g = mie_noscipy.rayleigh.efficiencies_mx(1.5, 0.01)
+        assert qsca > 0
+        assert qext >= qsca
+        assert g == pytest.approx(0.0, abs=1e-9)
+        assert "rayleigh" in mie_noscipy.__all__
+
+
+def test_vsh_is_absent_without_scipy():
+    """Every function in it needs scipy, so there is nothing useful to bind."""
+    with reimported_without("scipy") as mie_noscipy:
+        assert not hasattr(mie_noscipy, "vsh")
+        # and it must stay out of __all__, or ``from miepython import *`` would raise
+        assert "vsh" not in mie_noscipy.__all__
+        missing = [name for name in mie_noscipy.__all__ if not hasattr(mie_noscipy, name)]
+        assert missing == [], f"__all__ promises unbound names without scipy: {missing}"
+
+
+def test_monte_carlo_works_without_scipy():
+    """Sampling the phase function is core Mie work, not near-field work."""
+    with reimported_without("scipy"):
+        monte_carlo = importlib.import_module("miepython.monte_carlo")
+        mu, cdf = monte_carlo.mu_with_uniform_cdf(1.33, 2.0, 50)
+        assert len(mu) == 50
+        assert cdf[0] == 0.0 and cdf[-1] == 1.0
+
+
 def test_a_non_scipy_import_failure_is_not_swallowed():
     """Only a missing SciPy is tolerated; anything else must propagate."""
     with pytest.raises(ModuleNotFoundError) as excinfo:

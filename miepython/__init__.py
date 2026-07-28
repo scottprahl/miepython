@@ -42,6 +42,29 @@ The scattering matrix
 
     mie.phase_matrix(m, x, mu)
 
+Submodules
+----------
+
+``miepython.rayleigh`` is imported with the package and needs nothing beyond NumPy.
+It mirrors the API above using the small-sphere limit, which is handy for checking
+the full solution as x goes to zero::
+
+    mie.rayleigh.efficiencies_mx(1.5, 0.01)
+
+``miepython.vsh`` holds the vector spherical harmonics as a direct transcription of
+the textbook formulas.  It is a reference for development and cross-checking rather
+than a fast path, it requires the optional ``scipy`` dependency, and so it is bound
+only when scipy is installed::
+
+    mie.vsh.M_odd(1, k, d_sphere, r, theta, phi)
+
+``miepython.monte_carlo`` samples scattering angles from the Mie phase function.  It
+imports this package, so importing it from here would be circular; ask for it
+explicitly instead::
+
+    import miepython.monte_carlo as mc
+    mu, cdf = mc.mu_with_uniform_cdf(m, x, 100)
+
 Near-field calculations are provided by the ``miepython.field`` module::
 
     from miepython.field import e_near, h_near, eh_near
@@ -68,6 +91,8 @@ from ._backend import single_sphere, small_conducting_sphere, small_sphere
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
 
+from . import rayleigh
+
 _FIELD_IMPORT_ERROR = None
 
 
@@ -93,10 +118,14 @@ def _missing_field_function(name):
 
 try:
     from . import field as _field
+    from . import vsh  # noqa: F401  reachable as miepython.vsh; needs scipy, so guarded here
 except ModuleNotFoundError as exc:
     missing_module = str(getattr(exc, "name", "") or "")
     if missing_module.startswith("scipy"):
         _FIELD_IMPORT_ERROR = exc
+        # ``miepython.vsh`` is left unbound rather than stubbed out.  It is a
+        # reference implementation used for development and cross-checking, not part
+        # of the public surface, and every one of its functions needs scipy.
         e_far = _missing_field_function("e_far")
         e_near = _missing_field_function("e_near")
         h_near = _missing_field_function("h_near")
@@ -115,8 +144,10 @@ else:
     h_near_cartesian = _field.h_near_cartesian
     eh_near_cartesian = _field.eh_near_cartesian
 
-# functions exposed to the user
+# Names exposed to the user.  ``vsh`` is deliberately absent: it is bound only when
+# scipy is installed, and a star-import must not depend on that.
 __all__ = (
+    "rayleigh",
     "intensities",
     "i_par",
     "i_per",

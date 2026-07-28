@@ -29,17 +29,26 @@ Bessel Function Selection:
 
 Functions:
 
-    M_odd(n, k, d_sphere, r, theta, phi)
+    All four take the same arguments ``(n, lambda0, d_sphere, m_index, r, theta,
+    phi)``: the multipole order, the vacuum wavelength, the sphere diameter, the
+    refractive index of the medium the point lies in, and the spherical coordinates
+    of that point.  ``lambda0``, ``d_sphere`` and ``r`` share one length unit.
+
+    M_odd(n, lambda0, d_sphere, m_index, r, theta, phi)
         Compute the nth odd magnetic vector spherical harmonic (m=1).
 
-    M_even(n, k, d_sphere, r, theta, phi)
+    M_even(n, lambda0, d_sphere, m_index, r, theta, phi)
         Compute the nth even magnetic vector spherical harmonic (m=1).
 
-    N_odd(n, k, d_sphere, r, theta, phi)
+    N_odd(n, lambda0, d_sphere, m_index, r, theta, phi)
         Compute the nth odd electric vector spherical harmonic (m=1).
 
-    N_even(n, k, d_sphere, r, theta, phi)
+    N_even(n, lambda0, d_sphere, m_index, r, theta, phi)
         Compute the nth even electric vector spherical harmonic (m=1).
+
+    Each has an ``*_array`` counterpart -- ``M_odd_array``, ``M_even_array``,
+    ``N_odd_array``, ``N_even_array`` -- with the identical signature, taking
+    array-valued ``r``, ``theta`` and ``phi``.
 
 Additional Utility Functions:
 
@@ -54,8 +63,8 @@ Additional Utility Functions:
 
 import numpy as np
 from scipy.special import spherical_jn, lpmv, factorial2
-from miepython.bessel import spherical_h1, d_riccati_bessel_h1
-import miepython as mie
+from .bessel import spherical_h1, d_riccati_bessel_h1
+from ._backend import D_calc
 
 __all__ = (
     "mie_tau",
@@ -312,7 +321,7 @@ def N_base(n, m_index, kr, theta, inside):
         else:
             factor1 = spherical_jn(n, rho)
             # D_calc returns D_1..D_N; request one extra term and take D_n.
-            Dn = mie.D_calc(m_index, kr, n + 1)[n - 1]
+            Dn = D_calc(m_index, kr, n + 1)[n - 1]
             factor2 = factor1 * Dn
             factor1 /= rho
     else:

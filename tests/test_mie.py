@@ -939,3 +939,29 @@ class TestArrayDispatchAndErrors:
             mie.S1_S2(flipped, 2.0, mu, norm=norm), mie.S1_S2(physical, 2.0, mu, norm=norm), rtol=1e-13
         )
         np.testing.assert_allclose(mie.efficiencies_mx(flipped, 2.0), mie.efficiencies_mx(physical, 2.0), rtol=1e-13)
+
+    @pytest.mark.parametrize("name", ["i_par", "i_per", "i_unpolarized"])
+    def test_a_scalar_angle_gives_a_length_one_array(self, name):
+        """The angular functions keep their shape whether given one angle or many.
+
+        ``docs/01_basics.ipynb`` shows ``S1_S2(m, x, -1)`` and
+        ``S1_S2(m, x, np.array([-1.0]))`` side by side to make this point, so the
+        convention is deliberate rather than an oversight.
+        """
+        one = getattr(mie, name)(1.5, 2.0, 0.5)
+        as_array = getattr(mie, name)(1.5, 2.0, np.array([0.5]))
+        assert np.shape(one) == (1,)
+        np.testing.assert_array_equal(one, as_array)
+
+    def test_s1_s2_and_intensities_follow_the_same_convention(self):
+        """Same for the amplitudes and the physical-units wrapper."""
+        s1, s2 = mie.S1_S2(1.5, 2.0, 0.5)
+        assert np.shape(s1) == np.shape(s2) == (1,)
+        ipar, iper = mie.intensities(1.5, 1000.0, 600.0, 0.5)
+        assert np.shape(ipar) == np.shape(iper) == (1,)
+
+    def test_phase_matrix_is_the_documented_exception(self):
+        """phase_matrix squeezes a single angle away, and says so."""
+        assert mie.phase_matrix(1.5, 2.0, 0.5).shape == (4, 4)
+        assert mie.phase_matrix(1.5, 2.0, np.array([0.5])).shape == (4, 4)
+        assert mie.phase_matrix(1.5, 2.0, np.linspace(-1, 1, 5)).shape == (4, 4, 5)

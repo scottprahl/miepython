@@ -3,6 +3,50 @@ Changelog
 
 unreleased
 -------------------
+*   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The
+    ``coefficients`` examples called ``mie_coefficients``, a name that never
+    existed, showed the imaginary parts with the wrong sign, and still included the
+    padding element ``an_bn`` no longer returns; the ``efficiencies_mx`` examples
+    used a different function's signature and printed an invented repr.  The
+    Returns section also described a tuple where an ndarray comes back
+*   run the docstring examples as part of the test suite, so they cannot rot again.
+    They are written with explicit formatting rather than bare array reprs, which
+    keeps them independent of NumPy's print precision
+*   keep one copy of the scattering-function normalization rules.  ``core`` and
+    ``rayleigh`` held the same thirty lines differing only in which efficiencies
+    they consulted, so ``core.normalization_factor`` now takes an
+    ``efficiency_source`` and ``rayleigh`` passes its own
+*   accept an ``rng`` argument in ``generate_mie_costheta``.  It drew from the
+    process-wide ``numpy.random``, which a caller could only control by reseeding
+    the whole program; passing ``numpy.random.default_rng(seed)`` now gives a
+    reproducible stream and leaves the global one alone.  Omitting it behaves as
+    before
+*   document the angular-argument convention: a scalar ``mu`` counts as one angle
+    and returns a length-one array, except in ``phase_matrix``, which squeezes it
+    away.  ``docs/01_basics.ipynb`` demonstrates the first half deliberately, so
+    both are now stated in the docstrings and pinned by tests
+*   make the submodules reachable, each in the way that suits it.
+    ``miepython.rayleigh`` needs only NumPy and is now imported with the package, so
+    ``import miepython`` is enough to reach it; ``miepython.vsh`` requires the
+    optional ``scipy`` and is imported inside the same guard as ``field``, staying
+    absent when scipy is not installed; ``miepython.monte_carlo`` imports
+    ``miepython`` itself, so importing it from the package would be circular and it
+    remains a separate ``import miepython.monte_carlo``.  All three are now described
+    in the package docstring, and ``monte_carlo``'s own docstring shows the full
+    workflow and says why it is not imported for you
+*   have ``vsh`` reach ``D_calc`` through ``._backend`` instead of importing
+    ``miepython`` for it.  The old import was a cycle that worked only because the
+    call is deferred to run time, and importing ``vsh`` from ``__init__`` would have
+    depended on that
+*   fix the call signatures listed in ``vsh``'s module docstring.  All four vector
+    spherical harmonics were advertised as ``(n, k, d_sphere, r, theta, phi)``; they
+    actually take a wavelength rather than a wavenumber and a refractive index
+    besides, ``(n, lambda0, d_sphere, m_index, r, theta, phi)``, so anyone following
+    the docstring got a ``TypeError``.  The four ``*_array`` variants went unmentioned
+    altogether.  Signatures written out in prose are now checked against the code
+*   fix two stale references in the notebooks: ``mie.mie_S1_S2`` in
+    ``docs/03a_normalization.ipynb``, together with the comparison values it quotes,
+    and a commented-out ``mie._D_calc`` in ``docs/10_basic_tests.ipynb``
 *   fix off-by-one in ``n_pole`` for ``S1_S2`` and everything built on it
     (``i_par``, ``i_per``, ``i_unpolarized``, ``phase_matrix``, ``intensities``).
     ``n_pole=1`` returned the quadrupole instead of the dipole; it now matches

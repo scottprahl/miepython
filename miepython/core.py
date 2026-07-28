@@ -48,6 +48,7 @@ __all__ = (
     "phase_matrix",
     "coefficients",
     "wiscombe_terms",
+    "normalization_factor",
 )
 
 
@@ -91,30 +92,36 @@ def coefficients(m, x, n_pole=0, internal=False):
             calculate fields inside the sphere.
 
     Returns:
-        tuple:
-            - a (complex or array-like): The computed Mie coefficient A_n or an array of A_n values.
-            - b (complex or array-like): The computed Mie coefficient B_n or an array of B_n values.
+        ndarray: ``[a, b]``, or ``[a, b, c, d]`` when ``internal`` is True.  For
+            scalar ``m`` and ``x`` each entry is a 1-D array of coefficients, so
+            the result has shape ``(2, n_terms)`` or ``(4, n_terms)``.  For array
+            input each entry gains a leading axis over the spheres, giving
+            ``(2, n_spheres, n_pole)`` or ``(4, n_spheres, n_pole)``.
 
     Notes:
         - If the imaginary part of the refractive index is positive, it is
           automatically corrected to its conjugate value to ensure a valid input.
+        - Every returned coefficient is a real term; the arrays carry no padding.
 
     Examples:
         Compute coefficients for a single sphere:
-        >>> m = 1.5 - 0.1j
-        >>> x = 0.1
-        >>> mie_coefficients(m, x)
-        (array([3.33370015e-05+1.97363100e-04j, 1.77504613e-08+1.11834113e-07j,
-        4.60529820e-12+2.97368373e-11j, 1.58460985e-28+1.25881287e-14j]),
-        array([6.67296256e-08+2.75469444e-07j, 1.90474848e-11+7.86835968e-11j,
-        3.02615454e-15+1.24937186e-14j, 1.58460985e-28+1.25881287e-14j]))
 
-        Compute first multipoles for multiple spheres:
-        >>> m = [1.5 + 0.1j, 1.4 + 0.05j]
-        >>> x = [2.0, 1.8]
-        >>> mie_coefficients(m, x, 1)
-        (array([0.44794644+0.38665192j, 0.27813728+0.38495241j]),
-        array([0.5621083 +0.25504616j, 0.20206531+0.29589842j]))
+        >>> import miepython as mie
+        >>> a, b = mie.coefficients(1.5 - 0.1j, 0.1)
+        >>> len(a), len(b)
+        (3, 3)
+        >>> print(f"{a[0]:.6e}")
+        3.333700e-05-1.973631e-04j
+        >>> print(f"{b[0]:.6e}")
+        6.672963e-08-2.754694e-07j
+
+        Keep only the dipole term for each of several spheres:
+
+        >>> a, b = mie.coefficients([1.5 - 0.1j, 1.4 - 0.05j], [2.0, 1.8], n_pole=1)
+        >>> a.shape
+        (2, 1)
+        >>> print(f"{a[0, 0]:.6f}")
+        0.447946-0.386652j
     """
     mlen = np.size(m) if np.ndim(m) > 0 else 0
     xlen = np.size(x) if np.ndim(x) > 0 else 0
@@ -202,19 +209,24 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
           non-absorbing medium.
 
     Examples:
-        Compute efficiencies for a sphere with fixed parameters:
+        Compute efficiencies for one sphere:
 
         >>> import miepython as mie
-        >>> mie.efficiencies(1.5 - 0.01j, 2.0, 0)
-        (qext: 1.81, qsca: 1.72, qback: 0.27, g: 0.63)
+        >>> qext, qsca, qback, g = mie.efficiencies_mx(1.5 - 0.01j, 2.0)
+        >>> print(f"{qext:.6f} {qsca:.6f} {qback:.6f} {g:.6f}")
+        1.812597 1.724396 0.266214 0.630214
 
-        Compute efficiencies for wavelength-dependent refractive indices:
+        Compute efficiencies for a wavelength-dependent refractive index:
 
-        >>> import miepython as mie
+        >>> import numpy as np
         >>> m_array = np.array([1.5 - 0.01j, 1.45 - 0.02j])
         >>> x_array = np.array([2.0, 2.5])
-        >>> mie.efficiencies(m_array, x_array, 0)
-        (qext: [1.81, 2.15], qsca: [1.72, 1.95], qback: [0.27, 0.31], g: [0.63, 0.70])
+        >>> qext, qsca, qback, g = mie.efficiencies_mx(m_array, x_array)
+        >>> np.round(qext, 6)
+        array([1.812597, 2.14972 ])
+
+        Use :func:`efficiencies` instead when the diameter and wavelength are
+        known rather than the size parameter.
     """
     # ensure imaginary part of refractive index is negative
     if np.isscalar(m):
@@ -256,7 +268,12 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
     return qext, qsca, qback, g
 
 
-def normalization_factor(m, x, norm_str):
+def _mie_efficiencies(m, x):
+    """Return the full Mie efficiencies, the default source for normalization."""
+    return single_sphere(m, x, 0, True)
+
+
+def normalization_factor(m, x, norm_str, efficiency_source=_mie_efficiencies):
     """
     Figure out scattering function normalization.
 
@@ -264,6 +281,10 @@ def normalization_factor(m, x, norm_str):
         m: complex index of refraction of sphere
         x: dimensionless sphere size
         norm_str: string describing type of normalization
+        efficiency_source: callable returning ``(qext, qsca, qback, g)`` for ``m``
+            and ``x``.  Defaults to the full Mie solution; ``miepython.rayleigh``
+            passes its own so that the two share these rules rather than keeping
+            a second copy of them.
 
     Returns:
         scaling factor needed for scattering function
@@ -281,7 +302,7 @@ def normalization_factor(m, x, norm_str):
         factor = x * np.sqrt(np.pi)
 
     else:
-        qext, qsca, _, _ = single_sphere(m, x, 0, True)
+        qext, qsca, _, _ = efficiency_source(m, x)
 
         # every remaining choice divides by qext or qsca
         if qext <= 0 or qsca <= 0:
@@ -328,7 +349,9 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate scattering amplitudes
+        mu: the angles, cos(theta), to calculate scattering amplitudes. A scalar,
+            list, tuple or array is accepted; a scalar is treated as one angle,
+            so the returned amplitudes are still length-one arrays.
         norm: (optional) string describing scattering function normalization
         n_pole: isolate a single multipole order, 1=dipole, 2=quadrupole,
             3=octupole (default=0 means include all terms). Summing over
@@ -380,7 +403,9 @@ def phase_matrix(m, x, mu, norm="albedo", n_pole=0):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), of the phase scattering matrix
+        mu: the angles, cos(theta), of the phase scattering matrix. Unlike the
+            other angular functions this one squeezes a single angle away, so a
+            scalar gives a bare 4x4 matrix rather than 4x4x1.
         n_pole: return n_pole term from series (default=0 means include all terms)
         norm: (optional) string describing scattering function normalization
 
@@ -425,7 +450,9 @@ def i_per(m, x, mu, norm="albedo", n_pole=0):
     Args:
         m (complex): Complex index of refraction of the sphere.
         x (float): Size parameter of the sphere.
-        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
+        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which
+            intensity is desired. A scalar counts as one angle and yields a
+            length-one array, not a bare number.
         norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
         n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
@@ -454,7 +481,9 @@ def i_par(m, x, mu, norm="albedo", n_pole=0):
     Args:
         m (complex): Complex index of refraction of the sphere.
         x (float): Size parameter of the sphere.
-        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which intensity is desired.
+        mu (array-like): Cosine of the scattering angle(s), cos(θ), for which
+            intensity is desired. A scalar counts as one angle and yields a
+            length-one array, not a bare number.
         norm (str, optional): Normalization method for the scattered intensity. Default is 'albedo'.
         n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
@@ -484,7 +513,8 @@ def i_unpolarized(m, x, mu, norm="albedo", n_pole=0):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter
-        mu: the cos(theta) of each direction desired
+        mu: the cos(theta) of each direction desired. A scalar counts as one
+            direction and yields a length-one array, not a bare number.
         norm: (optional) string describing scattering function normalization
         n_pole (int, optional): If greater than zero, returns only the nth multipole term;
             default is 0, which returns the sum of all terms.
