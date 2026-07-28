@@ -29,8 +29,7 @@ def makefile_text():
     """The Makefile source, or a skip when running somewhere it was not installed."""
     if not MAKEFILE.is_file():
         pytest.skip(f"no Makefile at {MAKEFILE}; not running from a source checkout")
-    return MAKEFILE.read_text()
-
+    return MAKEFILE.read_text(encoding="utf-8")
 
 def rule_names():
     """Names of every rule the Makefile defines."""
