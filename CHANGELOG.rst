@@ -38,6 +38,21 @@ unreleased
     Worst error against a direct SciPy evaluation over 7320 cases drops from
     90 to 3e-9, and the JIT and no-JIT backends now agree to 5e-15 where they
     previously differed by up to a factor of 39
+*   always use the downwards recurrence for the logarithmic derivative ``D_n``.
+    Wiscombe's criterion chose between the two recurrences from the refractive
+    index alone, never from the number of terms, so it picked the upwards
+    recurrence for small spheres where it is unstable.  For a lossless sphere
+    ``Re(a_n)`` must equal ``|a_n|**2``; at m=1.05, x=0.1 the real parts of the
+    quadrupole and higher coefficients came out with the wrong sign and up to 12
+    orders of magnitude too large, which made ``efficiencies_mx(n_pole=3)``
+    report a negative extinction efficiency.  That identity now holds to 4e-24
+    over all lossless cases tested, and ``qext`` and ``qsca`` agree to 5e-16
+    where they used to differ by 2e-7.  The pure-python backend is about 20%
+    slower for a large sweep of size parameters; the numba backend is unchanged
+*   remove ``fastmath`` from every numba kernel.  Besides defeating the
+    perfectly-conducting guard above, its reassociation degraded the exact
+    lossless identity by roughly six times relative to the pure-python backend.
+    Costs about 10% on a large sweep of size parameters
 
 3.2.0 (03/06/2026)
 -------------------

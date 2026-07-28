@@ -773,6 +773,32 @@ class TestElectricMagneticMultipoles:
         x = 3.0
         assert mie.efficiencies_mx(m, x, n_pole=0, e_field=True) == mie.efficiencies_mx(m, x, n_pole=0, e_field=False)
 
+    def test_lossless_unitarity(self):
+        """For a lossless sphere Re(a_n) must equal |a_n|**2 for every order."""
+        for m in (1.05, 1.2, 1.33, 1.5, 2.0, 3.0, 0.75):
+            for x in (0.1, 1.0, 5.0, 20.0, 62.0, 200.0):
+                a, b = mie.an_bn(complex(m, 0.0), x, 0)
+                for coeff in (a, b):
+                    nz = np.abs(coeff) > 0
+                    resid = np.abs(coeff[nz].real - np.abs(coeff[nz]) ** 2)
+                    assert np.max(resid / np.abs(coeff[nz])) < 1e-15, f"m={m} x={x}"
+
+    def test_lossless_qext_equals_qsca(self):
+        """A lossless sphere cannot absorb, so qext and qsca must agree."""
+        for m in (1.05, 1.2, 1.33, 1.5, 2.0, 3.0, 0.75):
+            for x in (0.1, 1.0, 5.0, 20.0, 62.0, 200.0):
+                qext, qsca, _, _ = mie.efficiencies_mx(m, x)
+                assert qext == pytest.approx(qsca, rel=1e-13)
+
+    def test_per_multipole_extinction_is_positive(self):
+        """Every isolated multipole must extinguish a non-negative amount."""
+        for m in (1.05, 1.33, 1.5):
+            for x in (0.1, 0.5, 2.0):
+                for n in range(1, 4):
+                    for e_field in (True, False):
+                        qext, _, _, _ = mie.efficiencies_mx(m, x, n_pole=n, e_field=e_field)
+                        assert qext >= 0.0, f"m={m} x={x} n_pole={n} e_field={e_field}"
+
 
 class TestConductingInternalCoefficients:
     """Test that cn_dn returns no internal field for a perfectly conducting sphere."""

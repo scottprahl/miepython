@@ -177,7 +177,7 @@ def _D_calc_down_py(z, N):
 
 def _D_calc_py(m, x, N):
     """
-    Compute the logarithmic derivative of ψ_n(z) using the best method.
+    Compute the logarithmic derivative of ψ_n(z) using the downwards recurrence.
 
     D_n(z) = d[log ψ_n(z)] = ψ_n'(z)/ψ_n(z)
 
@@ -185,6 +185,14 @@ def _D_calc_py(m, x, N):
     were j_n(z) is the spherical Bessel function of order n.
 
     The zero-based array, D[:], is shifted so that D[0] = D₁(z) = ψ₁'(z)/ψ₁(z)
+
+    Wiscombe's criterion used to pick between the upwards and downwards
+    recurrences from the refractive index alone.  The upwards recurrence is
+    contaminated once N passes |mx|, which is the case for every small sphere,
+    and it left the Mie coefficients wrong by as much as 1% near m=1.  The
+    downwards recurrence is stable everywhere, and the criterion already chose it
+    for most large spheres, so always taking it costs little.  ``_D_upwards`` is
+    kept for comparison and testing.
 
     Args:
         m: the np.complex128 index of refraction of the sphere
@@ -194,16 +202,7 @@ def _D_calc_py(m, x, N):
     Returns:
         Array of logarithmic derivatives D_k(z) for k=1 to N-1.
     """
-    n = m.real
-    kappa = np.abs(m.imag)
-    D = np.zeros(N + 1, dtype=np.complex128)
-    mx = np.complex128(m * x)  # ensure np.complex128
-
-    if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        _D_downwards(mx, N, D)
-    else:
-        _D_upwards(mx, N, D)
-    return D[1:]
+    return _D_calc_down_py(np.complex128(m * x), N)
 
 
 def _an_bn_py(m, x, n_pole=0):

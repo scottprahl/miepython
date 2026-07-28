@@ -154,7 +154,7 @@ def _D_calc_down_nb(z, N):
 @njit((complex128, float64, int64), cache=True)
 def _D_calc_nb(m, x, N):
     """
-    Compute the logarithmic derivative of ψ_n(z) using the best method.
+    Compute the logarithmic derivative of ψ_n(z) using the downwards recurrence.
 
     D_n(z) = d[log ψ_n(z)] = ψ_n'(z)/ψ_n(z)
 
@@ -162,6 +162,14 @@ def _D_calc_nb(m, x, N):
     were j_n(z) is the spherical Bessel function of order n.
 
     The zero-based array, D[:], is shifted so that D[0] = D₁(z) = ψ₁'(z)/ψ₁(z)
+
+    Wiscombe's criterion used to pick between the upwards and downwards
+    recurrences from the refractive index alone.  The upwards recurrence is
+    contaminated once N passes |mx|, which is the case for every small sphere,
+    and it left the Mie coefficients wrong by as much as 1% near m=1.  The
+    downwards recurrence is stable everywhere, and the criterion already chose it
+    for most large spheres, so always taking it costs little.  ``_D_upwards`` is
+    kept for comparison and testing.
 
     Args:
         m: the np.complex128 index of refraction of the sphere
@@ -171,19 +179,10 @@ def _D_calc_nb(m, x, N):
     Returns:
         Array of logarithmic derivatives D_k(z) for k=1 to N-1.
     """
-    n = m.real
-    kappa = np.abs(m.imag)
-    D = np.zeros(N + 1, dtype=np.complex128)
-    mx = np.complex128(m * x)  # ensure complex
-
-    if n < 1 or n > 10 or kappa > 10 or x * kappa >= 3.9 - 10.8 * n + 13.78 * n**2:
-        _D_downwards(mx, N, D)
-    else:
-        _D_upwards(mx, N, D)
-    return D[1:]
+    return _D_calc_down_nb(np.complex128(m * x), N)
 
 
-@njit((complex128, float64, int64), cache=True, fastmath=True)
+@njit((complex128, float64, int64), cache=True)
 def _an_bn_nb(m, x, n_pole):
     """
     Compute arrays of Mie coefficients a_n and b_n for a sphere.
@@ -263,8 +262,10 @@ def _an_bn_nb(m, x, n_pole):
     return np.conjugate(a), np.conjugate(b)
 
 
-# no fastmath here: it implies LLVM's ninf, which folds the np.isinf guard below
-# to False and lets an infinite index divide by zero
+# No kernel in this module uses fastmath.  It implies LLVM's nnan and ninf, which
+# folded the np.isinf guard below to False and let an infinite index divide by
+# zero, and its reassociation also broke the exact Re(a_n) == |a_n|**2 identity
+# that a lossless sphere has to satisfy.  Do not add it back.
 @njit((complex128, float64, int64))
 def _cn_dn_nb(m, x, n_pole):
     """
@@ -418,7 +419,7 @@ def _S1_S2_nb(m, x, mu, n_pole):
     return np.conjugate(S1), np.conjugate(S2)
 
 
-@njit((complex128, float64), cache=True, fastmath=True)
+@njit((complex128, float64), cache=True)
 def _small_conducting_sphere_nb(_m, x):
     """
     Calculate the efficiencies for a small conducting spheres.
@@ -456,7 +457,7 @@ def _small_conducting_sphere_nb(_m, x):
     return qext, qsca, qback, g
 
 
-@njit((complex128, float64), cache=True, fastmath=True)
+@njit((complex128, float64), cache=True)
 def _small_sphere_nb(m, x):
     """
     Calculate the efficiencies for a small sphere.
@@ -504,7 +505,7 @@ def _small_sphere_nb(m, x):
     return qext, qsca, qback, g
 
 
-@njit((complex128, float64, int64, boolean), cache=True, fastmath=True)
+@njit((complex128, float64, int64, boolean), cache=True)
 def _single_sphere_nb(m, x, n_pole, e_field):
     """
     Calculate the efficiencies for a single sphere (both m and x are scalars).
