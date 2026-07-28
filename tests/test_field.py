@@ -11,7 +11,9 @@ from miepython.field import (
     e_near_cartesian,
     h_near_cartesian,
     eh_near_cartesian,
+    _coefficients_abcd,
 )
+from miepython.core import wiscombe_terms
 from miepython.util import spherical_vector_to_cartesian
 
 
@@ -358,3 +360,33 @@ def test_no_contrast_spherical_fields_match_incident_components():
     np.testing.assert_allclose(h_sph, h_expected, rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(e_sph2, e_expected, rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(h_sph2, h_expected, rtol=1e-12, atol=1e-12)
+
+
+def test_default_truncation_keeps_one_extra_order():
+    """The near field keeps one more term than Wiscombe's scattering criterion."""
+    lambda0, d_sphere, n_env = 1.0, 1.0, 1.0
+    x = np.pi * d_sphere * n_env / lambda0
+    abcd = _coefficients_abcd(lambda0, d_sphere, 1.5 + 0j, n_env, 0)
+    for coeff in abcd:
+        assert len(coeff) == wiscombe_terms(x) + 1
+
+
+@pytest.mark.parametrize("m_sphere", [1.5 + 0j, 0.75 + 0j, 1.33 + 0j, 1.5 - 0.1j])
+def test_default_path_boundary_continuity(m_sphere):
+    """Tangential E is continuous to better than 1e-5 on the default abcd path.
+
+    Truncating at Wiscombe's criterion instead leaves a mismatch near 1.5e-5, so
+    this also guards the extra order from being dropped again.
+    """
+    lambda0, d_sphere, n_env = 1.0, 1.0, 1.0
+    radius = d_sphere / 2
+    delta = 1e-7
+    theta = np.linspace(0.05, np.pi - 0.05, 25)
+    phi = np.linspace(0.0, 2 * np.pi, 25)
+
+    e_in = e_near(lambda0, d_sphere, m_sphere, n_env, np.full_like(theta, radius - delta), theta, phi)
+    e_out = e_near(lambda0, d_sphere, m_sphere, n_env, np.full_like(theta, radius + delta), theta, phi)
+
+    for comp in (1, 2):  # theta and phi are the tangential components
+        scale = np.maximum(np.abs(e_out[comp]), 1e-12)
+        assert np.max(np.abs(e_in[comp] - e_out[comp]) / scale) < 8e-6

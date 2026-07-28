@@ -47,7 +47,25 @@ __all__ = (
     "S1_S2",
     "phase_matrix",
     "coefficients",
+    "wiscombe_terms",
 )
+
+
+def wiscombe_terms(x):
+    """
+    Return the number of Mie series terms from Wiscombe's criterion.
+
+    The series is truncated after this many orders so that the summed scattering
+    quantities are accurate to about 1e-6.  The low-level ``an_bn`` and ``cn_dn``
+    kernels repeat this expression because numba cannot call back into Python.
+
+    Args:
+        x: the size parameter of the sphere
+
+    Returns:
+        number of terms, so orders 1 through the returned value
+    """
+    return int(x + 4.05 * x**0.33333 + 2.0)
 
 
 def coefficients(m, x, n_pole=0, internal=False):

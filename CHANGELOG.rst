@@ -58,6 +58,13 @@ unreleased
     Wiscombe's number of terms with every entry a real coefficient, so the
     internal and external series share one truncation.  The retained ``a_n`` and
     ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
+*   the near-field routines keep one more term than Wiscombe's criterion.  That
+    criterion truncates the scattered series, which converges faster than the
+    field evaluated right at the sphere surface: the tangential E and H mismatch
+    across the boundary drops from 1.5e-5 to 3.6e-6.  Two or three extra orders
+    gain little more and eight make it far worse, so exactly one is added.  The
+    scattering quantities are untouched, and ``e_far`` still uses the criterion
+    unchanged.  ``miepython.core.wiscombe_terms`` now names the term count
 *   ``pi_tau`` now fills ``tau`` for the highest order.  It had always left the
     last entry zero, which was hidden by the ``an_bn`` padding above and would
     have silently dropped a term once the padding went away.  ``n_pole`` may now
