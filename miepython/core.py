@@ -299,7 +299,11 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
         x: the size parameter of the sphere
         mu: the angles, cos(theta), to calculate scattering amplitudes
         norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means include all terms)
+        n_pole: isolate a single multipole order, 1=dipole, 2=quadrupole,
+            3=octupole (default=0 means include all terms). Summing over
+            every order reproduces the full series, so n_pole uses the same
+            convention as `efficiencies_mx`. Orders beyond the truncated
+            series raise a ValueError.
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]

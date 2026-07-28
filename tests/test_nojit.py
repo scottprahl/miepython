@@ -600,3 +600,64 @@ class TestNotebookTests:
         assert qsca[29] == pytest.approx(2.213262310704816, abs=1e-6)
         assert qsca[39] == pytest.approx(1.9314911518355427, abs=1e-6)
         assert qsca[49] == pytest.approx(1.640006561518987, abs=1e-6)
+
+
+class TestMultipoles:
+    """Test that n_pole isolates the requested multipole order."""
+
+    def test_multipole_sum_matches_full_series(self):
+        """Summing every multipole reproduces the complete Mie series."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        mu = np.linspace(-1, 1, 11)
+        n_max = len(mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)[0]) - 1
+
+        S1_sum = np.zeros_like(mu, dtype=complex)
+        S2_sum = np.zeros_like(mu, dtype=complex)
+        for n in range(1, n_max + 1):
+            s1, s2 = mie.S1_S2(m, x, mu, norm="wiscombe", n_pole=n)
+            S1_sum += s1
+            S2_sum += s2
+
+        S1, S2 = mie.S1_S2(m, x, mu, norm="wiscombe", n_pole=0)
+        np.testing.assert_allclose(S1_sum, S1, rtol=1e-10, atol=1e-12)
+        np.testing.assert_allclose(S2_sum, S2, rtol=1e-10, atol=1e-12)
+
+    def test_multipole_closed_form(self):
+        """n_pole=n pairs the nth Mie coefficient with pi_n and tau_n."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        mu = np.array([1.0, 0.3, -0.7])
+        a, b = mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)
+
+        # pi_1 = 1, tau_1 = mu, pi_2 = 3 mu, tau_2 = 3 (2 mu^2 - 1)
+        cases = ((1, 1 + 0 * mu, mu), (2, 3 * mu, 3 * (2 * mu**2 - 1)))
+        for n, pi_n, tau_n in cases:
+            scale = (2 * n + 1) / (n * (n + 1))
+            S1, S2 = mie.S1_S2(m, x, mu, norm="wiscombe", n_pole=n)
+            # an_bn returns conjugated coefficients, S1_S2 does not
+            expected_S1 = np.conjugate(scale * (a[n - 1] * pi_n + b[n - 1] * tau_n))
+            expected_S2 = np.conjugate(scale * (a[n - 1] * tau_n + b[n - 1] * pi_n))
+            np.testing.assert_allclose(S1, expected_S1, rtol=1e-12)
+            np.testing.assert_allclose(S2, expected_S2, rtol=1e-12)
+
+    def test_multipole_optical_theorem(self):
+        """S1_S2 and efficiencies_mx agree on which order n_pole selects."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        for n in range(1, 5):
+            qext, _, _, _ = mie.efficiencies_mx(m, x, n_pole=n)
+            S1, _ = mie.S1_S2(m, x, np.array([1.0]), norm="wiscombe", n_pole=n)
+            assert qext == pytest.approx(4 * S1[0].real / x**2, abs=1e-12)
+
+    def test_multipole_out_of_range(self):
+        """Orders outside the truncated series are rejected."""
+        m = 1.5 - 0.01j
+        x = 3.0
+        mu = np.array([0.5])
+        n_terms = len(mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)[0])
+
+        with pytest.raises(ValueError):
+            mie.S1_S2(m, x, mu, n_pole=-1)
+        with pytest.raises(ValueError):
+            mie.S1_S2(m, x, mu, n_pole=n_terms)

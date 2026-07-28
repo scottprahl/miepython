@@ -343,6 +343,9 @@ def _S1_S2_py(m, x, mu, n_pole):
     """
     a, b = _an_bn_py(m, x, 0)
     N = len(a)
+    if n_pole < 0 or n_pole >= N:
+        raise ValueError("n_pole must be 0 (all terms) or a multipole order in 1.." + str(N - 1))
+
     pi = np.zeros(N)
     tau = np.zeros(N)
     scale = _series_scale_factors(N)
@@ -353,14 +356,17 @@ def _S1_S2_py(m, x, mu, n_pole):
     S1 = np.zeros(nangles, dtype=np.complex128)
     S2 = np.zeros(nangles, dtype=np.complex128)
 
+    # zero-based arrays: multipole order n lives at index n-1
+    j = n_pole - 1
+
     for k in range(nangles):
         _pi_tau_py(mu[k], pi, tau)
         if n_pole == 0:
             S1[k] = np.dot(pi, scale_a) + np.dot(tau, scale_b)
             S2[k] = np.dot(tau, scale_a) + np.dot(pi, scale_b)
         else:
-            S1[k] = scale[n_pole] * (pi[n_pole] * a[n_pole] + tau[n_pole] * b[n_pole])
-            S2[k] = scale[n_pole] * (tau[n_pole] * a[n_pole] + pi[n_pole] * b[n_pole])
+            S1[k] = scale[j] * (pi[j] * a[j] + tau[j] * b[j])
+            S2[k] = scale[j] * (tau[j] * a[j] + pi[j] * b[j])
 
     return np.conjugate(S1), np.conjugate(S2)
 

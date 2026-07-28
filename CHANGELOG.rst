@@ -1,6 +1,17 @@
 Changelog
 =========
 
+unreleased
+-------------------
+*   fix off-by-one in ``n_pole`` for ``S1_S2`` and everything built on it
+    (``i_par``, ``i_per``, ``i_unpolarized``, ``phase_matrix``, ``intensities``).
+    ``n_pole=1`` returned the quadrupole instead of the dipole; it now matches
+    the convention already used by ``efficiencies_mx``
+*   raise ``ValueError`` for an ``n_pole`` beyond the truncated series instead of
+    returning zeros or an ``IndexError``
+*   add multipole regression tests (series sum, closed form, per-multipole
+    optical theorem) and re-execute ``docs/12_multipoles.ipynb``
+
 3.2.0 (03/06/2026)
 -------------------
 *   fix error in E & H calculations in the near field when y≠0 (thanks @dorianherle)
