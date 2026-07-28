@@ -1,7 +1,7 @@
 Changelog
 =========
 
-unreleased
+3.3.0 (07/28/2026)
 -------------------
 *   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The
     ``coefficients`` examples called ``mie_coefficients``, a name that never
@@ -46,7 +46,6 @@ unreleased
     images are regenerated once against that
 *   point the README license badge at ``blob/main`` rather than ``blob/master``.  There
     is no master branch; the link worked only because GitHub silently redirects
-
 *   evaluate the near fields for every point at once instead of one point at a time.
     ``field.py`` walked the grid with ``np.ndindex`` and called into
     ``scipy.special`` separately for each point, so a 41x41 slice spent 0.4 s almost
