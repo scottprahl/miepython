@@ -151,7 +151,7 @@ JIT Enabled  0.15 s       27×
 Citation
 --------
 
-If you use ``laserbeamsize`` in academic, instructional, or applied technical work, please cite:
+If you use ``miepython`` in academic, instructional, or applied technical work, please cite:
 
 Prahl, S. (2026). *miepython: Pure python calculation of Mie scattering* (Version 3.2.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.7949263
 
