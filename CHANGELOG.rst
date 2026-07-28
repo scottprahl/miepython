@@ -58,6 +58,23 @@ unreleased
     Wiscombe's number of terms with every entry a real coefficient, so the
     internal and external series share one truncation.  The retained ``a_n`` and
     ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
+*   raise a clear error instead of returning ``inf`` or ``nan`` when a scattering
+    function is asked to normalise against a sphere that does not scatter.  A
+    sphere whose index matches its surroundings gave ``i_unpolarized`` values of
+    ``inf`` for the 'albedo', 'one' and '4pi' normalizations and a bare
+    ``ZeroDivisionError`` for 'qext'.  The 'wiscombe', 'bohren' and 'qsca'
+    choices do not divide by an efficiency and still work
+*   ``efficiencies_mx`` returns zero rather than ``nan`` for ``qback`` when the
+    size parameter is zero.  The small-sphere form of ``qback`` is 0/0 there,
+    although its limit is zero, and a single zero in an array of size parameters
+    used to leave a ``nan`` behind
+*   fix ``util.cartesian_to_spherical``, which raised on array input because of a
+    scalar ``if r != 0`` test.  It now broadcasts its three arguments, reports
+    theta as zero at the origin, and clips ``z/r`` so rounding cannot push the
+    arccos argument out of range.  ``field.py`` dropped its private duplicate of
+    this routine
+*   fix ``util`` exporting ``_all_`` instead of ``__all__``, and list
+    ``phasor_str_scalar`` alongside the rest
 *   the near-field routines keep one more term than Wiscombe's criterion.  That
     criterion truncates the scattered series, which converges faster than the
     field evaluated right at the sphere surface: the tangential E and H mismatch

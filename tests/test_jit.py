@@ -962,3 +962,52 @@ class TestSeriesTruncation:
         assert s1[0] != 0
         with pytest.raises(ValueError):
             mie.S1_S2(m, x, mu, n_pole=n_max + 1)
+
+
+class TestDegenerateSpheres:
+    """Test spheres that do not scatter: zero size or index matched."""
+
+    def test_zero_size_efficiencies_are_zero(self):
+        """Every efficiency tends to zero as x goes to zero, qback included."""
+        for m in (1.5 - 0.1j, 1.33, complex(0.0, 100.0)):
+            q = mie.efficiencies_mx(m, 0.0)
+            assert np.all(np.isfinite(q)), m
+            assert all(v == 0 for v in q), m
+
+    def test_zero_size_inside_an_array(self):
+        """One zero size parameter must not poison the rest of the sweep."""
+        qext, qsca, qback, g = mie.efficiencies_mx(1.5 - 0.1j, np.array([0.0, 1.0, 2.0]))
+        for arr in (qext, qsca, qback, g):
+            assert np.all(np.isfinite(arr))
+        assert qback[0] == 0.0
+        assert qback[1] > 0.0
+
+    def test_index_matched_normalization_raises(self):
+        """A sphere matching its surroundings has nothing to normalize against."""
+        mu = np.array([0.5])
+        for norm in ("albedo", "one", "4pi", "qext"):
+            with pytest.raises(ValueError, match="scatters"):
+                mie.i_unpolarized(1.0, 2.0, mu, norm=norm)
+
+    def test_zero_size_normalization_raises(self):
+        """Same for a sphere of zero size."""
+        mu = np.array([0.5])
+        for norm in ("albedo", "one", "4pi", "qext"):
+            with pytest.raises(ValueError, match="scatters"):
+                mie.i_unpolarized(1.5, 0.0, mu, norm=norm)
+
+    def test_unnormalized_choices_still_work(self):
+        """The norms that do not divide by an efficiency stay usable."""
+        mu = np.array([0.5])
+        for norm in ("qsca", "wiscombe", "bohren"):
+            value = mie.i_unpolarized(1.0, 2.0, mu, norm=norm)
+            assert np.all(np.isfinite(value))
+            assert value[0] == pytest.approx(0.0, abs=1e-20)
+
+    def test_ordinary_sphere_unaffected(self):
+        """The guard must not fire for a sphere that does scatter."""
+        mu = np.linspace(-1, 1, 5)
+        for norm in ("albedo", "one", "4pi", "qext", "qsca", "wiscombe", "bohren"):
+            value = mie.i_unpolarized(1.5 - 0.01j, 2.0, mu, norm=norm)
+            assert np.all(np.isfinite(value))
+            assert np.all(value > 0)

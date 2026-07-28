@@ -2,10 +2,11 @@
 
 import numpy as np
 
-_all_ = (
+__all__ = (
     "cs_scalar",
     "cs_vector",
     "cs",
+    "phasor_str_scalar",
     "phasor_str",
     "cartesian_to_spherical",
     "spherical_to_cartesian",
@@ -14,10 +15,29 @@ _all_ = (
 
 
 def cartesian_to_spherical(x, y, z):
-    """Convert Cartesian coordinates (x, y, z) to spherical (r, theta, phi)."""
-    r = np.sqrt(x**2 + y**2 + z**2)
-    theta = np.arccos(z / r) if r != 0 else 0  # Polar angle (0 to pi)
-    phi = np.arctan2(y, x)  # Azimuthal angle (-pi to pi)
+    """
+    Convert Cartesian coordinates (x, y, z) to spherical (r, theta, phi).
+
+    Scalars and arrays are both accepted and the three inputs are broadcast
+    against each other.  At the origin theta is reported as 0, and z/r is clipped
+    so that rounding cannot push the arccos argument outside [-1, 1].
+
+    Args:
+        x: Cartesian x coordinate, scalar or array-like
+        y: Cartesian y coordinate, scalar or array-like
+        z: Cartesian z coordinate, scalar or array-like
+
+    Returns:
+        r, theta, phi: radius, polar angle from +z, azimuth from +x toward +y
+    """
+    xx, yy, zz = np.broadcast_arrays(np.asarray(x), np.asarray(y), np.asarray(z))
+    r = np.sqrt(xx**2 + yy**2 + zz**2)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        cos_theta = np.where(r == 0, 1.0, np.clip(zz / r, -1.0, 1.0))
+
+    theta = np.arccos(cos_theta)  # polar angle (0 to pi)
+    phi = np.arctan2(yy, xx)  # azimuthal angle (-pi to pi)
     return r, theta, phi
 
 

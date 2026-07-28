@@ -83,7 +83,7 @@ from scipy.special import factorial2, spherical_jn
 from ._backend import D_calc, pi_tau
 from .bessel import d_riccati_bessel_h1, spherical_h1
 from .core import S1_S2, coefficients, wiscombe_terms
-from .util import spherical_vector_to_cartesian
+from .util import cartesian_to_spherical, spherical_vector_to_cartesian
 
 __all__ = (
     "e_near",
@@ -315,27 +315,6 @@ def _vectorized_field_pair_eval(evaluator, r, theta, phi):
         e_out[(slice(None),) + idx] = e_val
         h_out[(slice(None),) + idx] = h_val
     return e_out, h_out
-
-
-def _cartesian_to_spherical_safe(x, y, z):
-    """Convert Cartesian coordinates to spherical coordinates safely.
-
-    Args:
-        x (float or ndarray): Cartesian x coordinate(s).
-        y (float or ndarray): Cartesian y coordinate(s).
-        z (float or ndarray): Cartesian z coordinate(s).
-
-    Returns:
-        tuple[ndarray, ndarray, ndarray]: ``(r, theta, phi)`` arrays after
-            broadcasting the inputs.
-    """
-    xx, yy, zz = np.broadcast_arrays(np.asarray(x), np.asarray(y), np.asarray(z))
-    rr = np.sqrt(xx**2 + yy**2 + zz**2)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        cos_theta = np.where(rr == 0, 1.0, np.clip(zz / rr, -1.0, 1.0))
-    theta = np.arccos(cos_theta)
-    phi = np.arctan2(yy, xx)
-    return rr, theta, phi
 
 
 def _spherical_components_to_cartesian(field_sph, r, theta, phi):
@@ -664,7 +643,7 @@ def e_near_cartesian(
     Returns:
         ndarray: Cartesian electric components ``[E_x, E_y, E_z]``.
     """
-    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    r, theta, phi = cartesian_to_spherical(x, y, z)
     e_sph = e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     return _spherical_components_to_cartesian(e_sph, r, theta, phi)
 
@@ -700,7 +679,7 @@ def h_near_cartesian(
     Returns:
         ndarray: Cartesian magnetic components ``[H_x, H_y, H_z]``.
     """
-    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    r, theta, phi = cartesian_to_spherical(x, y, z)
     h_sph = h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     return _spherical_components_to_cartesian(h_sph, r, theta, phi)
 
@@ -737,7 +716,7 @@ def eh_near_cartesian(
         tuple[ndarray, ndarray]: Tuple ``(E_xyz, H_xyz)`` where each array is
             ``[x, y, z]`` components.
     """
-    r, theta, phi = _cartesian_to_spherical_safe(x, y, z)
+    r, theta, phi = cartesian_to_spherical(x, y, z)
     e_sph, h_sph = eh_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, n_pole, abcd)
     e_xyz = _spherical_components_to_cartesian(e_sph, r, theta, phi)
     h_xyz = _spherical_components_to_cartesian(h_sph, r, theta, phi)

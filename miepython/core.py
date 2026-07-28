@@ -283,6 +283,15 @@ def normalization_factor(m, x, norm_str):
     else:
         qext, qsca, _, _ = single_sphere(m, x, 0, True)
 
+        # every remaining choice divides by qext or qsca
+        if qext <= 0 or qsca <= 0:
+            raise ValueError(
+                "normalization %r needs a sphere that scatters, but qext=%g and qsca=%g. "
+                "A sphere of zero size, or one whose index matches its surroundings, has "
+                "no scattering to normalize against. Use norm='wiscombe', 'bohren' or "
+                "'qsca' if an unnormalized amplitude is what you want." % (norm_str, qext, qsca)
+            )
+
         if norm in ["a", "albedo"]:
             factor = x * np.sqrt(np.pi * qext)
 
