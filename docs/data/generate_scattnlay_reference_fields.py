@@ -186,7 +186,7 @@ def main() -> None:
         print(f"[{case}] wrote {fx}, {fz}, {fe}, {fh}; " f"max|E|={np.max(e_abs):.6g}, max|H|={np.max(h_abs):.6g}")
 
     meta_path = data_dir / "scattnlay_reference_metadata.json"
-    meta_path.write_text(json.dumps(metadata, indent=2))
+    meta_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     print(f"Wrote {meta_path}")
 
 

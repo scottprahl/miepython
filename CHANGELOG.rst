@@ -1,6 +1,22 @@
 Changelog
 =========
 
+unreleased
+-------------------
+*   name the encoding on every text read and write.  ``open(path)`` and
+    ``Path.read_text()`` decode with the locale's preferred encoding, which is UTF-8
+    on Linux and macOS but cp1252 on Windows, so ``tests/test_makefile.py`` passed
+    everywhere except the four Windows jobs, where it died on the emoji in the
+    Makefile's echo lines.  Two more latent cases are fixed alongside it: the
+    scattnlay metadata read in ``tests/test_scattnlay_reference.py``, which survived
+    only because that JSON happens to be pure ASCII, and the ``write_text`` in
+    ``docs/data/generate_scattnlay_reference_fields.py``
+*   check for locale-dependent text I/O in the test suite, by walking the syntax trees
+    of every Python file in the repository and requiring an explicit ``encoding=``.
+    The failure is invisible on the platforms this package is developed on, so a
+    Windows-only break was waiting for whoever next added a non-ASCII character to a
+    file something reads
+
 3.3.0 (07/28/2026)
 -------------------
 *   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The

@@ -31,6 +31,7 @@ def makefile_text():
         pytest.skip(f"no Makefile at {MAKEFILE}; not running from a source checkout")
     return MAKEFILE.read_text(encoding="utf-8")
 
+
 def rule_names():
     """Names of every rule the Makefile defines."""
     found = re.findall(r"^([A-Za-z][\w.-]*)\s*:(?!=)", makefile_text(), re.M)

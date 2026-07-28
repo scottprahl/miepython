@@ -87,7 +87,7 @@ def test_efficiencies_match_scattnlay(case):
 @grids_required
 def test_metadata_matches_the_inlined_scalars():
     """The inlined numbers must not drift from the metadata they were copied from."""
-    meta = json.loads(METADATA.read_text())
+    meta = json.loads(METADATA.read_text(encoding="utf-8"))
     assert meta["d_sphere"] == D_SPHERE
     assert meta["lambda0"] == LAMBDA0
     assert meta["n_env"] == N_ENV
