@@ -1,9 +1,15 @@
 """Tests for the coordinate and formatting helpers in miepython.util."""
 
+import os
+
 import numpy as np
 import pytest
 
+import miepython
 from miepython import util
+
+# tests/ is on sys.path during a pytest run, so the guard below can inspect conftest
+import conftest  # pylint: disable=wrong-import-order
 
 
 class TestExports:
@@ -77,3 +83,31 @@ class TestCartesianToSpherical:
         np.testing.assert_allclose(xx, x, atol=1e-12)
         np.testing.assert_allclose(yy, y, atol=1e-12)
         np.testing.assert_allclose(zz, z, atol=1e-12)
+
+
+class TestBackendGuard:
+    """Test that the active backend matches what the test files require.
+
+    These live here, in a file that belongs to neither backend, so they run in
+    every pytest process.
+    """
+
+    def test_backend_matches_environment(self):
+        """The package honoured MIEPYTHON_USE_JIT for this process."""
+        want = os.environ.get("MIEPYTHON_USE_JIT", "0") == "1"
+        assert miepython.USE_JIT is want, (
+            "MIEPYTHON_USE_JIT=%r but miepython.USE_JIT=%r; something imported "
+            "miepython before the variable was set" % (os.environ.get("MIEPYTHON_USE_JIT"), miepython.USE_JIT)
+        )
+
+    def test_kernels_come_from_the_expected_module(self):
+        """The bound kernels really are the numba or the python ones."""
+        kind = type(miepython.single_sphere).__name__
+        assert kind == ("CPUDispatcher" if miepython.USE_JIT else "function"), kind
+
+    def test_conftest_filters_the_other_backend(self):
+        """Filtering must stay in place, or half the suite tests the wrong code."""
+        assert conftest.USE_JIT is miepython.USE_JIT
+        assert conftest.JIT_PREFIX == "test_jit"
+        assert conftest.NOJIT_PREFIX == "test_nojit"
+        assert callable(conftest.pytest_collection_modifyitems)

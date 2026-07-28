@@ -1,11 +1,12 @@
-"""Regression tests for logarithmic-derivative helpers with JIT disabled."""
+"""Regression tests for the logarithmic-derivative helpers.
 
-import os
+The ``kernels`` fixture runs every test against both backends inside this one
+process, so there is no separate JIT copy of this file.
+"""
+
 import pytest
 import numpy as np
 
-os.environ["MIEPYTHON_USE_JIT"] = "0"  # must come before importing miepython
-import miepython as mie
 from miepython.bessel import d_riccati_bessel_jn, riccati_bessel_jn
 from miepython.util import cs
 
@@ -66,12 +67,12 @@ def basic_D(m, x):
 class TestD:
     """Test cases for d behavior."""
 
-    def test_01_Dn(self):
+    def test_01_Dn(self, kernels):
         """Test 01 Dn."""
         m = 1.5
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -85,12 +86,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_02_Dn(self):
+    def test_02_Dn(self, kernels):
         """Test 02 Dn."""
         m = 1.5
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -104,12 +105,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_03_Dn(self):
+    def test_03_Dn(self, kernels):
         """Test 03 Dn."""
         m = 1.5
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -123,12 +124,12 @@ class TestD:
             assert D[0].real == pytest.approx(Dt[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Dt[0].imag, abs=0.00000001)
 
-    def test_04_Dn(self):
+    def test_04_Dn(self, kernels):
         """Test 04 Dn."""
         m = 1.5 - 0.5j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -142,12 +143,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_05_Dn(self):
+    def test_05_Dn(self, kernels):
         """Test 05 Dn."""
         m = 1.5 - 0.5j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -161,12 +162,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_06_Dn(self):
+    def test_06_Dn(self, kernels):
         """Test 06 Dn."""
         m = 1.5 - 0.5j
         x = 100
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -180,12 +181,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_07_Dn(self):
+    def test_07_Dn(self, kernels):
         """Test 07 Dn."""
         m = 1.5 - 15j
         x = 1
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -199,12 +200,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_08_Dn(self):
+    def test_08_Dn(self, kernels):
         """Test 08 Dn."""
         m = 1.5 - 15j
         x = 0.01
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -218,12 +219,12 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_09_Dn(self):
+    def test_09_Dn(self, kernels):
         """Test 09 Dn."""
         m = 1.5 - 15j
         x = 10
         nstop = int(x + 4 * (x ** (1 / 3)) + 2)
-        D = mie.D_calc(m, x, nstop)
+        D = kernels.D_calc(m, x, nstop)
         Dt = basic_D(m, x)
         Db = bohren_D(m, x)
         Dp = pymiescatt_D(m, x)
@@ -237,11 +238,11 @@ class TestD:
             assert D[0].real == pytest.approx(Db[0].real, abs=0.00000001)
             assert D[0].imag == pytest.approx(Db[0].imag, abs=0.00000001)
 
-    def test_10_Dn(self):
+    def test_10_Dn(self, kernels):
         """Test 10 Dn."""
         x = 62
         m = 1.28 - 1.37j
         nstop = 50
-        dn = mie.D_calc(m, x, nstop)
+        dn = kernels.D_calc(m, x, nstop)
         assert dn[9].real == pytest.approx(0.004087, abs=0.00001)
         assert dn[9].imag == pytest.approx(1.0002620, abs=0.00001)

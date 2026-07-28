@@ -42,7 +42,14 @@ jobs:
           python -m pip install -e .
           python -m pip install pytest
 
-      - name: Run pytest
-        run: |
-          python -m pytest tests/test_nojit.py
-          python -m pytest tests/test_jit.py
+      # The backend is bound when miepython is first imported, so each
+      # process tests only one of them.  conftest.py skips the other's files.
+      - name: Run pytest with the pure python backend
+        env:
+          MIEPYTHON_USE_JIT: "0"
+        run: python -m pytest tests
+
+      - name: Run pytest with the numba backend
+        env:
+          MIEPYTHON_USE_JIT: "1"
+        run: python -m pytest tests

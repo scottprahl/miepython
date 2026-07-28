@@ -58,6 +58,55 @@ unreleased
     Wiscombe's number of terms with every entry a real coefficient, so the
     internal and external series share one truncation.  The retained ``a_n`` and
     ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
+*   ``an_bn(m, x)`` works on both backends.  ``_an_bn_py`` defaulted ``n_pole`` to
+    zero but the numba kernel's eager signature could not, so the two-argument
+    call raised ``TypeError`` with the JIT on.  ``_an_bn_nb`` is now compiled
+    lazily, which allows the default
+*   group the arithmetic in the numba ``_an_bn_nb`` and ``_cn_dn_nb`` kernels the
+    way the pure-python ones do.  Multiplying by a precomputed ``1/x`` in one and
+    dividing by ``x`` in the other differed by one ulp, and the psi recurrence
+    amplified that to 2.6e-7 between the backends on significant coefficients.
+    They now agree to 1e-13
+*   collapse the per-backend test files.  ``test_jit.py``/``test_nojit.py`` and
+    ``test_jit_abcd.py``/``test_nojit_abcd.py`` became ``test_mie.py`` and
+    ``test_abcd.py`` for the high-level API, which needs one copy because
+    ``core.py`` has no backend-specific code, plus ``test_kernels.py`` for the
+    kernel-level tests, which the ``kernels`` fixture runs against both backends
+    in one process.  All 74 distinct test names are preserved, and the merge picks
+    up what had drifted between the two halves: an extra MIEV0 conducting case,
+    four extra ``qext`` assertions, and both spellings of a perfectly conducting
+    index.  Shared reference implementations moved to ``tests/reference.py``
+*   drop the ``MIEPYTHON_RUN_MIE_SPEED`` switch and ``test_mie_backend_speed.py``.
+    Nothing ever set that variable, so the three real assertions in that file --
+    a backend agreement check over 4000 random particles and 361 angles -- had
+    never run, while the four assertions it also gated were tautologies
+    (``elapsed > 0``).  The agreement check moved to ``test_backend_parity.py``
+    where it always runs and costs about a tenth of a second, and the speedup
+    report it printed became ``benchmark_efficiencies.py --compare``, which
+    ``make speed`` now calls
+*   the benchmark scripts ``test_jit_speed.py`` and ``test_nojit_speed.py`` became
+    one ``tests/benchmark_efficiencies.py``.  They timed at import rather than in a
+    test function, so pytest spent about seven seconds running benchmarks during
+    collection while collecting nothing; a full test pass is now much quicker.
+    They also both timed whichever backend happened to be bound, so the JIT-named
+    one could report pure-python speed.  ``make speed`` runs the single script once
+    per backend
+*   add ``tests/test_backend_parity.py``, which compares the two kernel sets
+    directly -- signatures and values -- in a single process, and merge the
+    ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
+    that parametrizes over both backends.  Tests written this way need only one
+    copy instead of a JIT/no-JIT pair
+*   the ``test_jit*`` files now really exercise the numba backend.  ``_backend.py``
+    binds its kernels the first time ``miepython`` is imported, so setting
+    ``MIEPYTHON_USE_JIT`` inside a test module only worked when that module
+    happened to import the package first.  In a full ``make test`` run something
+    always imported it earlier with the JIT off, so those files silently retested
+    the pure-python kernels and passed.  ``tests/conftest.py`` now reads the
+    backend that actually got bound and skips the files belonging to the other
+    one, and ``make test`` runs the suite once per backend.  The backend-agnostic
+    tests run under both, which is new coverage for them.  New ``make test-jit``
+    and ``make test-nojit`` targets run a single pass, and CI now runs the whole
+    suite per backend rather than one file each
 *   raise a clear error instead of returning ``inf`` or ``nan`` when a scattering
     function is asked to normalise against a sphere that does not scatter.  A
     sphere whose index matches its surroundings gave ``i_unpolarized`` values of

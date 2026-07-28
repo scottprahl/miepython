@@ -6,3 +6,7 @@ include CITATION.cff
 
 # Package data needed at runtime
 include miepython/data/*.txt
+
+# setuptools already picks up tests/test*.py, but conftest.py selects the backend
+# each test file needs, so the shipped tests are wrong without it
+recursive-include tests *.py

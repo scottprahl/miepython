@@ -182,8 +182,12 @@ def _D_calc_nb(m, x, N):
     return _D_calc_down_nb(np.complex128(m * x), N)
 
 
-@njit((complex128, float64, int64), cache=True)
-def _an_bn_nb(m, x, n_pole):
+# Lazily compiled, unlike the kernels around it, so that n_pole can carry the same
+# default as ``_an_bn_py``: numba rejects an omitted argument against an eager
+# signature, which used to make ``an_bn(m, x)`` work with the JIT off and raise
+# TypeError with it on.
+@njit(cache=True)
+def _an_bn_nb(m, x, n_pole=0):
     """
     Compute arrays of Mie coefficients a_n and b_n for a sphere.
 
@@ -226,21 +230,27 @@ def _an_bn_nb(m, x, n_pole):
     if x <= 0:
         return a, b
 
+    # group the arithmetic exactly as _an_bn_py does.  The psi recurrence is mildly
+    # unstable, so multiplying by a precomputed 1/x here and dividing by x there
+    # amplified a one-ulp difference into 2.6e-7 between the two backends.
+    inv_x = 1.0 / x
     psi_nm1 = np.sin(x)  # nm1 = n-1 = 0
-    psi_n = psi_nm1 / x - np.cos(x)
+    psi_n = psi_nm1 * inv_x - np.cos(x)
     xi_nm1 = np.complex128(psi_nm1 + 1j * np.cos(x))
-    xi_n = np.complex128(psi_n + 1j * (np.cos(x) / x + np.sin(x)))
+    xi_n = np.complex128(psi_n + 1j * (np.cos(x) * inv_x + np.sin(x)))
 
     if m.real > 0.0:
         D = _D_calc_nb(m, x, n_terms + 2)
 
         for n in range(1, n_terms + 1):
-            temp = D[n - 1] / m + n / x
+            n_over_x = n * inv_x
+            temp = D[n - 1] / m + n_over_x
             a[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            temp = D[n - 1] * m + n / x
+            temp = D[n - 1] * m + n_over_x
             b[n - 1] = (temp * psi_n - psi_nm1) / (temp * xi_n - xi_nm1)
-            psi = (2 * n + 1) * psi_n / x - psi_nm1
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            two_np1_over_x = (2 * n + 1) * inv_x
+            psi = two_np1_over_x * psi_n - psi_nm1
+            xi = two_np1_over_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
@@ -248,9 +258,10 @@ def _an_bn_nb(m, x, n_pole):
 
     else:
         for n in range(1, n_terms + 1):
-            a[n - 1] = (n * psi_n / x - psi_nm1) / (n * xi_n / x - xi_nm1)
+            n_over_x = n * inv_x
+            a[n - 1] = (n_over_x * psi_n - psi_nm1) / (n_over_x * xi_n - xi_nm1)
             b[n - 1] = psi_n / xi_n
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi = (2 * n + 1) * inv_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
             psi_nm1 = psi_n
@@ -300,12 +311,15 @@ def _cn_dn_nb(m, x, n_pole):
     # stay zero.  The `and` chain must not be mixed with `or` here, otherwise the
     # test is true for every finite index and m=0 divides by zero below.
     if m.real > 0.0 and not np.isinf(m.real) and not np.isinf(m.imag):
+        # same arithmetic grouping as _cn_dn_py, so the two backends agree to the
+        # last bits rather than only to about 1e-13
+        inv_x = 1.0 / x
         sin_x = np.sin(x)
         cos_x = np.cos(x)
 
         # xi is the growing solution, so seeding it and running upwards is stable
         xi_nm1 = np.complex128(sin_x + 1j * cos_x)
-        xi_n = np.complex128((sin_x / x - cos_x) + 1j * (cos_x / x + sin_x))
+        xi_n = np.complex128((sin_x * inv_x - cos_x) + 1j * (cos_x * inv_x + sin_x))
 
         psi_x = _psi_downwards_nb(np.complex128(x), n_terms + 1)
         psi_mx = _psi_downwards_nb(np.complex128(mx), n_terms + 1)
@@ -313,12 +327,13 @@ def _cn_dn_nb(m, x, n_pole):
         Dx = _D_calc_down_nb(np.complex128(x), n_terms + 2)
 
         for n in range(1, n_terms + 1):
-            common = (psi_x[n] / psi_mx[n]) * ((Dx[n - 1] + n / x) * xi_n - xi_nm1)
+            n_over_x = n * inv_x
+            common = (psi_x[n] / psi_mx[n]) * ((Dx[n - 1] + n_over_x) * xi_n - xi_nm1)
 
-            c[n - 1] = m * common / ((m * Dmx[n - 1] + n / x) * xi_n - xi_nm1)
-            d[n - 1] = common / ((Dmx[n - 1] / m + n / x) * xi_n - xi_nm1)
+            c[n - 1] = m * common / ((m * Dmx[n - 1] + n_over_x) * xi_n - xi_nm1)
+            d[n - 1] = common / ((Dmx[n - 1] / m + n_over_x) * xi_n - xi_nm1)
 
-            xi = (2 * n + 1) * xi_n / x - xi_nm1
+            xi = (2 * n + 1) * inv_x * xi_n - xi_nm1
             xi_nm1 = xi_n
             xi_n = xi
 

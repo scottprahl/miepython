@@ -44,7 +44,9 @@ help:
 	@echo "  sync           - Sync uv environment with dev/docs/lite extras"
 	@echo ""
 	@echo "Test Targets:"
-	@echo "  test           - Run pytest on python files"
+	@echo "  test           - Run pytest once per backend (no-JIT then JIT)"
+	@echo "  test-nojit     - Run the suite with the pure python backend"
+	@echo "  test-jit       - Run the suite with the numba backend"
 	@echo "  note-test      - Test all notebooks for errors"
 	@echo ""
 	@echo "Packaging Targets:"
@@ -79,9 +81,19 @@ dist:
 readme:
 	cd docs/images && $(RUN) python make_readme_images.py
 
+# The backend is chosen when miepython is first imported, so one pytest process
+# can only exercise one of them.  Run the suite once per backend; conftest.py
+# skips the files belonging to the other one.
 .PHONY: test
-test:
-	$(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
+test: test-nojit test-jit
+
+.PHONY: test-nojit
+test-nojit:
+	MIEPYTHON_USE_JIT=0 $(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
+
+.PHONY: test-jit
+test-jit:
+	MIEPYTHON_USE_JIT=1 $(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
 
 .PHONY: note-test
 note-test:
@@ -209,8 +221,9 @@ lab:
 
 .PHONY: speed
 speed:
-	-$(RUN) python tests/test_nojit_speed.py
-	-$(RUN) python tests/test_jit_speed.py
+	-MIEPYTHON_USE_JIT=0 $(RUN) python tests/benchmark_efficiencies.py
+	-MIEPYTHON_USE_JIT=1 $(RUN) python tests/benchmark_efficiencies.py
+	-$(RUN) python tests/benchmark_efficiencies.py --compare
 
 .PHONY: lite-clean
 lite-clean:

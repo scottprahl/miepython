@@ -1,17 +1,15 @@
-"""Regression tests for Mie calculations with JIT enabled."""
+"""Regression tests for the high-level miepython API.
 
-import os
-import pytest
+Everything here goes through ``miepython.core``, which holds no backend-specific
+code, so one copy is enough: ``make test`` runs the file once per backend.  Tests
+that address the swappable kernels directly live in ``test_kernels.py``, where a
+fixture covers both backends in a single process.
+"""
+
 import numpy as np
-from scipy.special import spherical_jn, lpmv
+import pytest
 
-os.environ["MIEPYTHON_USE_JIT"] = "1"  # must come before importing miepython
 import miepython as mie
-from miepython.mie_jit import _psi_downwards_nb as psi_downwards
-
-# imported after miepython so that the backend selected above is the one
-# under test; this module imports miepython itself
-from test_jit_abcd import slow_cn_dn  # pylint: disable=wrong-import-order
 
 
 class TestNonAbsorbing:
@@ -232,9 +230,14 @@ class TestAbsorbing:
 class TestPerfectlyConducting:
     """Test cases for perfectly conducting behavior."""
 
-    def test_11_wiscombe_perfectly_conducting(self):
-        """Test 11 wiscombe perfectly conducting."""
-        m = 1000j
+    @pytest.mark.parametrize("m", [1000j, -10000j])
+    def test_11_wiscombe_perfectly_conducting(self, m):
+        """Test 11 wiscombe perfectly conducting.
+
+        A zero real part is what signals a perfect conductor, so neither the sign
+        nor the magnitude of the imaginary part should matter.  The two halves of
+        the old JIT/no-JIT pair happened to use different values; both are kept.
+        """
         # MIEV0 Test Case 0
         x = 0.001
         _, qsca, _, _ = mie.efficiencies_mx(m, x)
@@ -739,43 +742,11 @@ class TestElectricMagneticMultipoles:
         assert np.all(np.isfinite(g))
         np.testing.assert_array_equal(g, np.zeros(2))
 
-    def test_single_multipole_asymmetry_matches_angular_average(self):
-        """The zero g agrees with <cos(theta)> integrated over the isolated pattern."""
-        m = 1.5 - 0.01j
-        x = 3.0
-        a, b = mie.an_bn(complex(m.real, -abs(m.imag)), x, 0)
-        n_terms = len(a)
-        mu = np.linspace(-1, 1, 2001)
-
-        for n in range(1, 5):
-            scale = (2 * n + 1) / (n * (n + 1))
-            i_elec = np.zeros_like(mu)
-            i_magn = np.zeros_like(mu)
-            for k, mu_k in enumerate(mu):
-                pi = np.zeros(n_terms)
-                tau = np.zeros(n_terms)
-                mie.pi_tau(mu_k, pi, tau)
-                i_elec[k] = abs(scale * a[n - 1] * pi[n - 1]) ** 2 + abs(scale * a[n - 1] * tau[n - 1]) ** 2
-                i_magn[k] = abs(scale * b[n - 1] * tau[n - 1]) ** 2 + abs(scale * b[n - 1] * pi[n - 1]) ** 2
-
-            assert np.sum(i_elec * mu) / np.sum(i_elec) == pytest.approx(0.0, abs=1e-12)
-            assert np.sum(i_magn * mu) / np.sum(i_magn) == pytest.approx(0.0, abs=1e-12)
-
     def test_e_field_ignored_for_full_series(self):
         """e_field has no effect when every multipole is included."""
         m = 1.5 - 0.01j
         x = 3.0
         assert mie.efficiencies_mx(m, x, n_pole=0, e_field=True) == mie.efficiencies_mx(m, x, n_pole=0, e_field=False)
-
-    def test_lossless_unitarity(self):
-        """For a lossless sphere Re(a_n) must equal |a_n|**2 for every order."""
-        for m in (1.05, 1.2, 1.33, 1.5, 2.0, 3.0, 0.75):
-            for x in (0.1, 1.0, 5.0, 20.0, 62.0, 200.0):
-                a, b = mie.an_bn(complex(m, 0.0), x, 0)
-                for coeff in (a, b):
-                    nz = np.abs(coeff) > 0
-                    resid = np.abs(coeff[nz].real - np.abs(coeff[nz]) ** 2)
-                    assert np.max(resid / np.abs(coeff[nz])) < 1e-15, f"m={m} x={x}"
 
     def test_lossless_qext_equals_qsca(self):
         """A lossless sphere cannot absorb, so qext and qsca must agree."""
@@ -797,29 +768,6 @@ class TestElectricMagneticMultipoles:
 class TestConductingInternalCoefficients:
     """Test that cn_dn returns no internal field for a perfectly conducting sphere."""
 
-    def test_conducting_sphere_has_no_internal_field(self):
-        """Internal coefficients are zero when the index signals a perfect conductor."""
-        for m in (complex(0.0, 0.0), complex(0.0, 100.0), complex(0.0, -100.0)):
-            c, d = mie.cn_dn(m, 1.0, 0)
-            np.testing.assert_array_equal(c, np.zeros_like(c))
-            np.testing.assert_array_equal(d, np.zeros_like(d))
-
-    def test_infinite_index_has_no_internal_field(self):
-        """An infinite index is guarded instead of producing nan."""
-        for m in (complex(np.inf, 0.0), complex(1.5, -np.inf), complex(np.inf, -np.inf)):
-            c, d = mie.cn_dn(m, 1.0, 0)
-            assert np.all(np.isfinite(c.view(float)))
-            assert np.all(np.isfinite(d.view(float)))
-            np.testing.assert_array_equal(c, np.zeros_like(c))
-            np.testing.assert_array_equal(d, np.zeros_like(d))
-
-    def test_dielectric_sphere_still_computed(self):
-        """The guard does not suppress ordinary spheres."""
-        for m in (complex(1.5, 0.0), complex(1.5, -0.1), complex(1.33, -1e-8)):
-            c, d = mie.cn_dn(m, 1.0, 0)
-            assert np.any(c != 0)
-            assert np.any(d != 0)
-
     def test_conducting_coefficients_via_public_api(self):
         """coefficients(internal=True) is zero for the internal terms only."""
         a, b, c, d = mie.coefficients(complex(0.0, 100.0), 1.0, internal=True)
@@ -827,130 +775,9 @@ class TestConductingInternalCoefficients:
         np.testing.assert_array_equal(c, np.zeros_like(c))
         np.testing.assert_array_equal(d, np.zeros_like(d))
 
-    def test_internal_coefficients_match_reference(self):
-        """cn_dn agrees with a direct scipy evaluation, including m < 1."""
-        for m, x in [
-            (complex(1.5, -0.01), 5.0),
-            (complex(1.5, -0.01), 20.0),
-            (complex(1.5, -0.5), 10.0),
-            (complex(0.75, 0.0), 1.0),
-            (complex(0.75, 0.0), 20.0),
-            (complex(0.75, -0.01), 20.0),
-            (complex(1.05, 0.0), 15.0),
-            (complex(1.33, 0.0), 0.1),
-        ]:
-            c, d = mie.cn_dn(m, x, 0)
-            c_ref, d_ref = slow_cn_dn(m, x, 0)
-            k = min(len(c), len(c_ref))
-            keep = np.abs(c_ref[:k]) > 1e-200
-            np.testing.assert_allclose(c[:k][keep], c_ref[:k][keep], rtol=1e-8)
-            keep = np.abs(d_ref[:k]) > 1e-200
-            np.testing.assert_allclose(d[:k][keep], d_ref[:k][keep], rtol=1e-8)
-
-    def test_internal_coefficients_stable_below_unit_index(self):
-        """The psi ratio stays accurate when the order runs past |mx|."""
-        # m < 1 puts every order above |mx|, which the old three-term
-        # recurrence for psi_n(mx) could not survive
-        m = complex(0.75, 0.0)
-        x = 20.0
-        c, _ = mie.cn_dn(m, x, 0)
-        c_ref, _ = slow_cn_dn(m, x, 0)
-        k = min(len(c), len(c_ref))
-        keep = np.abs(c_ref[:k]) > 1e-200
-        rel = np.max(np.abs(c[:k][keep] - c_ref[:k][keep]) / np.abs(c_ref[:k][keep]))
-        assert rel < 1e-10
-
-    def test_internal_coefficients_at_sin_zeros(self):
-        """Accuracy survives the orders where sin(x) or sin(mx) vanishes."""
-        # x = n*pi happens whenever the diameter is a multiple of the wavelength,
-        # and m*x = n*pi is the matching hazard on the internal argument
-        cases = [
-            (complex(1.5, 0.0), np.pi),
-            (complex(1.5, 0.0), 2 * np.pi),
-            (complex(2.5, 0.0), 2 * np.pi),  # m*x = 5*pi
-            (complex(2.0, 0.0), 1.5 * np.pi),  # m*x = 3*pi
-            (complex(0.5, 0.0), 4 * np.pi),  # m*x = 2*pi and m < 1
-        ]
-        for m, x in cases:
-            c, d = mie.cn_dn(m, x, 0)
-            c_ref, d_ref = slow_cn_dn(m, x, 0)
-            k = min(len(c), len(c_ref))
-            keep = np.abs(c_ref[:k]) > 1e-200
-            np.testing.assert_allclose(c[:k][keep], c_ref[:k][keep], rtol=1e-7)
-            keep = np.abs(d_ref[:k]) > 1e-200
-            np.testing.assert_allclose(d[:k][keep], d_ref[:k][keep], rtol=1e-7)
-
-    def test_psi_downwards_matches_scipy(self):
-        """The Riccati-Bessel helper agrees with scipy for real and complex z."""
-        for z in (0.1 + 0j, np.pi + 0j, 20.0 + 0j, 15.0 - 3.0j, 2.0 - 8.0j, 0.5 + 0j):
-            nstop = 30
-            got = psi_downwards(np.complex128(z), nstop)
-            n = np.arange(0, nstop + 1)
-            ref = z * spherical_jn(n, z)
-
-            # orders 1.. are tested relatively, right down into the underflowing
-            # tail, because the downward recurrence carries relative accuracy
-            keep = np.abs(ref[1:]) > 1e-250
-            np.testing.assert_allclose(got[1:][keep], ref[1:][keep], rtol=1e-9)
-
-            # psi_0 = sin(z) is a cancellation artifact at the zeros of sine, where
-            # scipy and sin(z) disagree at the 1e-16 level, so it gets an absolute
-            # bound instead
-            assert abs(got[0] - ref[0]) <= 1e-13 * np.max(np.abs(ref))
-
 
 class TestSeriesTruncation:
     """Test that every returned coefficient is a real term, with no padding."""
-
-    def test_no_trailing_zero(self):
-        """The last a_n and b_n are genuine coefficients, not padding."""
-        for m, x in ((complex(1.5, -0.1), 5.0), (complex(1.33, 0.0), 1.0), (complex(2.0, -0.5), 20.0)):
-            a, b = mie.an_bn(m, x, 0)
-            assert a[-1] != 0
-            assert b[-1] != 0
-
-    def test_internal_and_external_series_same_length(self):
-        """a_n/b_n and c_n/d_n must be truncated at the same order."""
-        for m, x in ((complex(1.5, -0.1), 5.0), (complex(1.33, 0.0), 1.0), (complex(2.0, -0.5), 20.0)):
-            a, b = mie.an_bn(m, x, 0)
-            c, d = mie.cn_dn(m, x, 0)
-            assert len(a) == len(b) == len(c) == len(d)
-            assert len(a) == int(x + 4.05 * x**0.33333 + 2.0)
-
-    def test_pi_tau_fills_every_order(self):
-        """pi_tau must set tau for the highest order too."""
-        mu = 0.3
-        for n_terms in (1, 2, 5, 12):
-            pi = np.zeros(n_terms)
-            tau = np.zeros(n_terms)
-            mie.pi_tau(mu, pi, tau)
-            assert tau[-1] != 0
-            # closed forms: tau_1 = mu, tau_2 = 3(2mu^2 - 1), pi_1 = 1, pi_2 = 3mu
-            assert pi[0] == pytest.approx(1.0)
-            assert tau[0] == pytest.approx(mu)
-            if n_terms >= 2:
-                assert pi[1] == pytest.approx(3 * mu)
-                assert tau[1] == pytest.approx(3 * (2 * mu**2 - 1))
-
-    def test_pi_tau_matches_legendre(self):
-        """pi_n and tau_n agree with the Legendre function and its derivative."""
-        n_terms = 10
-        n = np.arange(1, n_terms + 1)
-        for theta in (0.3, 1.1, np.pi / 2, 2.2, 2.9):
-            mu = np.cos(theta)
-            pi = np.zeros(n_terms)
-            tau = np.zeros(n_terms)
-            mie.pi_tau(mu, pi, tau)
-
-            # pi_n = P_n^1(cos theta) / sin theta
-            # atol matters at theta=pi/2 where some pi_n vanish
-            np.testing.assert_allclose(pi, -lpmv(1, n, mu) / np.sin(theta), rtol=1e-10, atol=1e-12)
-
-            # tau_n = d/dtheta P_n^1(cos theta), by central difference
-            h = 1e-6
-            plus = -lpmv(1, n, np.cos(theta + h))
-            minus = -lpmv(1, n, np.cos(theta - h))
-            np.testing.assert_allclose(tau, (plus - minus) / (2 * h), rtol=1e-6, atol=1e-6)
 
     def test_highest_multipole_is_usable(self):
         """n_pole may address the highest order now that nothing is padding."""
