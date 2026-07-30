@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77", "wheel"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -76,9 +76,10 @@ dev = [
   # Release / packaging checks
   "build",
   "check-manifest",
+  # setuptools is not listed: check-manifest and pyroma both require it, and the
+  # backend is installed by build isolation, so an explicit pin adds nothing
   "libarchive-c",
   "pyyaml",
-  "setuptools",
 
   # Notebooks (local JupyterLab workflows)
   "jupyterlab",
