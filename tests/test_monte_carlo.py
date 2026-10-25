@@ -42,6 +42,12 @@ def draw(mu_table, count, seed):
 class TestCdf:
     """Test the cumulative distribution sampled uniformly in cos(theta)."""
 
+    def test_small_sphere_matches_rayleigh_cdf(self):
+        """The small-sphere phase density is 3/8 * (1 + mu**2)."""
+        mu, cdf = mc.cdf(M_WATER, 0.001, 100)
+        expected = 0.5 + 3 * mu / 8 + mu**3 / 8
+        np.testing.assert_allclose(cdf, expected, atol=2e-5)
+
     @pytest.mark.parametrize("num", [20, 50, 500])
     def test_shape_and_angles(self, num):
         """The angles span the full exit range at even spacing."""
@@ -55,27 +61,20 @@ class TestCdf:
         """A cumulative distribution may never run backwards."""
         _, cdf = mc.cdf(M_WATER, X_DROPLET, num)
         assert np.all(np.diff(cdf) >= 0)
-        assert 0 < cdf[0] < 2.0 / num
+        assert cdf[0] == 0.0
 
-    def test_endpoint_approaches_one_from_above(self):
-        """The quadrature overshoots, and the error falls off like 1/num.
+    @pytest.mark.parametrize("num", [2, 20, 50, 500, 5000])
+    def test_endpoint_is_one(self, num):
+        """A CDF contains all the probability at its last angle."""
+        _, cdf = mc.cdf(M_WATER, X_DROPLET, num)
+        assert cdf[-1] == 1.0
 
-        ``cdf`` sums ``i_unpolarized / num`` rather than multiplying by the true
-        spacing 2/(num-1), so the last value is not exactly 1: it is about
-        1 + 1.3/num for this sphere.  The docstring claims a maximum of 1, so the
-        overshoot is worth pinning rather than leaving as a surprise -- at the
-        num=20 the notebook plots, the CDF reaches 1.067.
-        """
-        errors = {}
-        for num in (50, 500, 5000):
-            _, cdf = mc.cdf(M_WATER, X_DROPLET, num)
-            errors[num] = cdf[-1] - 1.0
-            assert errors[num] > 0, "overshoot expected"
-
-        # ten times as many points, a tenth of the error
-        assert errors[50] / errors[500] == pytest.approx(10.0, rel=0.1)
-        assert errors[500] / errors[5000] == pytest.approx(10.0, rel=0.1)
-        assert errors[5000] < 1e-3
+    @pytest.mark.parametrize("num", [0, 1])
+    @pytest.mark.parametrize("builder", [mc.cdf, mc.mu_with_uniform_cdf])
+    def test_at_least_two_points_are_required(self, num, builder):
+        """One angle cannot define an interval of scattering probability."""
+        with pytest.raises(ValueError, match="at least 2"):
+            builder(M_WATER, X_DROPLET, num)
 
     def test_more_forward_scattering_delays_the_rise(self):
         """A larger sphere throws light forward, so the cdf climbs later."""
@@ -87,6 +86,14 @@ class TestCdf:
 
 class TestUniformCdfTable:
     """Test the inverse-transform table used for sampling."""
+
+    def test_rayleigh_inverse_angles_are_physical(self):
+        """Fine tables must not interpolate across the two CDF endpoints."""
+        mu, _ = mc.mu_with_uniform_cdf(M_WATER, 0.001, 4096)
+        assert np.all(mu >= -1)
+        assert np.all(mu <= 1)
+        assert np.all(np.diff(mu) >= 0)
+        assert np.all(np.isfinite(np.arccos(mu)))
 
     @pytest.mark.parametrize("num", [20, 200, 3000])
     def test_cdf_values_are_exactly_uniform(self, num):

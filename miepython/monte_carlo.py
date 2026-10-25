@@ -52,21 +52,25 @@ def cdf(m, x, num):
     sampled uniformly and therefore huge array sizes are needed to adequately
     sample highly anisotropic phase functions.
 
-    Since this is a cumulative distribution function, the maximum value
-    should be 1.
+    The cumulative trapezoidal integral starts at zero and is normalized to
+    end at one. Increase num to resolve a sharply peaked phase function.
 
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        num: length of desired CDF array
+        num: length of desired CDF array, at least two
 
     Returns:
         mu: array of cosines of angles
         cdf: array of cumulative distribution function values
     """
+    if num < 2:
+        raise ValueError("num must be at least 2")
     mu = np.linspace(-1, 1, num)
-    intensity_per_mu = mie.i_unpolarized(m, x, mu, norm="4pi") / num
-    cdf_values = np.cumsum(intensity_per_mu)
+    intensity_per_mu = mie.i_unpolarized(m, x, mu, norm="4pi") / 2
+    cdf_values = np.zeros(num)
+    cdf_values[1:] = np.cumsum((intensity_per_mu[1:] + intensity_per_mu[:-1]) * np.diff(mu) / 2)
+    cdf_values /= cdf_values[-1]
     return mu, cdf_values
 
 
@@ -89,12 +93,14 @@ def mu_with_uniform_cdf(m, x, num):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        num: length of desired CDF array
+        num: length of desired CDF array, at least two
 
     Returns:
         mu: array of cosines of angles (irregularly spaced)
         cdf: array of cumulative distribution function values
     """
+    if num < 2:
+        raise ValueError("num must be at least 2")
     big_num = 2000  # large to work with x up to 10
     big_mu, big_cdf = cdf(m, x, big_num)
     mu = np.empty(num)
