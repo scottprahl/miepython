@@ -35,7 +35,7 @@ def efficiencies_mx(m, x):
     ratio = (m**2 - 1) / (m**2 + 2)
     qsca = 8 / 3 * x**4 * abs(ratio) ** 2
     qext = 4 * x * ratio * (1 + x**2 / 15 * ratio * (m**4 + 27 * m**2 + 38) / (2 * m**2 + 3))
-    qext = abs(qext.imag + qsca)
+    qext = abs(qext.imag) + qsca
     qback = 4 * x**4 * abs(ratio) ** 2
     g = 0
     return qext, qsca, qback, g
