@@ -1,7 +1,7 @@
 Changelog
 =========
 
-unreleased
+3.3.1 (10/28/2026)
 -------------------
 *   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With
     the m = n - ik convention the absorption term is negative, so
