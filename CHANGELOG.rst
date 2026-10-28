@@ -12,6 +12,24 @@ unreleased
     is conjugated first, as ``core.py`` does.  The Rayleigh ``qext`` also sets the
     ``albedo`` and ``qext`` normalizations, so ``rayleigh.S1_S2`` and the
     intensities change too
+*   handle perfectly conducting spheres in ``rayleigh``.  As elsewhere in the
+    package, m.real == 0 now means a perfect conductor, which radiates a magnetic
+    dipole b1 = -a1/2 alongside its electric one: qext = qsca = 10/3 x**4,
+    qback = 9 x**4 and g = -2/5.  The dielectric formulas were used before, so
+    m = -1j gave a qext about three times the Mie value; it now agrees to 2e-5 at
+    x = 0.01
+*   validate input to the ``rayleigh`` functions as ``core.py`` now does.  A NaN or
+    infinite m or x, a negative x, or a negative real part of m raises
+    ``ValueError``; before, ``rayleigh.efficiencies_mx(nan, 0.05)`` returned NaN and
+    ``m = -1.5 - 0.1j`` or ``x = -0.05`` returned normal-looking efficiencies
+*   say why ``S1_S2`` and the functions built on it reject an array of spheres, in
+    both ``core`` and ``rayleigh``.  They vectorize over mu and describe one sphere,
+    but an array m or x failed with numpy's "truth value of an array is ambiguous"
+*   return ``g`` from ``rayleigh.efficiencies_mx`` with the same shape and type as
+    the other efficiencies.  It was the int 0 even for an array of spheres
+*   document the ``rayleigh`` module: what the approximation is, which expressions
+    go beyond the leading Rayleigh term, its accuracy against Mie, and tested
+    examples
 *   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is
     dropped from the classifiers, the black target versions and the CI matrix, and
     3.15 is added to all three
