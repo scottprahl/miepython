@@ -32,10 +32,19 @@ def efficiencies_mx(m, x):
         qback: the backscatter efficiency
         g: the average cosine of the scattering phase function
     """
+    # ensure imaginary part of refractive index is negative, as core.py does
+    if np.isscalar(m):
+        m = np.conj(m) if np.imag(m) > 0 else m
+    else:
+        m = np.where(np.imag(m) > 0, np.conj(m), m)
+
     ratio = (m**2 - 1) / (m**2 + 2)
     qsca = 8 / 3 * x**4 * abs(ratio) ** 2
-    qext = 4 * x * ratio * (1 + x**2 / 15 * ratio * (m**4 + 27 * m**2 + 38) / (2 * m**2 + 3))
-    qext = abs(qext.imag + qsca)
+    # Bohren & Huffman write m = n + ik, so with m = n - ik the absorption term
+    # changes sign.  The x**4 term is Re(ratio**2), not |ratio|**2: the two only
+    # agree for a non-absorbing sphere, and the difference matters near resonance.
+    qabs = -4 * x * (ratio * (1 + x**2 / 15 * ratio * (m**4 + 27 * m**2 + 38) / (2 * m**2 + 3))).imag
+    qext = qabs + 8 / 3 * x**4 * (ratio**2).real
     qback = 4 * x**4 * abs(ratio) ** 2
     g = 0
     return qext, qsca, qback, g

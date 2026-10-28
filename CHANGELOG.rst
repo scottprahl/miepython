@@ -3,6 +3,15 @@ Changelog
 
 unreleased
 -------------------
+*   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With
+    the m = n - ik convention the absorption term is negative, so
+    ``abs(absorption + qsca)`` gave absorption minus scattering, and qext for
+    m = 1.5 - 1e-6j at x = 0.01 came out 21% low (thanks @antonsoo).  The x**4 term
+    now follows Bohren & Huffman's ``Re(ratio**2)`` rather than ``|ratio|**2``,
+    which agrees with Mie to 2e-5 instead of 6e-4 at m = 1.5 - 1j, x = 0.1.  ``m``
+    is conjugated first, as ``core.py`` does.  The Rayleigh ``qext`` also sets the
+    ``albedo`` and ``qext`` normalizations, so ``rayleigh.S1_S2`` and the
+    intensities change too
 *   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is
     dropped from the classifiers, the black target versions and the CI matrix, and
     3.15 is added to all three
