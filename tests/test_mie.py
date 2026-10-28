@@ -965,3 +965,66 @@ class TestArrayDispatchAndErrors:
         assert mie.phase_matrix(1.5, 2.0, 0.5).shape == (4, 4)
         assert mie.phase_matrix(1.5, 2.0, np.array([0.5])).shape == (4, 4)
         assert mie.phase_matrix(1.5, 2.0, np.linspace(-1, 1, 5)).shape == (4, 4, 5)
+
+
+class TestInvalidInput:
+    """Reject an index or size parameter the kernels would silently misread."""
+
+    NAN = float("nan")
+    ENTRY_POINTS = {
+        "coefficients": mie.coefficients,
+        "efficiencies_mx": mie.efficiencies_mx,
+        "efficiencies": lambda m, x: mie.efficiencies(m, x * 0.5 / np.pi, 0.5),
+        "S1_S2": lambda m, x: mie.S1_S2(m, x, 0.5),
+        "i_unpolarized": lambda m, x: mie.i_unpolarized(m, x, 0.5),
+    }
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    @pytest.mark.parametrize(
+        "m",
+        [NAN, complex(NAN, -1), complex(1.5, NAN), complex(np.inf, 0), complex(1.5, -np.inf)],
+    )
+    def test_non_finite_index_is_an_error(self, name, m):
+        """A NaN real part used to give the answer for a perfect conductor."""
+        with pytest.raises(ValueError, match="refractive index must be finite"):
+            self.ENTRY_POINTS[name](m, 2.0)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    def test_negative_real_index_is_an_error(self, name):
+        """A negative real part also used to fall through to the conductor branch."""
+        with pytest.raises(ValueError, match="must not be negative"):
+            self.ENTRY_POINTS[name](-1.5, 2.0)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    @pytest.mark.parametrize("x", [NAN, np.inf, -np.inf])
+    def test_non_finite_size_is_an_error(self, name, x):
+        """The backends used to disagree: one raised a cryptic error, the other returned NaN."""
+        with pytest.raises(ValueError, match="size parameter must be finite"):
+            self.ENTRY_POINTS[name](1.5, x)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    def test_negative_size_is_an_error(self, name):
+        """A negative size parameter used to return zeros for everything."""
+        with pytest.raises(ValueError, match="size parameter must not be negative"):
+            self.ENTRY_POINTS[name](1.5, -1.0)
+
+    def test_one_bad_entry_in_an_array_is_an_error(self):
+        """The array path checks every sphere, not just the first."""
+        with pytest.raises(ValueError, match="refractive index must be finite"):
+            mie.efficiencies_mx(np.array([1.5, self.NAN]), np.array([2.0, 2.0]))
+        with pytest.raises(ValueError, match="size parameter must not be negative"):
+            mie.coefficients(1.5, np.array([2.0, -1.0]), n_pole=1)
+
+    @pytest.mark.parametrize("m", [0, 0.0 - 1j, 1.5 + 0.1j])
+    def test_conventions_that_remain_valid(self, m):
+        """A zero real part means a conductor, and a positive imaginary part is conjugated."""
+        qext, qsca, _, _ = mie.efficiencies_mx(m, 2.0)
+        assert np.isfinite(qext) and np.isfinite(qsca)
+
+    def test_near_field_is_checked_before_truncation(self):
+        """e_near used to die in wiscombe_terms with 'cannot convert float NaN to integer'."""
+        pytest.importorskip("scipy")
+        with pytest.raises(ValueError, match="size parameter must be finite"):
+            mie.e_near(0.5, self.NAN, 1.5, 1.0, np.array([2.0]), np.array([0.3]), np.array([0.0]))
+        with pytest.raises(ValueError, match="refractive index must be finite"):
+            mie.e_near(0.5, 1.0, self.NAN, 1.0, np.array([2.0]), np.array([0.3]), np.array([0.0]))

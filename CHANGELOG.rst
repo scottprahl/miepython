@@ -3,6 +3,41 @@ Changelog
 
 unreleased
 -------------------
+*   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is
+    dropped from the classifiers, the black target versions and the CI matrix, and
+    3.15 is added to all three
+*   raise ``ValueError`` for a refractive index or size parameter the kernels would
+    misread.  The kernels treat any index that fails ``m.real > 0`` as a perfect
+    conductor, so ``m = nan`` or ``m = -1.5`` silently returned the answer for a metal
+    sphere, and an infinite m returned NaN.  A NaN x raised "cannot convert float
+    NaN to integer" on the pure-Python backend while numba returned NaN, an infinite
+    x raised a different unhelpful error on each backend, and a negative x returned
+    zeros.  ``coefficients``, ``efficiencies_mx``, ``S1_S2`` and the near fields, and
+    everything built on them, now reject a NaN or infinite m or x, a negative x, and
+    a negative real part of m, checking every entry of an array.  ``m.real == 0``
+    still means a perfect conductor and x = 0 is still allowed
+*   fix ``monte_carlo.mu_with_uniform_cdf`` returning wrong angles for fine tables.
+    ``cdf`` began at I(-1)/num rather than zero, so a target below that value left
+    the inversion loop at index zero and interpolated against the last entry.
+    ``cdf`` now integrates the phase function with the trapezoidal rule, starting at
+    exactly 0 and ending at exactly 1 (it used to end slightly above 1), so tables
+    differ slightly from 3.3.0.  ``cdf`` and ``mu_with_uniform_cdf`` also raise
+    ``ValueError`` when num is less than 2 (thanks @antonsoo)
+*   replace the inversion loop in ``monte_carlo.mu_with_uniform_cdf`` with
+    ``np.interp``
+*   warn when ``monte_carlo.cdf`` uses too few angles to resolve the phase function.
+    The raw integral should be one, so a ``RuntimeWarning`` is issued when it is off
+    by more than 1%; normalizing used to hide the error silently.  A large sphere
+    needs roughly x**2 angles, because its forward peak is only about 8/x**2 wide in
+    cos(theta)
+*   size the table inside ``monte_carlo.mu_with_uniform_cdf`` from x, as
+    max(2000, 5*x**2) angles instead of a fixed 2000.  At x = 100 the sampled mean
+    cosine was 0.930 against g = 0.868; it is now 0.869.  Large spheres are slower
+    to tabulate: seconds at x = 100, about a minute at x = 300
+*   raise ``ValueError`` from ``monte_carlo.cdf`` and ``mu_with_uniform_cdf`` when the
+    phase function is not finite
+*   rewrite the ``monte_carlo`` docstrings, with tested examples of drawing random
+    scattering angles
 *   name the encoding on every text read and write.  ``open(path)`` and
     ``Path.read_text()`` decode with the locale's preferred encoding, which is UTF-8
     on Linux and macOS but cp1252 on Windows, so ``tests/test_makefile.py`` passed
