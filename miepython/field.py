@@ -82,7 +82,7 @@ import numpy as np
 from scipy.special import factorial2, spherical_jn
 from ._backend import D_calc, pi_tau
 from .bessel import spherical_h1
-from .core import S1_S2, coefficients, wiscombe_terms
+from .core import S1_S2, _check_m_x, coefficients, wiscombe_terms
 from .util import cartesian_to_spherical, spherical_vector_to_cartesian
 
 __all__ = (
@@ -287,6 +287,7 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
+    _check_m_x(m_rel, x)  # before wiscombe_terms, which cannot take a NaN x
     if n_pole == 0:
         # Wiscombe's criterion truncates the scattered series, which converges
         # faster than the field evaluated right at the surface.  Now that an_bn

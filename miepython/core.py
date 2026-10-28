@@ -69,6 +69,36 @@ def wiscombe_terms(x):
     return int(x + 4.05 * x**0.33333 + 2.0)
 
 
+def _check_m_x(m, x):
+    """
+    Reject an index or size parameter that the kernels would silently misread.
+
+    The kernels treat any index whose real part fails ``m.real > 0`` as a perfect
+    conductor, so a NaN or negative real part gave the answer for a metal sphere
+    instead of an error.  A NaN or infinite x failed differently on each backend.
+
+    Args:
+        m: refractive index of the sphere, scalar or array
+        x: size parameter of the sphere, scalar or array
+
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or m.real is negative
+    """
+    m = np.asarray(m)
+    x = np.asarray(x)
+    if not np.all(np.isfinite(m)):
+        raise ValueError(f"refractive index must be finite, got m={m}")
+    if np.any(m.real < 0):
+        raise ValueError(
+            f"real part of the refractive index must not be negative, got m={m}; "
+            "use m.real == 0 for a perfect conductor"
+        )
+    if not np.all(np.isfinite(x)):
+        raise ValueError(f"size parameter must be finite, got x={x}")
+    if np.any(x < 0):
+        raise ValueError(f"size parameter must not be negative, got x={x}")
+
+
 def coefficients(m, x, n_pole=0, internal=False):
     """
     Computes the Mie coefficients for a sphere.
@@ -103,6 +133,10 @@ def coefficients(m, x, n_pole=0, internal=False):
           automatically corrected to its conjugate value to ensure a valid input.
         - Every returned coefficient is a real term; the arrays carry no padding.
 
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or the real part of
+            m is negative.  A perfect conductor is m.real == 0, not m.real < 0.
+
     Examples:
         Compute coefficients for a single sphere:
 
@@ -123,6 +157,7 @@ def coefficients(m, x, n_pole=0, internal=False):
         >>> print(f"{a[0, 0]:.6f}")
         0.447946-0.386652j
     """
+    _check_m_x(m, x)
     mlen = np.size(m) if np.ndim(m) > 0 else 0
     xlen = np.size(x) if np.ndim(x) > 0 else 0
 
@@ -208,6 +243,10 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
         - This implementation assumes spherical, homogeneous particles in a
           non-absorbing medium.
 
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or the real part of
+            m is negative.  A perfect conductor is m.real == 0, not m.real < 0.
+
     Examples:
         Compute efficiencies for one sphere:
 
@@ -228,6 +267,8 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
         Use :func:`efficiencies` instead when the diameter and wavelength are
         known rather than the size parameter.
     """
+    _check_m_x(m, x)
+
     # ensure imaginary part of refractive index is negative
     if np.isscalar(m):
         m = np.conj(m) if np.imag(m) > 0 else m
@@ -361,7 +402,12 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or the real part of
+            m is negative.  A perfect conductor is m.real == 0, not m.real < 0.
     """
+    _check_m_x(m, x)
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
