@@ -54,6 +54,22 @@ def test_weak_absorption_is_positive(index, absorption, size):
     np.testing.assert_allclose(qabs, 4 * size * polarizability.imag, rtol=0.003)
 
 
+@pytest.mark.parametrize(
+    "m, size, rtol",
+    [
+        (1.5 - 1e-6j, 0.01, 1e-5),  # the sign error made qext 21% low here
+        (1.5 - 0.1j, 0.05, 1e-5),
+        (1.5 - 1j, 0.1, 1e-4),  # |ratio|**2 in the x**4 term is 6e-4 high here
+        (0.05 - 1.43j, 0.05, 2e-3),  # silver-like, near the Frohlich resonance
+    ],
+)
+def test_extinction_matches_mie_for_absorbing_spheres(m, size, rtol):
+    """The 1% tolerance of test_efficiencies hides errors this size, so compare tightly."""
+    qext_ray = rayleigh.efficiencies_mx(m, size)[0]
+    qext_mie = mie.efficiencies_mx(m, size)[0]
+    assert qext_ray == pytest.approx(qext_mie, rel=rtol)
+
+
 @pytest.mark.parametrize("m, case", test_cases)
 def test_S1_S2(m, case):
     """Compare scattering amplitudes S1 and S2 to Mie theory."""
