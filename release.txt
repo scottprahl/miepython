@@ -3,6 +3,10 @@ Releasing a new version
 # run sanity checks
   make rcheck
 
+# lite need to wait about 10 minutes for the changes to propagate
+  make lite-deploy
+  open https://scottprahl.github.io/miepython/
+  
 # update the version in miepython/__init__.py
   git commit miepython/__init__.py -m 'update version'
   git push
