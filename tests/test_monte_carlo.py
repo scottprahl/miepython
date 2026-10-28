@@ -10,6 +10,7 @@ RNG disturbed for whatever runs next.
 """
 
 import contextlib
+import warnings
 
 import numpy as np
 import pytest
@@ -48,6 +49,25 @@ class TestCdf:
         expected = 0.5 + 3 * mu / 8 + mu**3 / 8
         np.testing.assert_allclose(cdf, expected, atol=2e-5)
 
+    @pytest.mark.parametrize("x, num", [(X_DROPLET, 401), (10, 2001)])
+    def test_matches_direct_integration_of_the_phase_function(self, x, num):
+        """Normalization pins both ends, so check the middle against an independent integral."""
+        _, cdf = mc.cdf(M_WATER, x, num)
+        fine = np.linspace(-1, 1, 200_001)
+        density = mie.i_unpolarized(M_WATER, x, fine, norm="4pi") / 2
+        step = (len(fine) - 1) // (num - 1)  # fine[step * k] is the k-th coarse cosine
+        for k in np.array([0.25, 0.5, 0.75, 0.95]) * (num - 1):
+            stop = step * int(k) + 1
+            expected = np.trapezoid(density[:stop], fine[:stop])
+            assert cdf[int(k)] == pytest.approx(expected, abs=1e-3)
+
+    def test_non_finite_phase_function_is_an_error(self, monkeypatch):
+        """A NaN would otherwise poison every value and the table built from it."""
+        monkeypatch.setattr(mie, "i_unpolarized", lambda m, x, mu, norm: np.full_like(mu, np.nan))
+        for builder in (mc.cdf, mc.mu_with_uniform_cdf):
+            with pytest.raises(ValueError, match="not finite"):
+                builder(M_WATER, X_DROPLET, 50)
+
     @pytest.mark.parametrize("num", [20, 50, 500])
     def test_shape_and_angles(self, num):
         """The angles span the full exit range at even spacing."""
@@ -57,17 +77,37 @@ class TestCdf:
         np.testing.assert_allclose(mu, np.linspace(-1, 1, num))
 
     @pytest.mark.parametrize("num", [20, 50, 500])
-    def test_is_non_decreasing_and_starts_near_zero(self, num):
+    def test_is_non_decreasing_and_starts_at_zero(self, num):
         """A cumulative distribution may never run backwards."""
         _, cdf = mc.cdf(M_WATER, X_DROPLET, num)
         assert np.all(np.diff(cdf) >= 0)
         assert cdf[0] == 0.0
 
+    @pytest.mark.filterwarnings("ignore:phase function under-resolved")
     @pytest.mark.parametrize("num", [2, 20, 50, 500, 5000])
     def test_endpoint_is_one(self, num):
         """A CDF contains all the probability at its last angle."""
         _, cdf = mc.cdf(M_WATER, X_DROPLET, num)
         assert cdf[-1] == 1.0
+
+    @pytest.mark.parametrize("x, num", [(0.001, 100), (X_DROPLET, 20), (10, 2000), (30, 5000)])
+    def test_resolved_phase_function_integrates_to_one(self, x, num):
+        """Normalization is only a rounding fix when the angles resolve the phase function."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            mc.cdf(M_WATER, x, num)
+
+    @pytest.mark.parametrize("x, num", [(X_DROPLET, 2), (10, 50), (100, 2000)])
+    def test_under_resolved_phase_function_warns(self, x, num):
+        """Normalizing must not silently hide a forward peak that the angles miss."""
+        with pytest.warns(RuntimeWarning, match="under-resolved"):
+            mc.cdf(M_WATER, x, num)
+
+    def test_warning_points_at_the_caller(self):
+        """The warning names the line that asked for too few angles, not a miepython internal."""
+        with pytest.warns(RuntimeWarning, match="under-resolved") as record:
+            mc.cdf(M_WATER, 100, 2000)
+        assert record[0].filename == __file__
 
     @pytest.mark.parametrize("num", [0, 1])
     @pytest.mark.parametrize("builder", [mc.cdf, mc.mu_with_uniform_cdf])
@@ -87,13 +127,21 @@ class TestCdf:
 class TestUniformCdfTable:
     """Test the inverse-transform table used for sampling."""
 
+    @pytest.mark.parametrize("x", [X_DROPLET, 30])
+    def test_table_reproduces_the_asymmetry_parameter(self, x):
+        """The table resolves the forward peak itself, whatever num the caller asks for."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            mu, _ = mc.mu_with_uniform_cdf(M_WATER, x, 200)
+        g = mie.efficiencies_mx(M_WATER, x)[3]
+        assert np.mean((mu[1:] + mu[:-1]) / 2) == pytest.approx(g, abs=1e-3)
+
     def test_rayleigh_inverse_angles_are_physical(self):
         """Fine tables must not interpolate across the two CDF endpoints."""
         mu, _ = mc.mu_with_uniform_cdf(M_WATER, 0.001, 4096)
         assert np.all(mu >= -1)
         assert np.all(mu <= 1)
         assert np.all(np.diff(mu) >= 0)
-        assert np.all(np.isfinite(np.arccos(mu)))
 
     @pytest.mark.parametrize("num", [20, 200, 3000])
     def test_cdf_values_are_exactly_uniform(self, num):
