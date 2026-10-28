@@ -3,6 +3,16 @@ Changelog
 
 unreleased
 -------------------
+*   raise ``ValueError`` for a refractive index or size parameter the kernels would
+    misread.  The kernels treat any index that fails ``m.real > 0`` as a perfect
+    conductor, so ``m = nan`` or ``m = -1.5`` silently returned the answer for a metal
+    sphere, and an infinite m returned NaN.  A NaN x raised "cannot convert float
+    NaN to integer" on the pure-Python backend while numba returned NaN, an infinite
+    x raised a different unhelpful error on each backend, and a negative x returned
+    zeros.  ``coefficients``, ``efficiencies_mx``, ``S1_S2`` and the near fields, and
+    everything built on them, now reject a NaN or infinite m or x, a negative x, and
+    a negative real part of m, checking every entry of an array.  ``m.real == 0``
+    still means a perfect conductor and x = 0 is still allowed
 *   fix ``monte_carlo.mu_with_uniform_cdf`` returning wrong angles for fine tables.
     ``cdf`` began at I(-1)/num rather than zero, so a target below that value left
     the inversion loop at index zero and interpolated against the last entry.
