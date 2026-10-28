@@ -5,19 +5,19 @@
         {
           "comment_text": "",
           "digests": {
-            "md5": "90563680fc4e63d35e6c35117930fb3a",
-            "sha256": "929cb78b5dd946cb31019b73715c1c7c5581cd2228fdab304a298c10f83b60fb"
+            "md5": "aada8be0abb63b385c35d3a62ba5953d",
+            "sha256": "f5f94171444122e856a665c13a18949d59153703d51c8d4be1a0feb8ef368c3e"
           },
           "downloads": -1,
           "filename": "miepython-3.3.0-py3-none-any.whl",
           "has_sig": false,
-          "md5_digest": "90563680fc4e63d35e6c35117930fb3a",
+          "md5_digest": "aada8be0abb63b385c35d3a62ba5953d",
           "packagetype": "bdist_wheel",
           "python_version": "py3",
-          "requires_python": ">=3.10",
-          "size": 55630,
-          "upload_time": "2026-07-28T21:12:04.662822Z",
-          "upload_time_iso_8601": "2026-07-28T21:12:04.662822Z",
+          "requires_python": ">=3.11",
+          "size": 59843,
+          "upload_time": "2026-10-28T17:57:10.826252Z",
+          "upload_time_iso_8601": "2026-10-28T17:57:10.826252Z",
           "url": "./miepython-3.3.0-py3-none-any.whl",
           "yanked": false,
           "yanked_reason": null
