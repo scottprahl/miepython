@@ -1,7 +1,125 @@
-"""Rayleigh approximation for scattering by small particles."""
+"""
+Rayleigh approximation for scattering by spheres much smaller than the wavelength.
+
+When a sphere is small both outside (x << 1) and inside (abs(m) * x << 1), the
+incident field is nearly uniform across it, and it radiates as a single
+oscillating electric dipole. Every scattering quantity then follows in closed
+form from the ratio (m**2 - 1) / (m**2 + 2), with no series of multipoles to
+sum. This module evaluates those expressions, following Bohren and Huffman,
+equations 5.4 and 5.7 to 5.9. A perfect conductor also radiates a magnetic
+dipole, and has its own expressions, described below.
+
+The functions mirror those of the same names in ``miepython``, with the same
+arguments and the same ``norm`` choices, so one can stand in for the other:
+
+``efficiencies_mx(m, x)``, ``efficiencies(m, d, lambda0, n_env)``
+    qext, qsca, qback and g.
+``S1_S2(m, x, mu, norm)``
+    The scattering amplitudes at each mu = cos(theta).
+``i_par``, ``i_per``, ``i_unpolarized``, ``intensities``
+    Scattered intensities at each mu.
+``phase_matrix(m, x, mu, norm)``
+    The 4x4 Mueller matrix at each mu.
+
+Nothing here takes ``n_pole``, since there is only the dipole.
+
+Order of approximation:
+    Strictly, Rayleigh scattering is only the leading term in x: an electric
+    dipole whose strength is set by the static polarizability. Not every
+    expression here stops at that term, so this is better described as a
+    small-particle approximation.
+
+    - qsca and qback are the leading terms, 8/3 x**4 abs(ratio)**2 and
+      4 x**4 abs(ratio)**2.
+    - qext carries Bohren and Huffman's next-order correction. Its absorption
+      term includes a relative x**2 correction, the order at which the
+      magnetic dipole and the electric quadrupole first contribute (the
+      2 m**2 + 3 in its denominator is the quadrupole's), and scattering is
+      added as 8/3 x**4 Re(ratio**2).
+    - ``S1_S2`` gives the electric dipole its own relative x**2 correction, the
+      x**5 term, but leaves out the magnetic dipole and quadrupole. The angular
+      pattern is therefore exactly that of a dipole, and g is 0.
+    - A perfect conductor gets only the leading terms of its electric and
+      magnetic dipoles.
+
+    The corrections are not applied evenly, so a dielectric's qext is more
+    accurate than its qsca. ``miepython`` itself goes further for x < 0.1,
+    using Wiscombe's expansions, which keep the electric dipole, the magnetic
+    dipole and the electric quadrupole, each with its own corrections.
+
+Accuracy:
+    Relative error in qext against the full Mie solution:
+
+    =================  =========  ========  ========
+    m                  x = 0.01   x = 0.1   x = 0.5
+    =================  =========  ========  ========
+    1.5                -7e-6      -7e-4     -1e-2
+    1.5 - 0.1j         8e-10      6e-6      4e-3
+    0.05 - 1.43j       2e-6       2e-2      14
+    -1j (conductor)    -2e-5      -2e-3     -4e-2
+    =================  =========  ========  ========
+
+    The last row is a silver-like sphere near its plasmon resonance, where
+    m**2 is close to -2 and the denominator of the ratio nearly vanishes. There
+    the approximation fails at much smaller x than for an ordinary dielectric.
+
+    For a dielectric the asymmetry parameter g is 0, because dipole scattering
+    is the same forwards and backwards. The Mie value is 0.002 at x = 0.1 and
+    0.05 at x = 0.5 for m = 1.5.
+
+Conventions:
+    The index is m = n - ik, as in the rest of the package, and an index with a
+    positive imaginary part is conjugated. The inputs that ``miepython``
+    rejects, a NaN or infinite m or x, a negative x or a negative real part of
+    m, raise the same ``ValueError`` here. The efficiencies accept an array of
+    m or x and return arrays, g included. The angular functions describe one
+    sphere and vectorize over mu only.
+
+Perfect conductors:
+    As in the rest of the package, m.real == 0 means a perfect conductor,
+    whatever the imaginary part, and m = 0 is one too. No field enters such a
+    sphere, so the dielectric expressions, which describe the field inside,
+    do not apply. Instead the surface currents radiate an electric dipole and
+    a magnetic dipole half as strong and opposite in sign, a1 = 2i x**3/3 and
+    b1 = -a1/2. The sphere absorbs nothing, qext = qsca = 10/3 x**4, and
+    qback = 9 x**4. The two dipoles add backwards and partly cancel forwards,
+    so g = -2/5 and the backscattered intensity is nine times the forward one.
+
+Examples:
+    A small absorbing sphere, compared with the full Mie solution:
+
+    >>> import numpy as np
+    >>> import miepython as mie
+    >>> from miepython import rayleigh
+    >>> qext, qsca, qback, g = rayleigh.efficiencies_mx(1.5 - 0.1j, 0.1)
+    >>> print(f"{qext:.5f} {qsca:.6f} {g:.4f}")
+    0.02006 0.000024 0.0000
+    >>> qext, qsca, qback, g = mie.efficiencies_mx(1.5 - 0.1j, 0.1)
+    >>> print(f"{qext:.5f} {qsca:.6f} {g:.4f}")
+    0.02006 0.000024 0.0020
+
+    The dipole pattern scatters equally forwards and backwards, and half as
+    much at 90 degrees:
+
+    >>> mu = np.array([-1.0, 0.0, 1.0])
+    >>> print(np.round(rayleigh.i_unpolarized(1.5, 0.1, mu), 4))
+    [0.1195 0.0597 0.1195]
+    >>> print(np.round(mie.i_unpolarized(1.5, 0.1, mu), 4))
+    [0.1188 0.0597 0.1199]
+
+    A perfect conductor scatters mostly backwards:
+
+    >>> qext, qsca, qback, g = rayleigh.efficiencies_mx(-1j, 0.1)
+    >>> print(f"{qsca:.4e} {qback:.4e} {g:.4f}")
+    3.3333e-04 9.0000e-04 -0.4000
+    >>> qext, qsca, qback, g = mie.efficiencies_mx(-1j, 0.1)
+    >>> print(f"{qsca:.4e} {qback:.4e} {g:.4f}")
+    3.3413e-04 8.9834e-04 -0.3973
+"""
 
 import numpy as np
 
+from .core import _check_m_x, _check_one_sphere
 from .core import normalization_factor as core_normalization_factor
 
 __all__ = (
@@ -20,7 +138,9 @@ def efficiencies_mx(m, x):
     """
     Calculate the efficiencies for a small sphere.
 
-    Based on equations 5.7 - 5.9 in Bohren and Huffman
+    Based on equations 5.7 - 5.9 in Bohren and Huffman.  A perfect conductor,
+    m.real == 0, uses the electric and magnetic dipoles instead; the module
+    docstring gives the details.
 
     Args:
         m: the complex index of refraction of the sphere
@@ -30,23 +150,43 @@ def efficiencies_mx(m, x):
         qext: the total extinction efficiency
         qsca: the scattering efficiency
         qback: the backscatter efficiency
-        g: the average cosine of the scattering phase function
+        g: the average cosine of the scattering phase function, 0 for a dielectric, -0.4 for a conductor
+
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or the real part of
+            m is negative, exactly as for the full Mie functions
     """
+    _check_m_x(m, x)
+
     # ensure imaginary part of refractive index is negative, as core.py does
     if np.isscalar(m):
         m = np.conj(m) if np.imag(m) > 0 else m
     else:
         m = np.where(np.imag(m) > 0, np.conj(m), m)
 
-    ratio = (m**2 - 1) / (m**2 + 2)
-    qsca = 8 / 3 * x**4 * abs(ratio) ** 2
-    # Bohren & Huffman write m = n + ik, so with m = n - ik the absorption term
-    # changes sign.  The x**4 term is Re(ratio**2), not |ratio|**2: the two only
-    # agree for a non-absorbing sphere, and the difference matters near resonance.
-    qabs = -4 * x * (ratio * (1 + x**2 / 15 * ratio * (m**4 + 27 * m**2 + 38) / (2 * m**2 + 3))).imag
-    qext = qabs + 8 / 3 * x**4 * (ratio**2).real
-    qback = 4 * x**4 * abs(ratio) ** 2
-    g = 0
+    # the dielectric expressions are evaluated for every entry and then replaced
+    # where m is a conductor; a few conductor indices, m = -1j*sqrt(2) and
+    # m = -1j*sqrt(1.5), make their denominators vanish, so silence the warnings
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = (m**2 - 1) / (m**2 + 2)
+        qsca = 8 / 3 * x**4 * abs(ratio) ** 2
+        # Bohren & Huffman write m = n + ik, so with m = n - ik the absorption term
+        # changes sign.  The x**4 term is Re(ratio**2), not |ratio|**2: the two only
+        # agree for a non-absorbing sphere, and the difference matters near resonance.
+        qabs = -4 * x * (ratio * (1 + x**2 / 15 * ratio * (m**4 + 27 * m**2 + 38) / (2 * m**2 + 3))).imag
+        qext = qabs + 8 / 3 * x**4 * (ratio**2).real
+        qback = 4 * x**4 * abs(ratio) ** 2
+
+    # A perfect conductor (m.real == 0) radiates a magnetic dipole half as strong
+    # as, and opposite to, its electric one: a1 = 2i x**3/3 and b1 = -a1/2.  It
+    # absorbs nothing, scatters 6/x**2 (|a1|**2 + |b1|**2) = 10/3 x**4, and the
+    # interference of the two dipoles throws light backwards, so g = -2/5.
+    conductor = np.real(m) == 0
+    qsca = np.where(conductor, 10 / 3 * x**4, qsca)[()]
+    qext = np.where(conductor, 10 / 3 * x**4, qext)[()]
+    qback = np.where(conductor, 9 * x**4, qback)[()]
+    # a dielectric's electric dipole alone scatters symmetrically fore and aft
+    g = np.where(conductor, -0.4, 0 * qsca)[()]
     return qext, qsca, qback, g
 
 
@@ -93,7 +233,8 @@ def S1_S2(m, x, mu, norm="albedo"):
     """
     Calculate the scattering amplitude functions for small spheres.
 
-    Based on equation 5.4 in Bohren and Huffman
+    Based on equation 5.4 in Bohren and Huffman.  A perfect conductor,
+    m.real == 0, adds the magnetic dipole b1 = -a1/2 to its electric one.
 
     The amplitude functions are normalized so that when integrated
     over all 4*pi solid angles, the integral will be qext*pi*x**2.
@@ -108,15 +249,29 @@ def S1_S2(m, x, mu, norm="albedo"):
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+
+    Raises:
+        ValueError: if m or x is not finite, x is negative, or the real part of
+            m is negative, exactly as for the full Mie functions, or if m or x
+            is an array, since this describes one sphere
     """
+    _check_m_x(m, x)
+    _check_one_sphere(m, x)
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
-    a1 = (2 * x**3) / 3 * (m**2 - 1) / (m**2 + 2) * 1j
-    a1 += (2 * x**5) / 5 * (m**2 - 2) * (m**2 - 1) / (m**2 + 2) ** 2 * 1j
+    if np.real(m) == 0:
+        # perfect conductor: an electric dipole and a magnetic one, b1 = -a1/2
+        a1 = 2j * x**3 / 3
+        b1 = -a1 / 2
+    else:
+        a1 = (2 * x**3) / 3 * (m**2 - 1) / (m**2 + 2) * 1j
+        a1 += (2 * x**5) / 5 * (m**2 - 2) * (m**2 - 1) / (m**2 + 2) ** 2 * 1j
+        b1 = 0
 
-    S1 = (3 / 2) * a1 * np.ones_like(mu)
-    S2 = (3 / 2) * a1 * mu
+    # the n = 1 terms of the Mie series, where pi_1 = 1 and tau_1 = mu
+    S1 = (3 / 2) * (a1 * np.ones_like(mu) + b1 * mu)
+    S2 = (3 / 2) * (a1 * mu + b1 * np.ones_like(mu))
 
     normalization = normalization_factor(m, x, norm)
 

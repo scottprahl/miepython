@@ -1,5 +1,7 @@
 """Tests for the rayleigh scattering approximation routines."""
 
+import warnings
+
 import numpy as np
 import pytest
 import miepython as mie
@@ -262,3 +264,129 @@ def test_sign_of_the_imaginary_index_does_not_matter(norm):
         rayleigh.i_unpolarized(physical, x, mu, norm=norm),
         rtol=1e-13,
     )
+
+
+class TestArrayIndex:
+    """Efficiencies handle an array of spheres entry by entry; angular functions take one."""
+
+    M = np.array([1.5 - 0.1j, 1.5 + 0.1j, 1.33 + 1e-6j])
+
+    def test_efficiencies_conjugate_each_entry(self):
+        """Either sign of the imaginary part gives the same efficiencies."""
+        qext, qsca, qback, _ = rayleigh.efficiencies_mx(self.M, 0.05)
+        for i, m in enumerate(self.M):
+            expected = rayleigh.efficiencies_mx(np.conj(m) if m.imag > 0 else m, 0.05)
+            np.testing.assert_allclose([qext[i], qsca[i], qback[i]], expected[:3], rtol=1e-14)
+
+    @pytest.mark.parametrize("module", [rayleigh, mie])
+    @pytest.mark.parametrize("m, size", [(M, 0.05), (1.5, np.array([0.01, 0.05]))])
+    def test_amplitudes_take_one_sphere(self, module, m, size):
+        """S1_S2 used to fail with 'truth value of an array is ambiguous'; now it says why."""
+        with pytest.raises(ValueError, match="takes one sphere"):
+            module.S1_S2(m, size, 0.5)
+        with pytest.raises(ValueError, match="takes one sphere"):
+            module.i_unpolarized(m, size, 0.5)
+
+    def test_g_has_the_shape_of_the_other_efficiencies(self):
+        """The asymmetry parameter used to be the int 0 even when the others were arrays."""
+        qext, qsca, qback, g = rayleigh.efficiencies_mx(self.M, 0.05)
+        assert np.shape(g) == np.shape(qext) == np.shape(qsca) == np.shape(qback) == (3,)
+        np.testing.assert_array_equal(g, 0)
+        _, _, _, g = rayleigh.efficiencies_mx(1.5, np.array([0.01, 0.05]))
+        assert np.shape(g) == (2,)
+
+    def test_scalar_g_is_a_float(self):
+        """A single sphere still gets a scalar g, as mie.efficiencies_mx returns."""
+        g = rayleigh.efficiencies_mx(1.5 - 0.1j, 0.05)[3]
+        assert np.ndim(g) == 0 and g == 0.0
+
+
+class TestInvalidInput:
+    """Reject the same inputs as the full Mie functions, rather than returning plausible numbers."""
+
+    NAN = float("nan")
+    ENTRY_POINTS = {
+        "efficiencies_mx": rayleigh.efficiencies_mx,
+        "efficiencies": lambda m, x: rayleigh.efficiencies(m, x * 0.5 / np.pi, 0.5),
+        "S1_S2": lambda m, x: rayleigh.S1_S2(m, x, 0.5),
+        "i_unpolarized": lambda m, x: rayleigh.i_unpolarized(m, x, 0.5),
+        "intensities": lambda m, x: rayleigh.intensities(m, x * 0.5 / np.pi, 0.5, 0.5),
+        "phase_matrix": lambda m, x: rayleigh.phase_matrix(m, x, 0.5),
+    }
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    @pytest.mark.parametrize("m", [NAN, complex(1.5, NAN), complex(np.inf, 0)])
+    def test_non_finite_index_is_an_error(self, name, m):
+        """A NaN index used to return NaN efficiencies silently."""
+        with pytest.raises(ValueError, match="refractive index must be finite"):
+            self.ENTRY_POINTS[name](m, 0.05)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    def test_negative_real_index_is_an_error(self, name):
+        """A negative real part used to give normal-looking efficiencies."""
+        with pytest.raises(ValueError, match="must not be negative"):
+            self.ENTRY_POINTS[name](-1.5 - 0.1j, 0.05)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    @pytest.mark.parametrize("size", [NAN, np.inf])
+    def test_non_finite_size_is_an_error(self, name, size):
+        """A non-finite size parameter has no small-particle limit."""
+        with pytest.raises(ValueError, match="size parameter must be finite"):
+            self.ENTRY_POINTS[name](1.5, size)
+
+    @pytest.mark.parametrize("name", ENTRY_POINTS)
+    def test_negative_size_is_an_error(self, name):
+        """A negative size parameter used to give normal-looking efficiencies."""
+        with pytest.raises(ValueError, match="size parameter must not be negative"):
+            self.ENTRY_POINTS[name](1.5, -0.05)
+
+    def test_rayleigh_and_mie_agree_on_what_is_valid(self):
+        """The two APIs accept the edge cases the conventions allow."""
+        for m, size in [(1.5 + 0.1j, 0.05), (1.5, 0.0)]:
+            ray = rayleigh.efficiencies_mx(m, size)
+            ref = mie.efficiencies_mx(m, size)
+            assert np.all(np.isfinite(ray)) and np.all(np.isfinite(ref))
+
+
+class TestPerfectConductor:
+    """m.real == 0 is a perfect conductor, with an electric and a magnetic dipole."""
+
+    @pytest.mark.parametrize("m", [0, -1j, -5j, -1j * np.sqrt(2)])
+    @pytest.mark.parametrize("size, rtol", [(0.01, 1e-4), (0.05, 1e-3)])
+    def test_efficiencies_match_mie(self, m, size, rtol):
+        """The electric dipole alone used to make qext three times too large."""
+        qext, qsca, qback, g = rayleigh.efficiencies_mx(m, size)
+        ref = mie.efficiencies_mx(m, size)
+        np.testing.assert_allclose([qext, qsca, qback], ref[:3], rtol=rtol)
+        assert g == pytest.approx(ref[3], abs=1e-3)
+
+    def test_closed_forms(self):
+        """No absorption, qsca = 10/3 x**4, qback = 9 x**4 and g = -2/5."""
+        size = 0.05
+        qext, qsca, qback, g = rayleigh.efficiencies_mx(-1j, size)
+        assert qext == qsca == pytest.approx(10 / 3 * size**4, rel=1e-14)
+        assert qback == pytest.approx(9 * size**4, rel=1e-14)
+        assert g == -0.4
+
+    @pytest.mark.parametrize("m", [0, -1j])
+    def test_amplitudes_match_mie(self, m):
+        """S1 and S2 carry the magnetic dipole, so the pattern is no longer symmetric."""
+        size = 0.01
+        s1, s2 = rayleigh.S1_S2(m, size, mu, norm="wiscombe")
+        t1, t2 = mie.S1_S2(m, size, mu, norm="wiscombe")
+        np.testing.assert_allclose(s1, t1, atol=1e-4 * size**3)
+        np.testing.assert_allclose(s2, t2, atol=1e-4 * size**3)
+
+    def test_backscattering_is_nine_times_forward(self):
+        """The two dipoles add backwards and partly cancel forwards."""
+        back, forward = rayleigh.i_unpolarized(-1j, 0.05, np.array([-1.0, 1.0]))
+        assert back / forward == pytest.approx(9, rel=1e-14)
+
+    def test_array_mixing_conductors_and_dielectrics(self):
+        """Each entry uses its own expressions, with no warning from a vanishing denominator."""
+        m = np.array([1.5 - 0.1j, -1j * np.sqrt(2), 0])
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            result = rayleigh.efficiencies_mx(m, 0.05)
+        for i, mm in enumerate(m):
+            np.testing.assert_allclose([q[i] for q in result], rayleigh.efficiencies_mx(mm, 0.05), rtol=1e-14)

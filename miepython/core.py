@@ -99,6 +99,25 @@ def _check_m_x(m, x):
         raise ValueError(f"size parameter must not be negative, got x={x}")
 
 
+def _check_one_sphere(m, x):
+    """
+    Reject arrays of m or x in functions that describe a single sphere.
+
+    The angular functions vectorize over mu, so an array of spheres has no
+    unambiguous shape to return.  Without this check numpy raised "truth value of
+    an array is ambiguous" from deep inside.
+
+    Args:
+        m: refractive index of the sphere
+        x: size parameter of the sphere
+
+    Raises:
+        ValueError: if m or x is not a scalar
+    """
+    if np.ndim(m) > 0 or np.ndim(x) > 0:
+        raise ValueError("this function takes one sphere, so m and x must be scalars; loop over spheres for more")
+
+
 def coefficients(m, x, n_pole=0, internal=False):
     """
     Computes the Mie coefficients for a sphere.
@@ -406,8 +425,10 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
     Raises:
         ValueError: if m or x is not finite, x is negative, or the real part of
             m is negative.  A perfect conductor is m.real == 0, not m.real < 0.
+            Also if m or x is an array, since this describes one sphere.
     """
     _check_m_x(m, x)
+    _check_one_sphere(m, x)
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
