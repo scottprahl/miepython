@@ -3,6 +3,9 @@ Changelog
 
 unreleased
 -------------------
+*   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is
+    dropped from the classifiers, the black target versions and the CI matrix, and
+    3.15 is added to all three
 *   raise ``ValueError`` for a refractive index or size parameter the kernels would
     misread.  The kernels treat any index that fails ``m.real > 0`` as a perfect
     conductor, so ``m = nan`` or ``m = -1.5`` silently returned the answer for a metal
