@@ -10,6 +10,7 @@ Unreleased
 *   badge Zenodo from the concept DOI.  The badge keyed on the GitHub repository id stopped working after Zenodo's 2023 platform migration
 *   add a self-hosted coverage badge.  After ``make coverage`` passes on ``main``, CI writes a shields.io endpoint file with the total to the orphan ``badges`` branch, only when the number changes, and the README reads it from there
 *   ``make clean`` also removes ``htmlcov/``, ``.coverage`` and ``build/``
+*   run the example scripts under matplotlib's non-interactive Agg backend in ``tests/test_all_examples.py`` and close their figures afterwards.  They opened real Tk windows, and on the Windows Python 3.11 runner Tcl/Tk intermittently failed to start ("invalid command name tcl_findLibrary"), failing a random example
 *   unwrap the CHANGELOG bullets so each wraps to the display width, and date the 2.3.x entries
 
 3.4.0 (11/26/2026)
