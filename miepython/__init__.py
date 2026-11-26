@@ -22,7 +22,7 @@ If the size parameter is known, then use::
 
     mie.efficiencies_mx(m, x)
 
-Mie scattering amplitudes S1 and S2 (complex numbers):
+Mie scattering amplitudes S1 and S2 (complex numbers)::
 
     mie.S1_S2(m, x, mu)
 
@@ -38,7 +38,7 @@ Mie scattering intensities normalized to one when integrated over all angles::
     mie.i_par(m, x, mu, norm='one')
     mie.i_unpolarized(m, x, mu, norm='one')
 
-The scattering matrix
+The scattering matrix::
 
     mie.phase_matrix(m, x, mu)
 

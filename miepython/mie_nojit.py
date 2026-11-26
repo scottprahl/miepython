@@ -86,8 +86,7 @@ def _D_downwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders
-           from 0 to N for an argument z using the downwards recurrence relations.
+        D: gets filled with ψ_k'(z)/ψ_k(z) for k=0 to N-1; D[N] is untouched
     """
     last_D = _Lentz_Dn(z, N)
     for n in range(N, 0, -1):
@@ -102,8 +101,7 @@ def _D_upwards(z, N, D):
     Args:
         z: function argument
         N: order of Ricatti-Bessel function
-        D: gets filled with the Ricatti-Bessel function values for orders
-           from 0 to N for an argument z using the upwards recurrence relations.
+        D: gets filled with ψ_k'(z)/ψ_k(z) for k=1 to N-1; D[0] is untouched
     """
     exp = np.exp(-2j * z)
     D[1] = -1 / z + (1 - exp) / ((1 - exp) / z - 1j * (1 + exp))
@@ -156,19 +154,18 @@ def _D_calc_down_py(z, N):
     """
     Compute D_1(z)..D_N(z) using only the downwards recurrence.
 
-    ``_D_calc_py`` picks between the upwards and downwards recurrences with
-    Wiscombe's criterion, which considers the refractive index but not the number
-    of terms.  The upwards recurrence loses accuracy once N exceeds ``|z|`` (about
-    4 digits for a small sphere), and the resulting noise differs between the
-    numba and pure-python backends.  The internal-field coefficients are not on
-    the hot path, so they always take the stable route.
+    The upwards recurrence loses accuracy once N exceeds ``|z|`` (about 4 digits
+    for a small sphere), and the resulting noise differs between the numba and
+    pure-python backends, so every caller, ``_D_calc_py`` included, uses this
+    stable route.
 
     Args:
         z: function argument (already multiplied by the refractive index)
         N: highest order needed
 
     Returns:
-        Array of logarithmic derivatives D_k(z) for k=1 to N
+        Array of length N holding D_k(z) for k=1 to N-1, followed by a zero.
+        Callers that need orders 1..n therefore ask for N = n + 1.
     """
     D = np.zeros(N + 1, dtype=np.complex128)
     _D_downwards(z, N, D)
@@ -200,7 +197,7 @@ def _D_calc_py(m, x, N):
         N: order of Ricatti-Bessel function
 
     Returns:
-        Array of logarithmic derivatives D_k(z) for k=1 to N-1.
+        Array of length N holding D_k(z) for k=1 to N-1, followed by a zero.
     """
     return _D_calc_down_py(np.complex128(m * x), N)
 
@@ -395,8 +392,9 @@ def _S1_S2_py(m, x, mu, n_pole):
     """
     Calculate the scattering amplitude functions for spheres.
 
-    The amplitude functions have been normalized so that when integrated
-    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+    The amplitudes are unnormalized (``norm='wiscombe'``): the unpolarized
+    intensity (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles is
+    pi*x**2*qsca.  The public ``S1_S2`` applies the requested normalization.
 
     The units are weird, sr**(-0.5)
 

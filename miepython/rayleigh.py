@@ -241,8 +241,9 @@ def S1_S2(m, x, mu, norm="albedo"):
     Based on equation 5.4 in Bohren and Huffman.  A perfect conductor,
     m.real == 0, adds the magnetic dipole b1 = -a1/2 to its electric one.
 
-    The amplitude functions are normalized so that when integrated
-    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+    With the default ``norm='albedo'`` the unpolarized intensity
+    (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles equals the
+    single-scattering albedo qsca/qext.
 
     The units are weird, sr**(-0.5)
 
@@ -381,7 +382,6 @@ def intensities(m, d, lambda0, mu, n_env=1.0, norm="albedo"):
         mu: the cos(theta) of each direction desired     [-]
         n_env: real index of medium around sphere, optional.
         norm: (optional) string describing scattering function normalization
-        n_pole: return n_pole term from series (default=0 means include all terms)
 
     Returns:
         ipar, iper: scattered intensity in parallel and perpendicular planes [1/sr]
@@ -413,7 +413,6 @@ def phase_matrix(m, x, mu, norm="albedo"):
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
         mu: the angles, cos(theta), of the phase scattering matrix
-        n_pole: return n_pole term from series (default=0 means include all terms)
         norm: (optional) string describing scattering function normalization
 
     Returns:

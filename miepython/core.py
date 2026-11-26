@@ -422,8 +422,9 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
     """
     Calculate the scattering amplitude functions for spheres.
 
-    The amplitude functions have been normalized so that when integrated
-    over all 4*pi solid angles, the integral will be qext*pi*x**2.
+    With the default ``norm='albedo'`` the unpolarized intensity
+    (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles equals the
+    single-scattering albedo qsca/qext.
 
     The normalization is controlled by `norm` and should be one of
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']
