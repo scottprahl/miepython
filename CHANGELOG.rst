@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Unreleased
+----------
+*   fix typos in docstrings: "coefficents" in the ``an_bn`` kernels of both backends and "comparision" in ``miepython/examples/01_dielectric.py`` (#39, thanks @kayaal34)
+*   explain in the README's citation section that the DOI given is Zenodo's concept DOI, which resolves to the newest release, and that every release also has its own DOI for citing an exact version
+*   make the ``CITATION.cff`` message self-contained.  Zenodo copies it into a record's Notes without the citation GitHub shows beneath it, so "cite it as below" pointed at nothing; it now gives the DOI
+*   organize the README badges into a table grouped by Testing, Package, Documentation and Explore, add a Python-versions badge, and drop the GitHub tag badge, which only repeated the PyPI version
+*   badge Zenodo from the concept DOI.  The badge keyed on the GitHub repository id stopped working after Zenodo's 2023 platform migration
+*   add a self-hosted coverage badge.  After ``make coverage`` passes on ``main``, CI writes a shields.io endpoint file with the total to the orphan ``badges`` branch, only when the number changes, and the README reads it from there
+*   ``make clean`` also removes ``htmlcov/``, ``.coverage`` and ``build/``
+*   unwrap the CHANGELOG bullets so each wraps to the display width, and date the 2.3.x entries
+
 3.4.0 (11/26/2026)
 ------------------
 *   ``e_far`` now broadcasts ``r``, ``theta`` and ``phi`` as its docstring promised, returning shape ``(3, ...)``.  An array ``r`` or ``phi`` with a scalar ``theta``, or a 2-D ``theta``, used to raise; all-scalar input now returns shape ``(3,)`` like ``e_near`` instead of ``(3, 1)``
