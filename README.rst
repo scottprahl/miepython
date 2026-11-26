@@ -174,6 +174,11 @@ BibTeX:
       publisher = {Zenodo}
     }
 
+The DOI above is the Zenodo concept DOI, which always resolves to the newest release.
+Zenodo also assigns a separate DOI to every release. To cite the exact version you used,
+choose it from the version list on the `Zenodo record <https://doi.org/10.5281/zenodo.7949263>`_
+and use that DOI instead.
+
 License
 -------
 
