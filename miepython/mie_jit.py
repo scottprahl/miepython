@@ -286,15 +286,16 @@ def _an_bn_nb(m, x, n_pole=0):
 # folded the np.isinf guard below to False and let an infinite index divide by
 # zero, and its reassociation also broke the exact Re(a_n) == |a_n|**2 identity
 # that a lossless sphere has to satisfy.  Do not add it back.
-@njit((complex128, float64, int64))
-def _cn_dn_nb(m, x, n_pole):
+# Lazily compiled for the same reason as _an_bn_nb: n_pole defaults to 0.
+@njit(cache=True)
+def _cn_dn_nb(m, x, n_pole=0):
     """
     Calculate Mie coefficients c_n and d_n for the internal field of a sphere.
 
     Args:
         m (np.complex128): Refractive index of the sphere relative to the surrounding medium.
         x (float): Size parameter of the sphere (2πr/λ).
-        n_pole (int): Number of terms to calculate (n_pole).
+        n_pole (int): Number of terms to calculate (0, the default, uses Wiscombe's criterion).
 
     Returns:
         (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
@@ -558,6 +559,9 @@ def _single_sphere_nb(m, x, n_pole, e_field):
     if x <= 0:
         return 0.0, 0.0, 0.0, 0.0
 
+    if m.imag > 0.0:  # ensure imaginary part of refractive index is negative
+        m = complex(m.real, -m.imag)
+
     # case when sphere matches its environment
     if abs(m.real - 1) <= 1e-8 and abs(m.imag) < 1e-8:
         return 0, 0, 0, 0
@@ -569,9 +573,9 @@ def _single_sphere_nb(m, x, n_pole, e_field):
     if m.real > 0.0 and np.abs(m) * x < 0.1 and n_pole == 0:
         return _small_sphere_nb(m, x)
 
-    # sometimes m=0 is used to signal perfectly conducting sphere
-    if abs(m.real) < 1e-8 and abs(m.imag) < 1e-8:
-        m = 1 - 10000j
+    n_max = int(x + 4.05 * x**0.33333 + 2.0)
+    if n_pole < 0 or n_pole > n_max:
+        raise ValueError("n_pole must be 0 (all terms) or a multipole order in 1.." + str(n_max))
 
     a, b = _an_bn_nb(m, x, n_pole)
     x2 = x * x

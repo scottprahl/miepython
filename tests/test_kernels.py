@@ -456,14 +456,11 @@ class TestKernelEdges:
 
     @pytest.mark.parametrize("x", [0.1, 1.0, 5.0])
     def test_zero_index_means_perfectly_conducting(self, kernels, x):
-        """m=0 is a shorthand the kernel turns into a very large imaginary index."""
+        """m=0 is a shorthand for a perfect conductor, exactly as m.real == 0 is."""
         as_zero = kernels.single_sphere(complex(0.0, 0.0), x, 0, True)
-        as_conductor = kernels.single_sphere(complex(1.0, -10000.0), x, 0, True)
+        as_conductor = kernels.single_sphere(complex(0.0, -1.0), x, 0, True)
         np.testing.assert_allclose(as_zero, as_conductor, rtol=1e-12)
 
-        # 1-10000j is a very good conductor rather than a perfect one, so a little
-        # absorption remains.  It is roughly constant in absolute terms, which is
-        # why this is not phrased as a relative tolerance: at x=0.1 qext itself is
-        # only 3e-4 and the same 6e-8 of absorption is 2e-4 of it.
+        # a perfect conductor absorbs nothing
         qext, qsca = as_zero[0], as_zero[1]
-        assert 0 <= qext - qsca < 1e-6
+        assert qext == pytest.approx(qsca, rel=1e-12)

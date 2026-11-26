@@ -158,6 +158,10 @@ def efficiencies_mx(m, x):
             m is negative, exactly as for the full Mie functions
     """
     _check_m_x(m, x)
+    if not np.isscalar(x):
+        x = np.asarray(x, dtype=float)
+    if np.ndim(m) > 0 and np.ndim(x) > 0 and np.size(m) != np.size(x):
+        raise RuntimeError("m and x arrays to mie must be same length")
 
     # ensure imaginary part of refractive index is negative, as core.py does
     if np.isscalar(m):

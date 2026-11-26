@@ -43,7 +43,7 @@ def test_e_near_vs_e_far(m_sphere, n_env, r, d_sphere):
         phi,
         include_incident=False,
     )
-    _Fr, Ftheta, Fphi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+    _Fr, Ftheta, Fphi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)
 
     assert np.isclose(abs(Etheta), abs(Ftheta), rtol=1e-3), f"θ {Etheta}, far = {Ftheta}"
     assert np.isclose(abs(Ephi), abs(Fphi), rtol=1e-3), f"ɸ {Ephi}, far= {Fphi}"
@@ -64,7 +64,7 @@ def test_e_far_is_the_leading_term_of_e_near(m_sphere, r, theta, phi):
     kr = 2 * np.pi * n_env * r / lambda0
 
     near = np.ravel(e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=False))
-    far = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+    far = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)
 
     # e_far drops the O(1/kr) near-field terms; their coefficient depends on the
     # angle and the multipole content and reaches about 12 here, so allow 25
@@ -100,7 +100,7 @@ def test_e_far_phi_component_sign():
     jkr = 1j * 2 * np.pi * n_env * r / lambda0
     amp = np.exp(jkr) / (-jkr)
 
-    _er, e_theta, e_phi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+    _er, e_theta, e_phi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)
     # this module runs in exp(-iωt), where S1_S2 returns Bohren & Huffman's amplitudes
     assert np.isclose(e_theta, S2[0] * amp * np.cos(phi))
     assert np.isclose(e_phi, -S1[0] * amp * np.sin(phi))
@@ -681,3 +681,23 @@ def test_the_inlined_riccati_derivative_matches_bessel_py():
     inlined = 0.5 * (rho * h_all[:, 0:n_terms] + h_all[:, 1 : n_terms + 1] - rho * h_all[:, 2 : n_terms + 2])
 
     np.testing.assert_array_equal(inlined, d_riccati_bessel_h1(n_int, rho))
+
+
+@pytest.mark.parametrize(
+    "r, theta, phi, shape",
+    [
+        (1e5, 0.3, 0.2, (3,)),
+        (np.array([1e5, 2e5]), 0.3, 0.2, (3, 2)),
+        (1e5, 0.3, np.array([0.1, 0.2, 0.3]), (3, 3)),
+        (1e5, np.full((2, 3), 0.3), 0.2, (3, 2, 3)),
+    ],
+)
+def test_e_far_broadcasts_its_inputs(r, theta, phi, shape):
+    """Each point of the broadcast grid equals the field evaluated there alone."""
+    lambda0, d_sphere, m_sphere, n_env = 0.5, 0.4, 1.5 - 0.1j, 1.0
+    field = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)
+    assert field.shape == shape
+    rr, tt, pp = np.broadcast_arrays(r, theta, phi)
+    for idx in np.ndindex(rr.shape):
+        alone = e_far(lambda0, d_sphere, m_sphere, n_env, rr[idx], tt[idx], pp[idx])
+        np.testing.assert_allclose(field[(slice(None),) + idx], alone, rtol=1e-14)

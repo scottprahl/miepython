@@ -3,6 +3,23 @@ Changelog
 
 3.4.0 (11/26/2026)
 ------------------
+*   ``e_far`` now broadcasts ``r``, ``theta`` and ``phi`` as its docstring
+    promised, returning shape ``(3, ...)``.  An array ``r`` or ``phi`` with a
+    scalar ``theta``, or a 2-D ``theta``, used to raise; all-scalar input now
+    returns shape ``(3,)`` like ``e_near`` instead of ``(3, 1)``
+*   ``m = 0`` is now an exact perfect conductor in ``efficiencies_mx``, as it
+    already was in ``coefficients``, the field functions, ``rayleigh`` and for
+    x < 0.1.  It used to be replaced by ``1 - 10000j`` for x >= 0.1
+*   ``efficiencies_mx`` raises ``ValueError`` for an ``n_pole`` beyond
+    ``wiscombe_terms(x)``, as ``S1_S2`` does, instead of returning ~0
+*   ``single_sphere`` and ``core.normalization_factor`` conjugate an index with
+    a positive imaginary part themselves; the small-sphere branch used to give
+    a negative qext for one
+*   ``cn_dn`` defaults ``n_pole`` to 0 like ``an_bn``, on both backends
+*   ``norm='qsca'`` no longer returns NaN for a zero-size sphere
+*   ``rayleigh.efficiencies_mx`` accepts a list of ``x`` and raises the same
+    error as ``efficiencies_mx`` for mismatched lengths
+*   clarify that ``coefficients`` returns orders 1 through ``n_pole``
 *   treat zero-dimensional NumPy arrays for ``m`` and ``x`` as scalar inputs
     throughout the public Mie API, including the JIT backend
 *   return length-one arrays from the Rayleigh angular functions when ``mu`` is

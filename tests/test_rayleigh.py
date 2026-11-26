@@ -402,3 +402,13 @@ class TestPerfectConductor:
             result = rayleigh.efficiencies_mx(m, 0.05)
         for i, mm in enumerate(m):
             np.testing.assert_allclose([q[i] for q in result], rayleigh.efficiencies_mx(mm, 0.05), rtol=1e-14)
+
+
+def test_efficiencies_accept_a_list_of_sizes():
+    """Like the full Mie function, a list of x works and mismatched lengths raise."""
+    sizes = [0.01, 0.05]
+    result = rayleigh.efficiencies_mx(1.5, sizes)
+    for i, size in enumerate(sizes):
+        np.testing.assert_allclose([q[i] for q in result], rayleigh.efficiencies_mx(1.5, size), rtol=1e-14)
+    with pytest.raises(RuntimeError, match="same length"):
+        rayleigh.efficiencies_mx([1.5, 1.4, 1.3], sizes)

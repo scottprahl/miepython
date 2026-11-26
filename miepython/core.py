@@ -133,16 +133,19 @@ def coefficients(m, x, n_pole=0, internal=False):
     index and size parameter. For arrays, the lengths of `m` and `x` must match.
     Zero-dimensional NumPy arrays are treated as scalar values.
 
-    If `n_pole > 0`, the function returns only the 1 to nth multipole coefficients
-    for each input.
+    If `n_pole > 0`, the function returns the coefficients of orders 1 through
+    `n_pole` for each input, so the last entry is the order-`n_pole` term.  This
+    differs from `efficiencies_mx` and `S1_S2`, where a nonzero `n_pole` isolates
+    that single order.
 
     Args:
         m (complex or array-like): The complex refractive index of the sphere.
             If an array, must match the length of `x`.
         x (float or array-like): The size parameter of the sphere. If an array,
             must match the length of `m`.
-        n_pole (int, optional): The specific multipole order to compute. Defaults to 0,
-            which calculates all terms and returns the full arrays of coefficients.
+        n_pole (int, optional): The number of orders to compute, 1 through
+            `n_pole`.  Defaults to 0, which uses Wiscombe's criterion for the
+            number of terms.
         internal (bool, optional): If True then returns Mie coefficients needed to
             calculate fields inside the sphere.
 
@@ -248,7 +251,8 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
         n_pole (int):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
-            - If non-zero, computes contributions from the specified multipole order.
+            - If non-zero, computes contributions from the specified multipole order,
+              which must lie in 1..``wiscombe_terms(x)``; ValueError otherwise.
         e_field (boolean):
             When n_pole>0, selects which multipole of that order contributes:
             True gives the electric multipole a_n, False the magnetic
@@ -367,6 +371,8 @@ def normalization_factor(m, x, norm_str, efficiency_source=_mie_efficiencies):
         scaling factor needed for scattering function
     """
     m, x = _scalarize_0d(m), _scalarize_0d(x)
+    if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
+        m = np.conj(m)
     factor = None
     norm = norm_str.lower()
 
@@ -377,7 +383,9 @@ def normalization_factor(m, x, norm_str, efficiency_source=_mie_efficiencies):
         factor = 1
 
     elif norm in ["qsca", "scattering_efficiency"]:
-        factor = x * np.sqrt(np.pi)
+        # a zero-size sphere has zero amplitudes, so any nonzero factor leaves
+        # them zero; x * sqrt(pi) would give 0/0
+        factor = x * np.sqrt(np.pi) if x > 0 else 1
 
     else:
         qext, qsca, _, _ = efficiency_source(m, x)

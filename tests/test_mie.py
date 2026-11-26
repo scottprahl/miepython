@@ -1042,3 +1042,44 @@ class TestInvalidInput:
             mie.e_near(0.5, self.NAN, 1.5, 1.0, np.array([2.0]), np.array([0.3]), np.array([0.0]))
         with pytest.raises(ValueError, match="refractive index must be finite"):
             mie.e_near(0.5, 1.0, self.NAN, 1.0, np.array([2.0]), np.array([0.3]), np.array([0.0]))
+
+
+class TestReviewRegressions:
+    """Inconsistencies between entry points that once gave different answers."""
+
+    def test_zero_index_matches_its_own_coefficients(self):
+        """m=0 is a perfect conductor in efficiencies_mx just as in coefficients."""
+        x = 1.0
+        with mie.time_convention("-"):
+            a, b = mie.coefficients(0, x)
+        n = np.arange(1, len(a) + 1)
+        qext = 2 / x**2 * np.sum((2 * n + 1) * (a + b).real)
+        assert mie.efficiencies_mx(0, x)[0] == pytest.approx(qext, rel=1e-12)
+        assert mie.efficiencies_mx(0, x) == pytest.approx(mie.efficiencies_mx(-1j, x), rel=1e-12)
+
+    @pytest.mark.parametrize("x", [0.05, 1.0])
+    def test_single_sphere_accepts_either_absorption_sign(self, x):
+        """The kernel and normalization_factor conjugate a positive Im(m) themselves."""
+        m = 1.5 - 0.1j
+        np.testing.assert_allclose(mie.single_sphere(np.conj(m), x, 0, True), mie.single_sphere(m, x, 0, True))
+        want = mie.core.normalization_factor(m, x, "albedo")
+        assert mie.core.normalization_factor(np.conj(m), x, "albedo") == pytest.approx(want, rel=1e-14)
+
+    def test_efficiencies_reject_an_order_beyond_the_series(self):
+        """Like S1_S2, efficiencies_mx refuses an n_pole past Wiscombe's truncation."""
+        x = 1.0
+        n_max = mie.core.wiscombe_terms(x)
+        mie.efficiencies_mx(1.5, x, n_pole=n_max)
+        with pytest.raises(ValueError, match="n_pole"):
+            mie.efficiencies_mx(1.5, x, n_pole=n_max + 1)
+
+    def test_cn_dn_defaults_to_all_terms(self):
+        """cn_dn takes the same default n_pole as an_bn."""
+        c, d = mie.cn_dn(1.5, 2.0)
+        assert len(c) == len(d) == len(mie.an_bn(1.5, 2.0)[0])
+
+    def test_qsca_normalization_of_a_zero_size_sphere(self):
+        """The error message recommends norm='qsca' for x=0, so it must not give NaN."""
+        S1, S2 = mie.S1_S2(1.5, 0.0, [0.5, -0.5], norm="qsca")
+        np.testing.assert_array_equal(S1, 0)
+        np.testing.assert_array_equal(S2, 0)

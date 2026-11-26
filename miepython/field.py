@@ -226,10 +226,17 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
+    r, theta, phi = np.broadcast_arrays(
+        np.asarray(r, dtype=float), np.asarray(theta, dtype=float), np.asarray(phi, dtype=float)
+    )
     jkr = 1j * 2 * np.pi * n_env * r / lambda0
     amp = np.exp(jkr) / (-jkr)
 
-    S1, S2 = _S1_S2_normalized(m_rel, x, np.cos(theta), norm="wiscombe")
+    # the amplitudes depend on theta alone; evaluate them on the flattened,
+    # broadcast grid and restore its shape so every component matches
+    S1, S2 = _S1_S2_normalized(m_rel, x, np.cos(theta).ravel(), norm="wiscombe")
+    S1 = S1.reshape(theta.shape)
+    S2 = S2.reshape(theta.shape)
 
     E_r = np.zeros_like(S1, dtype=complex)
     E_theta = S2 * amp * np.cos(phi)
