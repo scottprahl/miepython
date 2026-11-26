@@ -35,3 +35,6 @@ coverage.xml
 # Local tooling
 CLAUDE.md
 uv.lock
+
+# scratch copy of the conda-forge recipe
+/meta.yaml
