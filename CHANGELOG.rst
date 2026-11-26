@@ -3,6 +3,14 @@ Changelog
 
 unreleased
 ----------
+*   normalize the sign of an absorbing sphere's index before evaluating its
+    interior near fields.  Previously, a positive imaginary input produced the
+    same scattering coefficients as its conjugate but different interior E and H
+    fields, breaking boundary continuity.  Both input signs now give the same
+    fields in either time convention
+*   make ``docs/13_resonance.ipynb`` construct silver indices as m = n - ik while
+    plotting the positive absorption magnitude k, and clarify that
+    ``m_im`` in ``docs/01_basics.ipynb`` is positive while Im(m) is negative
 *   **behaviour change:** one time convention for every complex result, chosen by
     the new ``set_time_convention``, ``get_time_convention`` and the context
     manager ``time_convention``.  The default is exp(+jωt), which goes with
