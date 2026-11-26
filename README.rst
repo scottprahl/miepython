@@ -10,8 +10,8 @@
    :target: https://github.com/conda-forge/miepython-feedstock
    :alt: Conda
 
-.. |doi| image:: https://zenodo.org/badge/99259684.svg
-   :target: https://zenodo.org/badge/latestdoi/99259684
+.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7949263.svg
+   :target: https://doi.org/10.5281/zenodo.7949263
    :alt: DOI
 
 .. |license| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
