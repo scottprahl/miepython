@@ -224,7 +224,7 @@ def _an_bn_py(m, x, n_pole=0):
         n_pole: the number of An and Bn terms (0 does autosizing)
 
     Returns:
-        a, b: arrays of Mie coefficents An and Bn, one entry per order,
+        a, b: arrays of Mie coefficients An and Bn, one entry per order,
         with no padding.  ``_cn_dn`` returns the same number of terms.
         They are in the exp(-iωt) convention of Bohren & Huffman: the series is
         built with m = n - ik and xi = x h_n^(2), which is exp(+jωt), and the

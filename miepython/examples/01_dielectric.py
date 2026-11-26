@@ -3,7 +3,7 @@
 """
 Plot the extinction efficiency as a function of particle size.
 
-This is a comparision of total extinction for non-absorbing and absorbing spheres.
+This is a comparison of total extinction for non-absorbing and absorbing spheres.
 """
 
 import numpy as np
