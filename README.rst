@@ -1,36 +1,36 @@
-.. |pypi| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
-   :target: https://pypi.org/project/miepython/
-   :alt: PyPI
-
-.. |github| image:: https://img.shields.io/github/v/tag/scottprahl/miepython?label=github&color=68CA66
-   :target: https://github.com/scottprahl/miepython
-   :alt: GitHub
-
-.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
-   :target: https://github.com/conda-forge/miepython-feedstock
-   :alt: Conda
-
-.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7949263.svg
-   :target: https://doi.org/10.5281/zenodo.7949263
-   :alt: DOI
-
-.. |license| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
-   :target: https://github.com/scottprahl/miepython/blob/main/LICENSE.txt
-   :alt: License
-
-.. |test| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yaml/badge.svg
+.. |test-badge| image:: https://github.com/scottprahl/miepython/actions/workflows/test.yaml/badge.svg
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
    :alt: Testing
 
-.. |docs| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
-   :target: https://miepython.readthedocs.io
-   :alt: Docs
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
+   :target: https://pypi.org/project/miepython/
+   :alt: PyPI
 
-.. |downloads| image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
+.. |pyversions-badge| image:: https://img.shields.io/pypi/pyversions/miepython?color=68CA66
+   :target: https://pypi.org/project/miepython/
+   :alt: Python versions
+
+.. |conda-badge| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
+   :target: https://github.com/conda-forge/miepython-feedstock
+   :alt: Conda
+
+.. |downloads-badge| image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: Downloads
 
-.. |lite| image:: https://img.shields.io/badge/try-JupyterLite-68CA66.svg
+.. |license-badge| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
+   :target: https://github.com/scottprahl/miepython/blob/main/LICENSE.txt
+   :alt: License
+
+.. |readthedocs-badge| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
+   :target: https://miepython.readthedocs.io
+   :alt: Docs
+
+.. |doi-badge| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7949263.svg
+   :target: https://doi.org/10.5281/zenodo.7949263
+   :alt: DOI
+
+.. |lite-badge| image:: https://img.shields.io/badge/try-JupyterLite-68CA66.svg
    :target: https://scottprahl.github.io/miepython/
    :alt: Try JupyterLite
 
@@ -38,11 +38,12 @@
 miepython
 =========
 
-|pypi| |github| |conda| |doi|  
-
-|license| |test| |docs| |downloads|  
-
-|lite|
+=================  =====================================================================
+**Testing**        |test-badge|
+**Package**        |pypi-badge| |conda-badge| |pyversions-badge| |downloads-badge|
+**Documentation**  |readthedocs-badge| |doi-badge| |license-badge|
+**Explore**        |lite-badge|
+=================  =====================================================================
 
 Mie scattering calculations in pure Python
 ------------------------------------------
@@ -67,7 +68,7 @@ JupyterLite Implementation
 
 The entire package can be used **immediately** in a browser — without installation — using the JupyterLite interface:
 
-|lite|
+|lite-badge|
 
 This environment runs entirely client-side (Pyodide), and supports:
 
@@ -113,7 +114,7 @@ Documentation and Examples
 
 The full documentation is available on ReadTheDocs:
 
-    |docs|
+    |readthedocs-badge|
 
 
 Representative results simple examples:
