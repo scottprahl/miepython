@@ -30,7 +30,7 @@
    :target: https://miepython.readthedocs.io
    :alt: Docs
 
-.. |doi-badge| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7949263.svg
+.. |doi-badge| image:: https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7949263-68CA66
    :target: https://doi.org/10.5281/zenodo.7949263
    :alt: DOI
 
