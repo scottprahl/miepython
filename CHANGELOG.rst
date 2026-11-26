@@ -7,7 +7,7 @@ Unreleased
 *   explain in the README's citation section that the DOI given is Zenodo's concept DOI, which resolves to the newest release, and that every release also has its own DOI for citing an exact version
 *   make the ``CITATION.cff`` message self-contained.  Zenodo copies it into a record's Notes without the citation GitHub shows beneath it, so "cite it as below" pointed at nothing; it now gives the DOI
 *   organize the README badges into a table grouped by Testing, Package, Documentation and Explore, add a Python-versions badge, and drop the GitHub tag badge, which only repeated the PyPI version
-*   badge Zenodo from the concept DOI.  The badge keyed on the GitHub repository id stopped working after Zenodo's 2023 platform migration
+*   badge Zenodo from the concept DOI.  The badge keyed on the GitHub repository id stopped working after Zenodo's 2023 platform migration.  It is now a static shields.io badge in the same green as the others, since the DOI never changes
 *   add a self-hosted coverage badge.  After ``make coverage`` passes on ``main``, CI writes a shields.io endpoint file with the total to the orphan ``badges`` branch, only when the number changes, and the README reads it from there
 *   ``make clean`` also removes ``htmlcov/``, ``.coverage`` and ``build/``
 *   run the example scripts under matplotlib's non-interactive Agg backend in ``tests/test_all_examples.py`` and close their figures afterwards.  They opened real Tk windows, and on the Windows Python 3.11 runner Tcl/Tk intermittently failed to start ("invalid command name tcl_findLibrary"), failing a random example
