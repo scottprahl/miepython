@@ -40,6 +40,8 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # publishes the README badge to the badges branch
 
     steps:
       - name: Checkout sources
@@ -62,6 +64,43 @@ jobs:
           name: coverage-html
           path: htmlcov/
           retention-days: 14
+
+      # The README badge reads a shields.io endpoint file from the orphan
+      # `badges` branch.  It is published only from main, and only after
+      # `make coverage` has passed its fail_under check.
+      - name: Publish the coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          UV_PYTHON: "3.14"
+        run: |
+          # read the total only; make coverage already enforced fail_under
+          pct=$(uv run --extra dev coverage report --format=total \
+            --fail-under=0)
+          if [ "$pct" -ge 95 ]; then color=68CA66
+          elif [ "$pct" -ge 80 ]; then color=yellow
+          else color=red; fi
+          printf '{"schemaVersion": 1, "label": "coverage", ' > badge.json
+          printf '"message": "%s%%", "color": "%s"}\n' "$pct" "$color" \
+            >> badge.json
+          cat badge.json
+
+          git fetch --depth=1 origin badges:refs/remotes/origin/badges || true
+          if git show origin/badges:coverage.json 2>/dev/null \
+              | cmp -s - badge.json; then
+            echo "badge unchanged"
+            exit 0
+          fi
+
+          dir="$RUNNER_TEMP/badges"
+          git worktree add --orphan -b badges "$dir"
+          mv badge.json "$dir/coverage.json"
+          cd "$dir"
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+          git add coverage.json
+          git commit -q -m "Coverage badge: ${pct}%"
+          git push --force origin badges
 
   tests:
     name: Python ${{ matrix.python-version }} – ${{ matrix.os }}

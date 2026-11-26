@@ -2,6 +2,10 @@
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
    :alt: Testing
 
+.. |coverage-badge| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/scottprahl/miepython/badges/coverage.json
+   :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
+   :alt: Coverage
+
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
    :target: https://pypi.org/project/miepython/
    :alt: PyPI
@@ -39,7 +43,7 @@ miepython
 =========
 
 =================  =====================================================================
-**Testing**        |test-badge|
+**Testing**        |test-badge| |coverage-badge|
 **Package**        |pypi-badge| |conda-badge| |pyversions-badge| |downloads-badge|
 **Documentation**  |readthedocs-badge| |doi-badge| |license-badge|
 **Explore**        |lite-badge|
