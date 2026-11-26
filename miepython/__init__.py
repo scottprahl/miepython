@@ -71,7 +71,7 @@ the textbook formulas.  It is a reference for development and cross-checking rat
 than a fast path, it requires the optional ``scipy`` dependency, and so it is bound
 only when scipy is installed::
 
-    mie.vsh.M_odd(1, k, d_sphere, r, theta, phi)
+    mie.vsh.M_odd(1, 0.5, 1.0, 1.5, 0.8, 0.7, 0.2)
 
 ``miepython.monte_carlo`` samples scattering angles from the Mie phase function.  It
 imports this package, so importing it from here would be circular; ask for it

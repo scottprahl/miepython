@@ -3,6 +3,10 @@ Changelog
 
 unreleased
 ----------
+*   treat zero-dimensional NumPy arrays for ``m`` and ``x`` as scalar inputs
+    throughout the public Mie API, including the JIT backend
+*   return length-one arrays from the Rayleigh angular functions when ``mu`` is
+    scalar, matching the full Mie API; correct the ``vsh.M_odd`` usage example
 *   normalize the sign of an absorbing sphere's index before evaluating its
     interior near fields.  Previously, a positive imaginary input produced the
     same scattering coefficients as its conjugate but different interior E and H
