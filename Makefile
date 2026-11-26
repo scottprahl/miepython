@@ -264,7 +264,8 @@ clean: lite-clean
 	@find . -name '.DS_Store' -type f -delete
 	@find . -name '.ipynb_checkpoints' -type d -prune -exec $(RMR) {} +
 	@find . -name '.pytest_cache' -type d -prune -exec $(RMR) {} +
-	@$(RMR) .ruff_cache
+	@$(RMR) .ruff_cache htmlcov build
+	@$(RM) .coverage
 	@$(RMR) docs/api docs/_build docs/.jupyter
 
 .PHONY: realclean
