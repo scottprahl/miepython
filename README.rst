@@ -6,35 +6,35 @@
    :target: https://github.com/scottprahl/miepython/actions/workflows/test.yaml
    :alt: Coverage
 
-.. |pypi-badge| image:: https://img.shields.io/pypi/v/miepython?color=68CA66
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/miepython?color=4c1
    :target: https://pypi.org/project/miepython/
    :alt: PyPI
 
-.. |pyversions-badge| image:: https://img.shields.io/pypi/pyversions/miepython?color=68CA66
+.. |pyversions-badge| image:: https://img.shields.io/pypi/pyversions/miepython?color=4c1
    :target: https://pypi.org/project/miepython/
    :alt: Python versions
 
-.. |conda-badge| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=68CA66
+.. |conda-badge| image:: https://img.shields.io/conda/vn/conda-forge/miepython?label=conda&color=4c1
    :target: https://github.com/conda-forge/miepython-feedstock
    :alt: Conda
 
-.. |downloads-badge| image:: https://img.shields.io/pypi/dm/miepython?color=68CA66
+.. |downloads-badge| image:: https://img.shields.io/pypi/dm/miepython?color=4c1
    :target: https://pypi.org/project/miepython/
    :alt: Downloads
 
-.. |license-badge| image:: https://img.shields.io/github/license/scottprahl/miepython?color=68CA66
+.. |license-badge| image:: https://img.shields.io/github/license/scottprahl/miepython?color=4c1
    :target: https://github.com/scottprahl/miepython/blob/main/LICENSE.txt
    :alt: License
 
-.. |readthedocs-badge| image:: https://readthedocs.org/projects/miepython/badge?color=68CA66
+.. |readthedocs-badge| image:: https://readthedocs.org/projects/miepython/badge
    :target: https://miepython.readthedocs.io
    :alt: Docs
 
-.. |doi-badge| image:: https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7949263-68CA66
+.. |doi-badge| image:: https://img.shields.io/badge/DOI-10.5281%2Fzenodo.7949263-4c1
    :target: https://doi.org/10.5281/zenodo.7949263
    :alt: DOI
 
-.. |lite-badge| image:: https://img.shields.io/badge/try-JupyterLite-68CA66.svg
+.. |lite-badge| image:: https://img.shields.io/badge/try-JupyterLite-4c1.svg
    :target: https://scottprahl.github.io/miepython/
    :alt: Try JupyterLite
 

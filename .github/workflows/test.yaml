@@ -76,7 +76,7 @@ jobs:
           # read the total only; make coverage already enforced fail_under
           pct=$(uv run --extra dev coverage report --format=total \
             --fail-under=0)
-          if [ "$pct" -ge 95 ]; then color=68CA66
+          if [ "$pct" -ge 95 ]; then color=4c1
           elif [ "$pct" -ge 80 ]; then color=yellow
           else color=red; fi
           printf '{"schemaVersion": 1, "label": "coverage", ' > badge.json
