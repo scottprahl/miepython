@@ -75,7 +75,7 @@ Changelog
     the project extras, because nothing else needs it
 
 3.3.1 (10/28/2026)
--------------------
+------------------
 *   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With
     the m = n - ik convention the absorption term is negative, so
     ``abs(absorption + qsca)`` gave absorption minus scattering, and qext for
@@ -153,7 +153,7 @@ Changelog
     file something reads
 
 3.3.0 (07/28/2026)
--------------------
+------------------
 *   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The
     ``coefficients`` examples called ``mie_coefficients``, a name that never
     existed, showed the imaginary parts with the wrong sign, and still included the
@@ -485,12 +485,12 @@ Changelog
     address the highest order, which the old bounds check rejected
 
 3.2.0 (03/06/2026)
--------------------
+------------------
 *   fix error in E & H calculations in the near field when y≠0 (thanks @dorianherle)
 *   add regression test
 
 3.1.0 (02/07/2026)
--------------------
+------------------
 *   add near-field E and H field APIs, fix boundary continuity/medium handling, and expand validation tests
 *   add field calculation utilities, field module cleanup/help text improvements, and precomputed E/H reference data (via scattnlay)
 *   improve performance: ~20% speedups in Mie backends and faster near-field calculations; add speed benchmarks
@@ -500,12 +500,12 @@ Changelog
 *   packaging/CI: pyproject and requirements cleanup, improved PyPI workflow, updated citation automation/config
 *   misc cleanups: remove unused files/images, minor typos, Makefile and docs config tidy-ups, CITATION.cff refresh
 
-3.0.5 (1/2/2026)
--------------------
+3.0.5 (01/02/2026)
+------------------
 *   fix versioning
 
-3.0.4 (1/2/2026)
--------------------
+3.0.4 (01/02/2026)
+------------------
 *   Host jupyterlite instance of github
 *   improve citation guidelines
 *   add test for unpolarized intensity methods
@@ -515,15 +515,15 @@ Changelog
 *   improve readme
 
 3.0.3
--------------------
+-----
 *   skipped
 
-3.0.2 (5/25/2025)
--------------------
+3.0.2 (05/25/2025)
+------------------
 *   fix version number
 
-3.0.1 (5/25/2025)
--------------------
+3.0.1 (05/25/2025)
+------------------
 *   fix JIT regression (thanks @avgeiss)
 *   clarify polarization in docstrings
 *   improve README.rst
@@ -534,8 +534,8 @@ Changelog
 *   rationalize importing of jit and non-jit code
 *   add test_jit_speed.py and test_nojit_speed.py
 
-3.0.0 (3/16/2025)
--------------------
+3.0.0 (03/16/2025)
+------------------
 *   breaking api changes
 *   api is more sane: mie.efficiencies() instead of miepython.ez_mie()
 *   use core.py to cleanly separate jit and non-jit code
@@ -551,35 +551,35 @@ Changelog
 *   add more tests
 
 
-2.5.5 (12/01/2025)
--------------------
+2.5.5 (12/01/2024)
+------------------
 *   add support for specific spherical modes
 *   only branch is now 'main'
 
 2.5.4 (05/07/2024)
--------------------
+------------------
 *   add auto-dating in CITATION
 *   add python 3.12
 *   add ruff, pylint config
 *   simplify mie_cdf and fix notebook
 *   set 3.7 as earliest python version
 
-v2.5.3 (8/5/2023)
--------------------
+2.5.3 (08/05/2023)
+------------------
 *   conda-forge fails because test files are not included
 
-v2.5.1 (8/5/2023)
--------------------
+2.5.1 (08/05/2023)
+------------------
 *   change tests to accommodate conda-forge
 *   require python>=3.9 to accommodate latest numba
 *   get rid of tox
 
-v2.5.0 (8/4/2023)
--------------------
+2.5.0 (08/04/2023)
+------------------
 *   fix scattering function for very small spheres
 
-v2.4.0 (6/10/2023)
--------------------
+2.4.0 (06/10/2023)
+------------------
 *   add mie_phase_matrix() to calculate scattering (Mueller) matrix
 
 v2.3.2
@@ -600,7 +600,7 @@ v2.3.0
 *   fix typo in header of gold sphere example script
 *   remove workaround for older Sphinx version
 
-v2.2.3 (1/26/2022)
+2.2.3 (01/26/2022)
 ------------------
 *   update _mie_An_Bn in miepython_nojit
 *   store data in module so github testing passes
@@ -608,7 +608,7 @@ v2.2.3 (1/26/2022)
 *   only test back to python 3.9 because importlib.resources
 *   3.9 is only needed for a few of the jupyter notebooks
 
-v2.2.2 (1/25/2022)
+2.2.2 (01/25/2022)
 ------------------
 *   modify _mie_An_Bn to allocate and return An and Bn
 *   fix minor packaging issue
@@ -618,14 +618,14 @@ v2.2.2 (1/25/2022)
 *   add docs/requirements
 *   restrict Jinja2 to 2.11.3 in docs/requirements
 
-v2.2.1 (9/5/2021)
------------------
+2.2.1 (09/05/2021)
+------------------
 *   create pure python packages
 *   include wheel file
 *   package as python3 only
 
-2.1.0 (05/22/21)
-----------------
+2.1.0 (05/22/2021)
+------------------
 *   fix case when scalar angle used with mie_S1_S2()
 *   add pypi badge
 *   fix notebook testing
@@ -637,28 +637,28 @@ v2.2.1 (9/5/2021)
 *   fix examples that use refractiveindex.info
 *   add testing badge
 
-2.0.1 (04/25/21)
-----------------
+2.0.1 (04/25/2021)
+------------------
 *   fix packaging mistake
 
-2.0.0 (04/25/21)
-----------------
+2.0.0 (04/25/2021)
+------------------
 *   use numba for 10-700X speed improvement
 *   thanks to @jbecca and @pscicluna for their help
 *   add performance notebook
 *   add automated notebook checking
 *   test more code
 
-1.3.3 (03/21/21)
-----------------
+1.3.3 (03/21/2021)
+------------------
 *   colab badge and link
 *   change theme for sphinx documentation
 *   add requirements.txt to avoid installing sphinx
 *   fix restructured text errors
 *   advise everywhere to `pip install --user miepython` to avoid permission problems
 
-1.3.2 (01/13/21)
-----------------
+1.3.2 (01/13/2021)
+------------------
 *   add ez_mie(m, d, lambda0)
 *   add ez_intensities(m, d, lambda0, mu)
 *   fix formatting
@@ -666,22 +666,22 @@ v2.2.1 (9/5/2021)
 *   specify newer pythons
 *   better install instructions
 
-1.3.1 (03/30/20)
-----------------
+1.3.1 (03/30/2020)
+------------------
 *   improve docstrings
 *   use Sphinx documentation
 *   host docs on readthedocs.io
 *   use tox
 
-1.3.0 (02/19/19)
-----------------
+1.3.0 (02/19/2019)
+------------------
 *   fix calculations for small spheres (x<0.05)
 *   added notebook doc/09_backscattering.ipynb
 *   general tweaks to documentation throughout
 *   improved README.md
 
-1.2.0. (02/08/19)
------------------
+1.2.0 (02/08/2019)
+------------------
 *   fix bug so that large sphere calculations work correctly
 *   add tests for large spheres
 *   add tests for backscattering efficiency
@@ -690,7 +690,7 @@ v2.2.1 (9/5/2021)
 *   finish fixing fractions in notebooks
 *   improve README.md
 
-1.1.1. (06/25/18)
+1.1.1 (06/25/2018)
 ------------------
 *   fix github rendering of fractions in equations
 *   add developer instructions

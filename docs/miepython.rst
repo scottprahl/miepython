@@ -3,6 +3,8 @@ API for `miepython` package
 
 .. automodapi:: miepython.core
 
+.. automodapi:: miepython._convention
+
 .. automodapi:: miepython.mie_nojit
 
 .. automodapi:: miepython.mie_jit

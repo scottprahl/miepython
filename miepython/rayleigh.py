@@ -242,7 +242,7 @@ def S1_S2(m, x, mu, norm="albedo"):
     m.real == 0, adds the magnetic dipole b1 = -a1/2 to its electric one.
 
     With the default ``norm='albedo'`` the unpolarized intensity
-    (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles equals the
+    ``(abs(S1)**2 + abs(S2)**2)/2`` integrated over all 4*pi solid angles equals the
     single-scattering albedo qsca/qext.
 
     The units are weird, sr**(-0.5)

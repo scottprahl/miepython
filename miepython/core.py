@@ -251,8 +251,8 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
         n_pole (int):
             Multipole order to compute:
             - If 0 (default), computes contributions from all multipoles.
-            - If non-zero, computes contributions from the specified multipole order,
-              which must lie in 1..``wiscombe_terms(x)``; ValueError otherwise.
+            - If non-zero, computes contributions from the specified multipole order.
+            - A nonzero order beyond ``wiscombe_terms(x)`` raises ValueError.
         e_field (boolean):
             When n_pole>0, selects which multipole of that order contributes:
             True gives the electric multipole a_n, False the magnetic
@@ -423,7 +423,7 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
     Calculate the scattering amplitude functions for spheres.
 
     With the default ``norm='albedo'`` the unpolarized intensity
-    (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles equals the
+    ``(abs(S1)**2 + abs(S2)**2)/2`` integrated over all 4*pi solid angles equals the
     single-scattering albedo qsca/qext.
 
     The normalization is controlled by `norm` and should be one of

@@ -397,7 +397,7 @@ def _S1_S2_nb(m, x, mu, n_pole):
     Calculate the scattering amplitude functions for spheres.
 
     The amplitudes are unnormalized (``norm='wiscombe'``): the unpolarized
-    intensity (|S1|**2 + |S2|**2)/2 integrated over all 4*pi solid angles is
+    intensity ``(abs(S1)**2 + abs(S2)**2)/2`` integrated over all 4*pi solid angles is
     pi*x**2*qsca.  The public ``S1_S2`` applies the requested normalization.
 
     The units are weird, sr**(-0.5)
