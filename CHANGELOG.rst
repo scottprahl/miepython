@@ -3,486 +3,110 @@ Changelog
 
 3.4.0 (11/26/2026)
 ------------------
-*   ``e_far`` now broadcasts ``r``, ``theta`` and ``phi`` as its docstring
-    promised, returning shape ``(3, ...)``.  An array ``r`` or ``phi`` with a
-    scalar ``theta``, or a 2-D ``theta``, used to raise; all-scalar input now
-    returns shape ``(3,)`` like ``e_near`` instead of ``(3, 1)``
-*   ``m = 0`` is now an exact perfect conductor in ``efficiencies_mx``, as it
-    already was in ``coefficients``, the field functions, ``rayleigh`` and for
-    x < 0.1.  It used to be replaced by ``1 - 10000j`` for x >= 0.1
-*   ``efficiencies_mx`` raises ``ValueError`` for an ``n_pole`` beyond
-    ``wiscombe_terms(x)``, as ``S1_S2`` does, instead of returning ~0
-*   ``single_sphere`` and ``core.normalization_factor`` conjugate an index with
-    a positive imaginary part themselves; the small-sphere branch used to give
-    a negative qext for one
+*   ``e_far`` now broadcasts ``r``, ``theta`` and ``phi`` as its docstring promised, returning shape ``(3, ...)``.  An array ``r`` or ``phi`` with a scalar ``theta``, or a 2-D ``theta``, used to raise; all-scalar input now returns shape ``(3,)`` like ``e_near`` instead of ``(3, 1)``
+*   ``m = 0`` is now an exact perfect conductor in ``efficiencies_mx``, as it already was in ``coefficients``, the field functions, ``rayleigh`` and for x < 0.1.  It used to be replaced by ``1 - 10000j`` for x >= 0.1
+*   ``efficiencies_mx`` raises ``ValueError`` for an ``n_pole`` beyond ``wiscombe_terms(x)``, as ``S1_S2`` does, instead of returning ~0
+*   ``single_sphere`` and ``core.normalization_factor`` conjugate an index with a positive imaginary part themselves; the small-sphere branch used to give a negative qext for one
 *   ``cn_dn`` defaults ``n_pole`` to 0 like ``an_bn``, on both backends
 *   ``norm='qsca'`` no longer returns NaN for a zero-size sphere
-*   ``rayleigh.efficiencies_mx`` accepts a list of ``x`` and raises the same
-    error as ``efficiencies_mx`` for mismatched lengths
+*   ``rayleigh.efficiencies_mx`` accepts a list of ``x`` and raises the same error as ``efficiencies_mx`` for mismatched lengths
 *   clarify that ``coefficients`` returns orders 1 through ``n_pole``
-*   treat zero-dimensional NumPy arrays for ``m`` and ``x`` as scalar inputs
-    throughout the public Mie API, including the JIT backend
-*   return length-one arrays from the Rayleigh angular functions when ``mu`` is
-    scalar, matching the full Mie API; correct the ``vsh.M_odd`` usage example
-*   normalize the sign of an absorbing sphere's index before evaluating its
-    interior near fields.  Previously, a positive imaginary input produced the
-    same scattering coefficients as its conjugate but different interior E and H
-    fields, breaking boundary continuity.  Both input signs now give the same
-    fields in either time convention
-*   make ``docs/13_resonance.ipynb`` construct silver indices as m = n - ik while
-    plotting the positive absorption magnitude k, and clarify that
-    ``m_im`` in ``docs/01_basics.ipynb`` is positive while Im(m) is negative
-*   **behaviour change:** one time convention for every complex result, chosen by
-    the new ``set_time_convention``, ``get_time_convention`` and the context
-    manager ``time_convention``.  The default is exp(+jωt), which goes with
-    m = n - ik and with Wiscombe's MIEV0; ``"-"`` gives exp(-iωt), the convention
-    of Bohren & Huffman, Jackson and scattnlay.  The two differ only by complex
-    conjugation, and efficiencies, g and intensities are the same in both.
-    Before, the package mixed them: ``S1_S2`` and ``phase_matrix`` were exp(+jωt)
-    while ``coefficients`` and every field function were exp(-iωt), which is
-    what let the ``e_far`` error below go unnoticed.  Under the default,
+*   treat zero-dimensional NumPy arrays for ``m`` and ``x`` as scalar inputs throughout the public Mie API, including the JIT backend
+*   return length-one arrays from the Rayleigh angular functions when ``mu`` is scalar, matching the full Mie API; correct the ``vsh.M_odd`` usage example
+*   normalize the sign of an absorbing sphere's index before evaluating its interior near fields.  Previously, a positive imaginary input produced the same scattering coefficients as its conjugate but different interior E and H fields, breaking boundary continuity.  Both input signs now give the same fields in either time convention
+*   make ``docs/13_resonance.ipynb`` construct silver indices as m = n - ik while plotting the positive absorption magnitude k, and clarify that ``m_im`` in ``docs/01_basics.ipynb`` is positive while Im(m) is negative
+*   **behaviour change:** one time convention for every complex result, chosen by the new ``set_time_convention``, ``get_time_convention`` and the context manager ``time_convention``.  The default is exp(+jωt), which goes with m = n - ik and with Wiscombe's MIEV0; ``"-"`` gives exp(-iωt), the convention of Bohren & Huffman, Jackson and scattnlay.  The two differ only by complex conjugation, and efficiencies, g and intensities are the same in both. Before, the package mixed them: ``S1_S2`` and ``phase_matrix`` were exp(+jωt) while ``coefficients`` and every field function were exp(-iωt), which is what let the ``e_far`` error below go unnoticed.  Under the default,
 
     - ``S1_S2``, ``rayleigh.S1_S2`` and ``phase_matrix`` are unchanged;
     - ``coefficients`` returns the conjugates of its previous values;
-    - ``e_near``, ``h_near``, ``eh_near``, their Cartesian forms and ``e_far``
-      return the conjugates of their previous fields, and a caller's ``abcd``
-      must come from ``coefficients`` under the same convention;
-    - the ``miepython.vsh`` harmonics use h_n^(2) outside the sphere, and take
-      ``m_index`` in the form that matches the active convention.
+    - ``e_near``, ``h_near``, ``eh_near``, their Cartesian forms and ``e_far`` return the conjugates of their previous fields, and a caller's ``abcd`` must come from ``coefficients`` under the same convention;
+    - the ``miepython.vsh`` harmonics use h_n^(2) outside the sphere, and take ``m_index`` in the form that matches the active convention.
 
-    Inside ``time_convention("-")`` the coefficients, fields and harmonics match
-    3.3.1, while ``S1_S2`` returns Bohren & Huffman's amplitudes and
-    ``phase_matrix`` puts S34 where their eq. 3.16 does.  The raw kernels
-    (``an_bn``, ``cn_dn``, ``_S1_S2``) ignore the setting and always return
-    exp(-iωt); ``_S1_S2`` no longer conjugates its sum a second time
-*   compare the scattnlay reference fields component by component, phase included,
-    rather than only as magnitudes, which could not see a conjugated field
-*   stop flipping the sign of S34 by hand in ``docs/07_algorithm.ipynb``: Bohren's
-    sample calculation now runs inside ``time_convention("-")`` and matches his
-    table directly.  ``docs/01_basics.ipynb`` explains both conventions, and
-    ``docs/14_boundary_conditions.ipynb`` uses eps = n**2 for exp(+jωt)
-*   fix the phase of ``e_far`` (#36, thanks @rcgiri-physics and @antonsoo).  It
-    conjugated the whole field, outgoing ``exp(ikr)`` included, so the radial phase
-    ran backwards for the exp(-iωt) convention, and ``E_phi`` had the wrong sign
-    relative to ``E_theta``.  Only S1 and S2 are conjugated now, and ``E_phi``
-    carries the ``-S1 sin(phi)`` of Bohren & Huffman eq. 4.74.  ``e_far`` now
-    agrees with ``e_near(..., include_incident=False)`` to O(1/kr) in every complex
-    component; before, it was off by O(1).  The old test compared magnitudes at
-    theta = phi = 45 degrees, which could see neither error.  Magnitudes, and so
-    intensities, are unchanged
-*   add PEP 723 inline metadata to ``docs/data/generate_scattnlay_reference_fields.py``
-    so ``uv run`` builds scattnlay 2.4 for it on demand.  scattnlay stays out of
-    the project extras, because nothing else needs it
+    Inside ``time_convention("-")`` the coefficients, fields and harmonics match 3.3.1, while ``S1_S2`` returns Bohren & Huffman's amplitudes and ``phase_matrix`` puts S34 where their eq. 3.16 does.  The raw kernels (``an_bn``, ``cn_dn``, ``_S1_S2``) ignore the setting and always return exp(-iωt); ``_S1_S2`` no longer conjugates its sum a second time
+*   compare the scattnlay reference fields component by component, phase included, rather than only as magnitudes, which could not see a conjugated field
+*   stop flipping the sign of S34 by hand in ``docs/07_algorithm.ipynb``: Bohren's sample calculation now runs inside ``time_convention("-")`` and matches his table directly.  ``docs/01_basics.ipynb`` explains both conventions, and ``docs/14_boundary_conditions.ipynb`` uses eps = n**2 for exp(+jωt)
+*   fix the phase of ``e_far`` (#36, thanks @rcgiri-physics and @antonsoo).  It conjugated the whole field, outgoing ``exp(ikr)`` included, so the radial phase ran backwards for the exp(-iωt) convention, and ``E_phi`` had the wrong sign relative to ``E_theta``.  Only S1 and S2 are conjugated now, and ``E_phi`` carries the ``-S1 sin(phi)`` of Bohren & Huffman eq. 4.74.  ``e_far`` now agrees with ``e_near(..., include_incident=False)`` to O(1/kr) in every complex component; before, it was off by O(1).  The old test compared magnitudes at theta = phi = 45 degrees, which could see neither error.  Magnitudes, and so intensities, are unchanged
+*   add PEP 723 inline metadata to ``docs/data/generate_scattnlay_reference_fields.py`` so ``uv run`` builds scattnlay 2.4 for it on demand.  scattnlay stays out of the project extras, because nothing else needs it
 
 3.3.1 (10/28/2026)
 ------------------
-*   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With
-    the m = n - ik convention the absorption term is negative, so
-    ``abs(absorption + qsca)`` gave absorption minus scattering, and qext for
-    m = 1.5 - 1e-6j at x = 0.01 came out 21% low (thanks @antonsoo).  The x**4 term
-    now follows Bohren & Huffman's ``Re(ratio**2)`` rather than ``|ratio|**2``,
-    which agrees with Mie to 2e-5 instead of 6e-4 at m = 1.5 - 1j, x = 0.1.  ``m``
-    is conjugated first, as ``core.py`` does.  The Rayleigh ``qext`` also sets the
-    ``albedo`` and ``qext`` normalizations, so ``rayleigh.S1_S2`` and the
-    intensities change too
-*   handle perfectly conducting spheres in ``rayleigh``.  As elsewhere in the
-    package, m.real == 0 now means a perfect conductor, which radiates a magnetic
-    dipole b1 = -a1/2 alongside its electric one: qext = qsca = 10/3 x**4,
-    qback = 9 x**4 and g = -2/5.  The dielectric formulas were used before, so
-    m = -1j gave a qext about three times the Mie value; it now agrees to 2e-5 at
-    x = 0.01
-*   validate input to the ``rayleigh`` functions as ``core.py`` now does.  A NaN or
-    infinite m or x, a negative x, or a negative real part of m raises
-    ``ValueError``; before, ``rayleigh.efficiencies_mx(nan, 0.05)`` returned NaN and
-    ``m = -1.5 - 0.1j`` or ``x = -0.05`` returned normal-looking efficiencies
-*   say why ``S1_S2`` and the functions built on it reject an array of spheres, in
-    both ``core`` and ``rayleigh``.  They vectorize over mu and describe one sphere,
-    but an array m or x failed with numpy's "truth value of an array is ambiguous"
-*   return ``g`` from ``rayleigh.efficiencies_mx`` with the same shape and type as
-    the other efficiencies.  It was the int 0 even for an array of spheres
-*   document the ``rayleigh`` module: what the approximation is, which expressions
-    go beyond the leading Rayleigh term, its accuracy against Mie, and tested
-    examples
-*   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is
-    dropped from the classifiers, the black target versions and the CI matrix, and
-    3.15 is added to all three
-*   raise ``ValueError`` for a refractive index or size parameter the kernels would
-    misread.  The kernels treat any index that fails ``m.real > 0`` as a perfect
-    conductor, so ``m = nan`` or ``m = -1.5`` silently returned the answer for a metal
-    sphere, and an infinite m returned NaN.  A NaN x raised "cannot convert float
-    NaN to integer" on the pure-Python backend while numba returned NaN, an infinite
-    x raised a different unhelpful error on each backend, and a negative x returned
-    zeros.  ``coefficients``, ``efficiencies_mx``, ``S1_S2`` and the near fields, and
-    everything built on them, now reject a NaN or infinite m or x, a negative x, and
-    a negative real part of m, checking every entry of an array.  ``m.real == 0``
-    still means a perfect conductor and x = 0 is still allowed
-*   fix ``monte_carlo.mu_with_uniform_cdf`` returning wrong angles for fine tables.
-    ``cdf`` began at I(-1)/num rather than zero, so a target below that value left
-    the inversion loop at index zero and interpolated against the last entry.
-    ``cdf`` now integrates the phase function with the trapezoidal rule, starting at
-    exactly 0 and ending at exactly 1 (it used to end slightly above 1), so tables
-    differ slightly from 3.3.0.  ``cdf`` and ``mu_with_uniform_cdf`` also raise
-    ``ValueError`` when num is less than 2 (thanks @antonsoo)
-*   replace the inversion loop in ``monte_carlo.mu_with_uniform_cdf`` with
-    ``np.interp``
-*   warn when ``monte_carlo.cdf`` uses too few angles to resolve the phase function.
-    The raw integral should be one, so a ``RuntimeWarning`` is issued when it is off
-    by more than 1%; normalizing used to hide the error silently.  A large sphere
-    needs roughly x**2 angles, because its forward peak is only about 8/x**2 wide in
-    cos(theta)
-*   size the table inside ``monte_carlo.mu_with_uniform_cdf`` from x, as
-    max(2000, 5*x**2) angles instead of a fixed 2000.  At x = 100 the sampled mean
-    cosine was 0.930 against g = 0.868; it is now 0.869.  Large spheres are slower
-    to tabulate: seconds at x = 100, about a minute at x = 300
-*   raise ``ValueError`` from ``monte_carlo.cdf`` and ``mu_with_uniform_cdf`` when the
-    phase function is not finite
-*   rewrite the ``monte_carlo`` docstrings, with tested examples of drawing random
-    scattering angles
-*   name the encoding on every text read and write.  ``open(path)`` and
-    ``Path.read_text()`` decode with the locale's preferred encoding, which is UTF-8
-    on Linux and macOS but cp1252 on Windows, so ``tests/test_makefile.py`` passed
-    everywhere except the four Windows jobs, where it died on the emoji in the
-    Makefile's echo lines.  Two more latent cases are fixed alongside it: the
-    scattnlay metadata read in ``tests/test_scattnlay_reference.py``, which survived
-    only because that JSON happens to be pure ASCII, and the ``write_text`` in
-    ``docs/data/generate_scattnlay_reference_fields.py``
-*   check for locale-dependent text I/O in the test suite, by walking the syntax trees
-    of every Python file in the repository and requiring an explicit ``encoding=``.
-    The failure is invisible on the platforms this package is developed on, so a
-    Windows-only break was waiting for whoever next added a non-ASCII character to a
-    file something reads
+*   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With the m = n - ik convention the absorption term is negative, so ``abs(absorption + qsca)`` gave absorption minus scattering, and qext for m = 1.5 - 1e-6j at x = 0.01 came out 21% low (thanks @antonsoo).  The x**4 term now follows Bohren & Huffman's ``Re(ratio**2)`` rather than ``|ratio|**2``, which agrees with Mie to 2e-5 instead of 6e-4 at m = 1.5 - 1j, x = 0.1.  ``m`` is conjugated first, as ``core.py`` does.  The Rayleigh ``qext`` also sets the ``albedo`` and ``qext`` normalizations, so ``rayleigh.S1_S2`` and the intensities change too
+*   handle perfectly conducting spheres in ``rayleigh``.  As elsewhere in the package, m.real == 0 now means a perfect conductor, which radiates a magnetic dipole b1 = -a1/2 alongside its electric one: qext = qsca = 10/3 x**4, qback = 9 x**4 and g = -2/5.  The dielectric formulas were used before, so m = -1j gave a qext about three times the Mie value; it now agrees to 2e-5 at x = 0.01
+*   validate input to the ``rayleigh`` functions as ``core.py`` now does.  A NaN or infinite m or x, a negative x, or a negative real part of m raises ``ValueError``; before, ``rayleigh.efficiencies_mx(nan, 0.05)`` returned NaN and ``m = -1.5 - 0.1j`` or ``x = -0.05`` returned normal-looking efficiencies
+*   say why ``S1_S2`` and the functions built on it reject an array of spheres, in both ``core`` and ``rayleigh``.  They vectorize over mu and describe one sphere, but an array m or x failed with numpy's "truth value of an array is ambiguous"
+*   return ``g`` from ``rayleigh.efficiencies_mx`` with the same shape and type as the other efficiencies.  It was the int 0 even for an array of spheres
+*   document the ``rayleigh`` module: what the approximation is, which expressions go beyond the leading Rayleigh term, its accuracy against Mie, and tested examples
+*   support Python 3.11 through 3.15.  ``requires-python`` is now ``>=3.11``, 3.10 is dropped from the classifiers, the black target versions and the CI matrix, and 3.15 is added to all three
+*   raise ``ValueError`` for a refractive index or size parameter the kernels would misread.  The kernels treat any index that fails ``m.real > 0`` as a perfect conductor, so ``m = nan`` or ``m = -1.5`` silently returned the answer for a metal sphere, and an infinite m returned NaN.  A NaN x raised "cannot convert float NaN to integer" on the pure-Python backend while numba returned NaN, an infinite x raised a different unhelpful error on each backend, and a negative x returned zeros.  ``coefficients``, ``efficiencies_mx``, ``S1_S2`` and the near fields, and everything built on them, now reject a NaN or infinite m or x, a negative x, and a negative real part of m, checking every entry of an array.  ``m.real == 0`` still means a perfect conductor and x = 0 is still allowed
+*   fix ``monte_carlo.mu_with_uniform_cdf`` returning wrong angles for fine tables. ``cdf`` began at I(-1)/num rather than zero, so a target below that value left the inversion loop at index zero and interpolated against the last entry. ``cdf`` now integrates the phase function with the trapezoidal rule, starting at exactly 0 and ending at exactly 1 (it used to end slightly above 1), so tables differ slightly from 3.3.0.  ``cdf`` and ``mu_with_uniform_cdf`` also raise ``ValueError`` when num is less than 2 (thanks @antonsoo)
+*   replace the inversion loop in ``monte_carlo.mu_with_uniform_cdf`` with ``np.interp``
+*   warn when ``monte_carlo.cdf`` uses too few angles to resolve the phase function. The raw integral should be one, so a ``RuntimeWarning`` is issued when it is off by more than 1%; normalizing used to hide the error silently.  A large sphere needs roughly x**2 angles, because its forward peak is only about 8/x**2 wide in cos(theta)
+*   size the table inside ``monte_carlo.mu_with_uniform_cdf`` from x, as max(2000, 5*x**2) angles instead of a fixed 2000.  At x = 100 the sampled mean cosine was 0.930 against g = 0.868; it is now 0.869.  Large spheres are slower to tabulate: seconds at x = 100, about a minute at x = 300
+*   raise ``ValueError`` from ``monte_carlo.cdf`` and ``mu_with_uniform_cdf`` when the phase function is not finite
+*   rewrite the ``monte_carlo`` docstrings, with tested examples of drawing random scattering angles
+*   name the encoding on every text read and write.  ``open(path)`` and ``Path.read_text()`` decode with the locale's preferred encoding, which is UTF-8 on Linux and macOS but cp1252 on Windows, so ``tests/test_makefile.py`` passed everywhere except the four Windows jobs, where it died on the emoji in the Makefile's echo lines.  Two more latent cases are fixed alongside it: the scattnlay metadata read in ``tests/test_scattnlay_reference.py``, which survived only because that JSON happens to be pure ASCII, and the ``write_text`` in ``docs/data/generate_scattnlay_reference_fields.py``
+*   check for locale-dependent text I/O in the test suite, by walking the syntax trees of every Python file in the repository and requiring an explicit ``encoding=``. The failure is invisible on the platforms this package is developed on, so a Windows-only break was waiting for whoever next added a non-ASCII character to a file something reads
 
 3.3.0 (07/28/2026)
 ------------------
-*   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The
-    ``coefficients`` examples called ``mie_coefficients``, a name that never
-    existed, showed the imaginary parts with the wrong sign, and still included the
-    padding element ``an_bn`` no longer returns; the ``efficiencies_mx`` examples
-    used a different function's signature and printed an invented repr.  The
-    Returns section also described a tuple where an ndarray comes back
-*   run the docstring examples as part of the test suite, so they cannot rot again.
-    They are written with explicit formatting rather than bare array reprs, which
-    keeps them independent of NumPy's print precision
-*   keep one copy of the scattering-function normalization rules.  ``core`` and
-    ``rayleigh`` held the same thirty lines differing only in which efficiencies
-    they consulted, so ``core.normalization_factor`` now takes an
-    ``efficiency_source`` and ``rayleigh`` passes its own
-*   accept an ``rng`` argument in ``generate_mie_costheta``.  It drew from the
-    process-wide ``numpy.random``, which a caller could only control by reseeding
-    the whole program; passing ``numpy.random.default_rng(seed)`` now gives a
-    reproducible stream and leaves the global one alone.  Omitting it behaves as
-    before
-*   document the angular-argument convention: a scalar ``mu`` counts as one angle
-    and returns a length-one array, except in ``phase_matrix``, which squeezes it
-    away.  ``docs/01_basics.ipynb`` demonstrates the first half deliberately, so
-    both are now stated in the docstrings and pinned by tests
-*   fix ``make readme_images``, which had never worked: ``.PHONY`` declared that name
-    but the rule below it was written ``readme:``, so the advertised command failed
-    with "No rule to make target" while an undocumented ``make readme`` did the job
-*   drop ``sync`` from ``make help``.  No such target exists; the one that syncs the
-    environment is ``venv``, and it was not listed at all.  Also corrected
-    ``pylint-check``, described as "Same as lint above" when it runs pylint alone, and
-    moved the individual check targets out of the packaging section into the lint one
-    where they belong
-*   check the Makefile's help text against the rules it defines, so a target cannot be
-    advertised, or declared phony, without existing.  These four bugs were all of the
-    same kind -- the help block is a pile of ``@echo`` lines with nothing tying it to
-    the rules underneath -- and nothing could have caught them
-*   generate the README figures reproducibly.  matplotlib stamps each SVG with the
-    current time and names clip paths and glyphs from a random salt, so re-running
-    ``make readme_images`` produced files differing on a hundred lines even when the
-    figures were pixel-for-pixel identical.  There was no way to tell "a plot changed"
-    from "matplotlib rolled different ids".  Fixing ``svg.hashsalt`` and passing
-    ``metadata={"Date": None}`` makes repeated runs byte-identical, and the committed
-    images are regenerated once against that
-*   point the README license badge at ``blob/main`` rather than ``blob/master``.  There
-    is no master branch; the link worked only because GitHub silently redirects
-*   evaluate the near fields for every point at once instead of one point at a time.
-    ``field.py`` walked the grid with ``np.ndindex`` and called into
-    ``scipy.special`` separately for each point, so a 41x41 slice spent 0.4 s almost
-    entirely in scipy's per-call overhead rather than on Bessel functions.  The points
-    are now split once into those inside the sphere and those outside -- the two sides
-    need different radial functions and different media, but within a side every point
-    does the same arithmetic -- and each group is evaluated as a
-    ``(n_points, n_terms)`` batch.  Roughly 18x faster: that slice takes 0.022 s, and
-    a 101x101 slice drops from 2.4 s to 0.13 s.  Every returned value is bitwise
-    identical to before, which is checked point by point against evaluating the same
-    coordinates individually
-*   evaluate the spherical Hankel functions over orders ``0..n+1`` in one call rather
-    than making four separate calls that recompute shared orders.  ``xi'_n`` needs
-    ``h1`` at ``n-1``, ``n`` and ``n+1``, and the order-``n`` value was being computed
-    twice; slicing one array instead cuts that part of the work to a quarter
-*   drop the three near-field per-point evaluators and the two loop drivers in favour
-    of a single batched routine, 63 fewer statements for the same physics.
-    ``_vsh_components_base`` now takes an explicit ``inside`` flag and arrays of
-    coordinates, so it no longer re-derives from ``d_sphere`` which side it is on
-*   make the submodules reachable, each in the way that suits it.
-    ``miepython.rayleigh`` needs only NumPy and is now imported with the package, so
-    ``import miepython`` is enough to reach it; ``miepython.vsh`` requires the
-    optional ``scipy`` and is imported inside the same guard as ``field``, staying
-    absent when scipy is not installed; ``miepython.monte_carlo`` imports
-    ``miepython`` itself, so importing it from the package would be circular and it
-    remains a separate ``import miepython.monte_carlo``.  All three are now described
-    in the package docstring, and ``monte_carlo``'s own docstring shows the full
-    workflow and says why it is not imported for you
-*   have ``vsh`` reach ``D_calc`` through ``._backend`` instead of importing
-    ``miepython`` for it.  The old import was a cycle that worked only because the
-    call is deferred to run time, and importing ``vsh`` from ``__init__`` would have
-    depended on that
-*   fix the call signatures listed in ``vsh``'s module docstring.  All four vector
-    spherical harmonics were advertised as ``(n, k, d_sphere, r, theta, phi)``; they
-    actually take a wavelength rather than a wavenumber and a refractive index
-    besides, ``(n, lambda0, d_sphere, m_index, r, theta, phi)``, so anyone following
-    the docstring got a ``TypeError``.  The four ``*_array`` variants went unmentioned
-    altogether.  Signatures written out in prose are now checked against the code
-*   fix two stale references in the notebooks: ``mie.mie_S1_S2`` in
-    ``docs/03a_normalization.ipynb``, together with the comparison values it quotes,
-    and a commented-out ``mie._D_calc`` in ``docs/10_basic_tests.ipynb``
-*   fix off-by-one in ``n_pole`` for ``S1_S2`` and everything built on it
-    (``i_par``, ``i_per``, ``i_unpolarized``, ``phase_matrix``, ``intensities``).
-    ``n_pole=1`` returned the quadrupole instead of the dipole; it now matches
-    the convention already used by ``efficiencies_mx``
-*   raise ``ValueError`` for an ``n_pole`` beyond the truncated series instead of
-    returning zeros or an ``IndexError``
-*   add multipole regression tests (series sum, closed form, per-multipole
-    optical theorem) and re-execute ``docs/12_multipoles.ipynb``
-*   implement the ``e_field`` argument of ``efficiencies_mx``, which was accepted
-    and documented but silently ignored. With ``n_pole > 0`` it now selects the
-    electric multipole a_n (``e_field=True``, the default) or the magnetic
-    multipole b_n (``e_field=False``). **Behavior change:** ``n_pole > 0``
-    previously returned a_n and b_n combined; that total is now
-    ``e_field=True`` plus ``e_field=False``
-*   make the two backends agree on ``g`` when ``n_pole > 0``. The no-JIT backend
-    returned ``None`` (which became ``nan`` for array input) while the JIT
-    backend returned ``0``. Both now return ``0.0``, which is the exact value:
-    an isolated multipole of one parity scatters symmetrically about 90 degrees
-*   fix an operator-precedence bug in the perfectly-conducting guard of ``cn_dn``.
-    ``a and b or c`` made the test true for every finite index, so ``cn_dn(0j, x)``
-    raised ``ZeroDivisionError`` and an infinite index produced ``nan``. The
-    internal coefficients are now zero for a perfect conductor, as intended
-*   drop ``fastmath`` from the numba ``_cn_dn_nb`` kernel. It implies LLVM's
-    ``ninf``, which folded the ``np.isinf`` guard to ``False`` and defeated the
-    fix above in the JIT backend. This also improves JIT/no-JIT agreement
-*   make the internal-field coefficients ``c_n`` and ``d_n`` numerically stable.
-    ``psi_n`` came from the three-term upwards recurrence, which is contaminated
-    by the growing ``chi_n`` solution once n exceeds ``|mx|``.  That is the normal
-    case for a relative index below one, where the coefficients were wrong by up
-    to 140%.  ``psi_n`` now uses Miller's downwards recurrence seeded above ``|z|``
-    and normalised against whichever of ``psi_0`` or ``psi_1`` is larger, and
-    the logarithmic derivatives take the always-stable downwards route.
-    Worst error against a direct SciPy evaluation over 7320 cases drops from
-    90 to 3e-9, and the JIT and no-JIT backends now agree to 5e-15 where they
-    previously differed by up to a factor of 39
-*   always use the downwards recurrence for the logarithmic derivative ``D_n``.
-    Wiscombe's criterion chose between the two recurrences from the refractive
-    index alone, never from the number of terms, so it picked the upwards
-    recurrence for small spheres where it is unstable.  For a lossless sphere
-    ``Re(a_n)`` must equal ``|a_n|**2``; at m=1.05, x=0.1 the real parts of the
-    quadrupole and higher coefficients came out with the wrong sign and up to 12
-    orders of magnitude too large, which made ``efficiencies_mx(n_pole=3)``
-    report a negative extinction efficiency.  That identity now holds to 4e-24
-    over all lossless cases tested, and ``qext`` and ``qsca`` agree to 5e-16
-    where they used to differ by 2e-7.  The pure-python backend is about 20%
-    slower for a large sweep of size parameters; the numba backend is unchanged
-*   remove ``fastmath`` from every numba kernel.  Besides defeating the
-    perfectly-conducting guard above, its reassociation degraded the exact
-    lossless identity by roughly six times relative to the pure-python backend.
-    Costs about 10% on a large sweep of size parameters
-*   ``an_bn`` no longer pads a zero onto the end of ``a`` and ``b``, and ``cn_dn``
-    no longer computes one order more than ``an_bn``.  Both now return exactly
-    Wiscombe's number of terms with every entry a real coefficient, so the
-    internal and external series share one truncation.  The retained ``a_n`` and
-    ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
-*   ``an_bn(m, x)`` works on both backends.  ``_an_bn_py`` defaulted ``n_pole`` to
-    zero but the numba kernel's eager signature could not, so the two-argument
-    call raised ``TypeError`` with the JIT on.  ``_an_bn_nb`` is now compiled
-    lazily, which allows the default
-*   group the arithmetic in the numba ``_an_bn_nb`` and ``_cn_dn_nb`` kernels the
-    way the pure-python ones do.  Multiplying by a precomputed ``1/x`` in one and
-    dividing by ``x`` in the other differed by one ulp, and the psi recurrence
-    amplified that to 2.6e-7 between the backends on significant coefficients.
-    They now agree to 1e-13
-*   ``an_bn`` builds ``psi_n`` with Miller's downwards recurrence, the same
-    treatment ``cn_dn`` already had, and builds ``xi_n`` as ``psi_n + i*chi_n``
-    from an upwards ``chi_n`` recurrence.  The upwards ``psi_n`` recurrence was
-    accurate enough inside Wiscombe's truncation but lost all relative accuracy
-    beyond it -- about 1e-6 at the last kept order, and 1e10 or worse a few orders
-    later -- so asking for extra terms returned noise.  Requesting more orders now
-    converges instead: the near-field boundary mismatch at W+8 terms improves from
-    4.7e-2 to 3.1e-6, and it keeps improving to W+16 rather than diverging.
-    Building ``xi_n`` from the same ``psi_n`` preserves the lossless identity
-    ``Re(a_n) == |a_n|**2`` at 5.6e-16.  Within the standard truncation nothing
-    moves by more than 1e-11, so this is headroom rather than a correction.  The
-    pure-python backend costs about 7% more for a large sweep; numba is unchanged.
-    ``xi_n`` itself was already fine: it is dominated by the growing ``chi_n``
-    solution, for which the upwards recurrence is the stable direction, and it
-    matches SciPy to 1e-15 even twenty orders past the truncation
-*   assert the scattnlay comparison instead of only plotting it.  The reference
-    arrays under ``docs/data`` were used solely by ``docs/15_2D_fields.ipynb``,
-    which printed relative errors without checking them, so a near-field
-    regression was invisible; the median error improved 19x during this release
-    and nothing would have noticed either that or its reversal.
-    ``tests/test_scattnlay_reference.py`` now checks the scalar efficiencies,
-    which are inlined like the existing MIEV0 values and need no data files, and
-    compares both 121x121 field grids point by point.  Grid points that land
-    exactly on the sphere surface are excluded, since the radial E component is
-    discontinuous there and the two codes may put them on opposite sides
-*   ``docs/15_2D_fields.ipynb`` reads the reference arrays from ``docs/data``
-    rather than downloading them from the published branch, so ``make note-test``
-    works offline and checks the working tree instead of the last release.  Its
-    stored error figures were also stale and have been refreshed
-*   collapse the per-backend test files.  ``test_jit.py``/``test_nojit.py`` and
-    ``test_jit_abcd.py``/``test_nojit_abcd.py`` became ``test_mie.py`` and
-    ``test_abcd.py`` for the high-level API, which needs one copy because
-    ``core.py`` has no backend-specific code, plus ``test_kernels.py`` for the
-    kernel-level tests, which the ``kernels`` fixture runs against both backends
-    in one process.  All 74 distinct test names are preserved, and the merge picks
-    up what had drifted between the two halves: an extra MIEV0 conducting case,
-    four extra ``qext`` assertions, and both spellings of a perfectly conducting
-    index.  Shared reference implementations moved to ``tests/reference.py``
-*   drop the ``MIEPYTHON_RUN_MIE_SPEED`` switch and ``test_mie_backend_speed.py``.
-    Nothing ever set that variable, so the three real assertions in that file --
-    a backend agreement check over 4000 random particles and 361 angles -- had
-    never run, while the four assertions it also gated were tautologies
-    (``elapsed > 0``).  The agreement check moved to ``test_backend_parity.py``
-    where it always runs and costs about a tenth of a second, and the speedup
-    report it printed became ``benchmark_efficiencies.py --compare``, which
-    ``make speed`` now calls
-*   the benchmark scripts ``test_jit_speed.py`` and ``test_nojit_speed.py`` became
-    one ``tests/benchmark_efficiencies.py``.  They timed at import rather than in a
-    test function, so pytest spent about seven seconds running benchmarks during
-    collection while collecting nothing; a full test pass is now much quicker.
-    They also both timed whichever backend happened to be bound, so the JIT-named
-    one could report pure-python speed.  ``make speed`` runs the single script once
-    per backend
-*   add ``tests/test_backend_parity.py``, which compares the two kernel sets
-    directly -- signatures and values -- in a single process, and merge the
-    ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture
-    that parametrizes over both backends.  Tests written this way need only one
-    copy instead of a JIT/no-JIT pair
-*   test ``monte_carlo.py``, which had no tests at all, and drop the unreachable
-    index clamp in ``generate_mie_costheta``: ``numpy.random.random`` draws from
-    [0, 1), so the index can never run off the table.  A test forces the largest
-    float below one to show that.  The sampler is checked against physics rather
-    than against itself: the mean of the drawn cosines reproduces the asymmetry
-    parameter g, computed by a completely separate path, and the empirical
-    distribution follows the inverse-transform table.  With this the whole package
-    is covered, so ``fail_under`` is now 100
-*   record that ``cdf`` overshoots one.  It sums ``i_unpolarized / num`` instead of
-    multiplying by the true spacing 2/(num-1), so the last value is about
-    1 + 1.3/num: at the num=20 of ``docs/06_random_deviates.ipynb`` the cumulative
-    distribution reaches 1.067 even though the docstring promises a maximum of 1.
-    A test pins the 1/num convergence so the quadrature cannot quietly change
-*   test the kernel paths an ordinary Mie call never reaches, taking both
-    ``mie_jit.py`` and ``mie_nojit.py`` to 100%.  ``_D_upwards`` is kept for
-    comparison but ``D_calc`` no longer selects it, so it is now checked against
-    SciPy where it is valid and against ``_D_downwards``.  Also covered: the
-    overflow rescale inside ``_psi_downwards``, which a small argument triggers and
-    which the normalisation afterwards has to undo exactly; ``cn_dn`` for a sphere
-    of no size; and the ``m=0`` shorthand for a perfect conductor, now shown to be
-    identical to passing ``1-10000j``.  Every module except ``monte_carlo.py`` is
-    fully covered, with no partial branches left anywhere
-*   test the scattered-only fields and the explicit term count in ``field.py``,
-    taking it to 100%.  Nothing had ever called a near-field routine with
-    ``include_incident=False`` for H, or passed ``n_pole`` at all.  Outside the
-    sphere the total field minus the scattered field is now checked against an
-    incident plane wave written out independently of miepython, and inside the
-    sphere ``include_incident`` is confirmed to make no difference
-*   test the array dispatch and error paths in ``core.py``, taking it to 100%.
-    The ``RuntimeError`` for mismatched ``m`` and ``x`` lengths, the one for array
-    input without ``n_pole``, the ``internal`` variants of ``coefficients`` and the
-    mixed scalar-and-array calls were all untested, as was the rejection of an
-    unknown normalization.  Every array result is now checked against the
-    equivalent scalar calls
-*   fix ``S1_S2`` rejecting a list or an integer array of angles under numba.  The
-    kernel is declared for ``float64[:]``, so ``S1_S2(m, x, [0, 1])`` worked with the
-    JIT off and raised ``TypeError`` with it on; ``core.py`` now coerces the angles
-    once, at the boundary, so both backends take the same arguments
-*   test the missing-SciPy path in ``__init__.py`` and the remaining parts of
-    ``rayleigh.py``, taking them from 52% and 72% to 100%; the total reaches 95%.
-    The SciPy fallback is what keeps the package usable in JupyterLite and had never
-    been exercised: the tests re-import the package behind an import hook, check the
-    placeholders name themselves and chain the original error, and confirm that a
-    failure other than SciPy still propagates.  ``rayleigh``'s physical-units
-    wrappers, all thirteen normalization spellings and its error paths were also
-    untested
-*   record that ``rayleigh``'s normalization closes only to O(x**2): ``qsca`` in
-    ``efficiencies_mx`` stops at x**4 while the ``a1`` used by ``S1_S2`` carries an
-    x**5 term, so the 'one' normalization integrates to 1 + 0.07 x**2 rather than 1.
-    A test pins that order so extending one expansion without the other shows up
-*   test ``vsh.py`` and ``util.py``, which the new coverage run showed at 60% and
-    55%.  Both are now at 100% branch coverage, and the total rises from 86% to
-    91%.  The four ``M_*_array``/``N_*_array`` helpers, the ``deg=True`` angle
-    paths and the small-argument series in ``N_base`` had no tests at all.  One of
-    the new tests checks ``vsh.py`` against ``field.py``, which holds a second copy
-    of the same vector spherical harmonics, so the two can no longer drift apart
-*   measure coverage.  ``make coverage`` runs the suite once per backend and
-    combines the results, and a CI job publishes the HTML report as an artifact.
-    Naive coverage is misleading here: coverage.py cannot see inside numba's
-    compiled functions, so ``mie_jit.py`` reports 11% no matter how well it is
-    tested.  The second pass therefore sets ``NUMBA_DISABLE_JIT=1``, which runs the
-    njit bodies as plain Python and lifts that file to 96%.  The combined figure is
-    86% with branch coverage, and ``fail_under`` is set to 84 as a floor to ratchet
-    upward.  Two tests that deliberately assert numba is compiled were rewritten to
-    hold in either mode rather than being skipped, so all three modes stay green
-*   widen the CI matrix.  It covered ubuntu on Python 3.10 and 3.14 only, and
-    because it also ran just two test files, most of the suite had never executed
-    on the oldest supported Python.  Linux now runs every version the classifiers
-    promise, 3.10 through 3.14, and macOS and Windows run both ends of that range,
-    since numba holds the platform-specific half of the package.  numba 0.66 ships
-    wheels for all of those combinations
-*   discover example scripts and notebooks relative to the test file rather than
-    the working directory.  ``test_all_examples.py`` globbed a relative path, so a
-    run started anywhere but the repository root collected nothing and reported
-    success; it now asserts that it found something
-*   CI now lints.  It only ran pytest, so a pull request with formatting or lint
-    errors passed clean and the checks in ``make rcheck`` were enforced on nobody.
-    A new job runs ``make lint``, the same target a release check uses, through uv,
-    so the list of checks lives in the Makefile alone and cannot drift from CI
-*   add a ``make lint`` target covering ruff, black, pylint, rstcheck, yamllint,
-    check-manifest and pyroma, and have ``make rcheck`` delegate to it.  That also
-    closes a gap: ``yaml-check`` existed but was never part of ``rcheck``, so the
-    workflow files were only ever checked by hand
-*   the ``test_jit*`` files now really exercise the numba backend.  ``_backend.py``
-    binds its kernels the first time ``miepython`` is imported, so setting
-    ``MIEPYTHON_USE_JIT`` inside a test module only worked when that module
-    happened to import the package first.  In a full ``make test`` run something
-    always imported it earlier with the JIT off, so those files silently retested
-    the pure-python kernels and passed.  ``tests/conftest.py`` now reads the
-    backend that actually got bound and skips the files belonging to the other
-    one, and ``make test`` runs the suite once per backend.  The backend-agnostic
-    tests run under both, which is new coverage for them.  New ``make test-jit``
-    and ``make test-nojit`` targets run a single pass, and CI now runs the whole
-    suite per backend rather than one file each
-*   raise a clear error instead of returning ``inf`` or ``nan`` when a scattering
-    function is asked to normalise against a sphere that does not scatter.  A
-    sphere whose index matches its surroundings gave ``i_unpolarized`` values of
-    ``inf`` for the 'albedo', 'one' and '4pi' normalizations and a bare
-    ``ZeroDivisionError`` for 'qext'.  The 'wiscombe', 'bohren' and 'qsca'
-    choices do not divide by an efficiency and still work
-*   ``efficiencies_mx`` returns zero rather than ``nan`` for ``qback`` when the
-    size parameter is zero.  The small-sphere form of ``qback`` is 0/0 there,
-    although its limit is zero, and a single zero in an array of size parameters
-    used to leave a ``nan`` behind
-*   fix ``util.cartesian_to_spherical``, which raised on array input because of a
-    scalar ``if r != 0`` test.  It now broadcasts its three arguments, reports
-    theta as zero at the origin, and clips ``z/r`` so rounding cannot push the
-    arccos argument out of range.  ``field.py`` dropped its private duplicate of
-    this routine
-*   fix ``util`` exporting ``_all_`` instead of ``__all__``, and list
-    ``phasor_str_scalar`` alongside the rest
-*   the near-field routines keep two more terms than Wiscombe's criterion.  That
-    criterion truncates the scattered series, which converges faster than the
-    field evaluated right at the sphere surface: the tangential E and H mismatch
-    across the boundary drops from 1.5e-5 to 3.2e-6, and the median disagreement
-    with scattnlay over a 121x121 slice falls from 1.1e-11 to 3.3e-14.  Further
-    orders gain almost nothing once ``psi_n`` is computed stably, so two is where
-    it stops.  The scattering quantities are untouched, and ``e_far`` still uses
-    the criterion unchanged.  ``miepython.core.wiscombe_terms`` names the count
-*   ``pi_tau`` now fills ``tau`` for the highest order.  It had always left the
-    last entry zero, which was hidden by the ``an_bn`` padding above and would
-    have silently dropped a term once the padding went away.  ``n_pole`` may now
-    address the highest order, which the old bounds check rejected
+*   fix the docstring examples in ``core.py``, which had rotted unnoticed.  The ``coefficients`` examples called ``mie_coefficients``, a name that never existed, showed the imaginary parts with the wrong sign, and still included the padding element ``an_bn`` no longer returns; the ``efficiencies_mx`` examples used a different function's signature and printed an invented repr.  The Returns section also described a tuple where an ndarray comes back
+*   run the docstring examples as part of the test suite, so they cannot rot again. They are written with explicit formatting rather than bare array reprs, which keeps them independent of NumPy's print precision
+*   keep one copy of the scattering-function normalization rules.  ``core`` and ``rayleigh`` held the same thirty lines differing only in which efficiencies they consulted, so ``core.normalization_factor`` now takes an ``efficiency_source`` and ``rayleigh`` passes its own
+*   accept an ``rng`` argument in ``generate_mie_costheta``.  It drew from the process-wide ``numpy.random``, which a caller could only control by reseeding the whole program; passing ``numpy.random.default_rng(seed)`` now gives a reproducible stream and leaves the global one alone.  Omitting it behaves as before
+*   document the angular-argument convention: a scalar ``mu`` counts as one angle and returns a length-one array, except in ``phase_matrix``, which squeezes it away.  ``docs/01_basics.ipynb`` demonstrates the first half deliberately, so both are now stated in the docstrings and pinned by tests
+*   fix ``make readme_images``, which had never worked: ``.PHONY`` declared that name but the rule below it was written ``readme:``, so the advertised command failed with "No rule to make target" while an undocumented ``make readme`` did the job
+*   drop ``sync`` from ``make help``.  No such target exists; the one that syncs the environment is ``venv``, and it was not listed at all.  Also corrected ``pylint-check``, described as "Same as lint above" when it runs pylint alone, and moved the individual check targets out of the packaging section into the lint one where they belong
+*   check the Makefile's help text against the rules it defines, so a target cannot be advertised, or declared phony, without existing.  These four bugs were all of the same kind -- the help block is a pile of ``@echo`` lines with nothing tying it to the rules underneath -- and nothing could have caught them
+*   generate the README figures reproducibly.  matplotlib stamps each SVG with the current time and names clip paths and glyphs from a random salt, so re-running ``make readme_images`` produced files differing on a hundred lines even when the figures were pixel-for-pixel identical.  There was no way to tell "a plot changed" from "matplotlib rolled different ids".  Fixing ``svg.hashsalt`` and passing ``metadata={"Date": None}`` makes repeated runs byte-identical, and the committed images are regenerated once against that
+*   point the README license badge at ``blob/main`` rather than ``blob/master``.  There is no master branch; the link worked only because GitHub silently redirects
+*   evaluate the near fields for every point at once instead of one point at a time. ``field.py`` walked the grid with ``np.ndindex`` and called into ``scipy.special`` separately for each point, so a 41x41 slice spent 0.4 s almost entirely in scipy's per-call overhead rather than on Bessel functions.  The points are now split once into those inside the sphere and those outside -- the two sides need different radial functions and different media, but within a side every point does the same arithmetic -- and each group is evaluated as a ``(n_points, n_terms)`` batch.  Roughly 18x faster: that slice takes 0.022 s, and a 101x101 slice drops from 2.4 s to 0.13 s.  Every returned value is bitwise identical to before, which is checked point by point against evaluating the same coordinates individually
+*   evaluate the spherical Hankel functions over orders ``0..n+1`` in one call rather than making four separate calls that recompute shared orders.  ``xi'_n`` needs ``h1`` at ``n-1``, ``n`` and ``n+1``, and the order-``n`` value was being computed twice; slicing one array instead cuts that part of the work to a quarter
+*   drop the three near-field per-point evaluators and the two loop drivers in favour of a single batched routine, 63 fewer statements for the same physics. ``_vsh_components_base`` now takes an explicit ``inside`` flag and arrays of coordinates, so it no longer re-derives from ``d_sphere`` which side it is on
+*   make the submodules reachable, each in the way that suits it. ``miepython.rayleigh`` needs only NumPy and is now imported with the package, so ``import miepython`` is enough to reach it; ``miepython.vsh`` requires the optional ``scipy`` and is imported inside the same guard as ``field``, staying absent when scipy is not installed; ``miepython.monte_carlo`` imports ``miepython`` itself, so importing it from the package would be circular and it remains a separate ``import miepython.monte_carlo``.  All three are now described in the package docstring, and ``monte_carlo``'s own docstring shows the full workflow and says why it is not imported for you
+*   have ``vsh`` reach ``D_calc`` through ``._backend`` instead of importing ``miepython`` for it.  The old import was a cycle that worked only because the call is deferred to run time, and importing ``vsh`` from ``__init__`` would have depended on that
+*   fix the call signatures listed in ``vsh``'s module docstring.  All four vector spherical harmonics were advertised as ``(n, k, d_sphere, r, theta, phi)``; they actually take a wavelength rather than a wavenumber and a refractive index besides, ``(n, lambda0, d_sphere, m_index, r, theta, phi)``, so anyone following the docstring got a ``TypeError``.  The four ``*_array`` variants went unmentioned altogether.  Signatures written out in prose are now checked against the code
+*   fix two stale references in the notebooks: ``mie.mie_S1_S2`` in ``docs/03a_normalization.ipynb``, together with the comparison values it quotes, and a commented-out ``mie._D_calc`` in ``docs/10_basic_tests.ipynb``
+*   fix off-by-one in ``n_pole`` for ``S1_S2`` and everything built on it (``i_par``, ``i_per``, ``i_unpolarized``, ``phase_matrix``, ``intensities``). ``n_pole=1`` returned the quadrupole instead of the dipole; it now matches the convention already used by ``efficiencies_mx``
+*   raise ``ValueError`` for an ``n_pole`` beyond the truncated series instead of returning zeros or an ``IndexError``
+*   add multipole regression tests (series sum, closed form, per-multipole optical theorem) and re-execute ``docs/12_multipoles.ipynb``
+*   implement the ``e_field`` argument of ``efficiencies_mx``, which was accepted and documented but silently ignored. With ``n_pole > 0`` it now selects the electric multipole a_n (``e_field=True``, the default) or the magnetic multipole b_n (``e_field=False``). **Behavior change:** ``n_pole > 0`` previously returned a_n and b_n combined; that total is now ``e_field=True`` plus ``e_field=False``
+*   make the two backends agree on ``g`` when ``n_pole > 0``. The no-JIT backend returned ``None`` (which became ``nan`` for array input) while the JIT backend returned ``0``. Both now return ``0.0``, which is the exact value: an isolated multipole of one parity scatters symmetrically about 90 degrees
+*   fix an operator-precedence bug in the perfectly-conducting guard of ``cn_dn``. ``a and b or c`` made the test true for every finite index, so ``cn_dn(0j, x)`` raised ``ZeroDivisionError`` and an infinite index produced ``nan``. The internal coefficients are now zero for a perfect conductor, as intended
+*   drop ``fastmath`` from the numba ``_cn_dn_nb`` kernel. It implies LLVM's ``ninf``, which folded the ``np.isinf`` guard to ``False`` and defeated the fix above in the JIT backend. This also improves JIT/no-JIT agreement
+*   make the internal-field coefficients ``c_n`` and ``d_n`` numerically stable. ``psi_n`` came from the three-term upwards recurrence, which is contaminated by the growing ``chi_n`` solution once n exceeds ``|mx|``.  That is the normal case for a relative index below one, where the coefficients were wrong by up to 140%.  ``psi_n`` now uses Miller's downwards recurrence seeded above ``|z|`` and normalised against whichever of ``psi_0`` or ``psi_1`` is larger, and the logarithmic derivatives take the always-stable downwards route. Worst error against a direct SciPy evaluation over 7320 cases drops from 90 to 3e-9, and the JIT and no-JIT backends now agree to 5e-15 where they previously differed by up to a factor of 39
+*   always use the downwards recurrence for the logarithmic derivative ``D_n``. Wiscombe's criterion chose between the two recurrences from the refractive index alone, never from the number of terms, so it picked the upwards recurrence for small spheres where it is unstable.  For a lossless sphere ``Re(a_n)`` must equal ``|a_n|**2``; at m=1.05, x=0.1 the real parts of the quadrupole and higher coefficients came out with the wrong sign and up to 12 orders of magnitude too large, which made ``efficiencies_mx(n_pole=3)`` report a negative extinction efficiency.  That identity now holds to 4e-24 over all lossless cases tested, and ``qext`` and ``qsca`` agree to 5e-16 where they used to differ by 2e-7.  The pure-python backend is about 20% slower for a large sweep of size parameters; the numba backend is unchanged
+*   remove ``fastmath`` from every numba kernel.  Besides defeating the perfectly-conducting guard above, its reassociation degraded the exact lossless identity by roughly six times relative to the pure-python backend. Costs about 10% on a large sweep of size parameters
+*   ``an_bn`` no longer pads a zero onto the end of ``a`` and ``b``, and ``cn_dn`` no longer computes one order more than ``an_bn``.  Both now return exactly Wiscombe's number of terms with every entry a real coefficient, so the internal and external series share one truncation.  The retained ``a_n`` and ``b_n`` are bit-for-bit unchanged, and the arrays are one element shorter
+*   ``an_bn(m, x)`` works on both backends.  ``_an_bn_py`` defaulted ``n_pole`` to zero but the numba kernel's eager signature could not, so the two-argument call raised ``TypeError`` with the JIT on.  ``_an_bn_nb`` is now compiled lazily, which allows the default
+*   group the arithmetic in the numba ``_an_bn_nb`` and ``_cn_dn_nb`` kernels the way the pure-python ones do.  Multiplying by a precomputed ``1/x`` in one and dividing by ``x`` in the other differed by one ulp, and the psi recurrence amplified that to 2.6e-7 between the backends on significant coefficients. They now agree to 1e-13
+*   ``an_bn`` builds ``psi_n`` with Miller's downwards recurrence, the same treatment ``cn_dn`` already had, and builds ``xi_n`` as ``psi_n + i*chi_n`` from an upwards ``chi_n`` recurrence.  The upwards ``psi_n`` recurrence was accurate enough inside Wiscombe's truncation but lost all relative accuracy beyond it -- about 1e-6 at the last kept order, and 1e10 or worse a few orders later -- so asking for extra terms returned noise.  Requesting more orders now converges instead: the near-field boundary mismatch at W+8 terms improves from 4.7e-2 to 3.1e-6, and it keeps improving to W+16 rather than diverging. Building ``xi_n`` from the same ``psi_n`` preserves the lossless identity ``Re(a_n) == |a_n|**2`` at 5.6e-16.  Within the standard truncation nothing moves by more than 1e-11, so this is headroom rather than a correction.  The pure-python backend costs about 7% more for a large sweep; numba is unchanged. ``xi_n`` itself was already fine: it is dominated by the growing ``chi_n`` solution, for which the upwards recurrence is the stable direction, and it matches SciPy to 1e-15 even twenty orders past the truncation
+*   assert the scattnlay comparison instead of only plotting it.  The reference arrays under ``docs/data`` were used solely by ``docs/15_2D_fields.ipynb``, which printed relative errors without checking them, so a near-field regression was invisible; the median error improved 19x during this release and nothing would have noticed either that or its reversal. ``tests/test_scattnlay_reference.py`` now checks the scalar efficiencies, which are inlined like the existing MIEV0 values and need no data files, and compares both 121x121 field grids point by point.  Grid points that land exactly on the sphere surface are excluded, since the radial E component is discontinuous there and the two codes may put them on opposite sides
+*   ``docs/15_2D_fields.ipynb`` reads the reference arrays from ``docs/data`` rather than downloading them from the published branch, so ``make note-test`` works offline and checks the working tree instead of the last release.  Its stored error figures were also stale and have been refreshed
+*   collapse the per-backend test files.  ``test_jit.py``/``test_nojit.py`` and ``test_jit_abcd.py``/``test_nojit_abcd.py`` became ``test_mie.py`` and ``test_abcd.py`` for the high-level API, which needs one copy because ``core.py`` has no backend-specific code, plus ``test_kernels.py`` for the kernel-level tests, which the ``kernels`` fixture runs against both backends in one process.  All 74 distinct test names are preserved, and the merge picks up what had drifted between the two halves: an extra MIEV0 conducting case, four extra ``qext`` assertions, and both spellings of a perfectly conducting index.  Shared reference implementations moved to ``tests/reference.py``
+*   drop the ``MIEPYTHON_RUN_MIE_SPEED`` switch and ``test_mie_backend_speed.py``. Nothing ever set that variable, so the three real assertions in that file -- a backend agreement check over 4000 random particles and 361 angles -- had never run, while the four assertions it also gated were tautologies (``elapsed > 0``).  The agreement check moved to ``test_backend_parity.py`` where it always runs and costs about a tenth of a second, and the speedup report it printed became ``benchmark_efficiencies.py --compare``, which ``make speed`` now calls
+*   the benchmark scripts ``test_jit_speed.py`` and ``test_nojit_speed.py`` became one ``tests/benchmark_efficiencies.py``.  They timed at import rather than in a test function, so pytest spent about seven seconds running benchmarks during collection while collecting nothing; a full test pass is now much quicker. They also both timed whichever backend happened to be bound, so the JIT-named one could report pure-python speed.  ``make speed`` runs the single script once per backend
+*   add ``tests/test_backend_parity.py``, which compares the two kernel sets directly -- signatures and values -- in a single process, and merge the ``test_*_D.py`` pair into one ``test_D.py`` driven by a ``kernels`` fixture that parametrizes over both backends.  Tests written this way need only one copy instead of a JIT/no-JIT pair
+*   test ``monte_carlo.py``, which had no tests at all, and drop the unreachable index clamp in ``generate_mie_costheta``: ``numpy.random.random`` draws from [0, 1), so the index can never run off the table.  A test forces the largest float below one to show that.  The sampler is checked against physics rather than against itself: the mean of the drawn cosines reproduces the asymmetry parameter g, computed by a completely separate path, and the empirical distribution follows the inverse-transform table.  With this the whole package is covered, so ``fail_under`` is now 100
+*   record that ``cdf`` overshoots one.  It sums ``i_unpolarized / num`` instead of multiplying by the true spacing 2/(num-1), so the last value is about 1 + 1.3/num: at the num=20 of ``docs/06_random_deviates.ipynb`` the cumulative distribution reaches 1.067 even though the docstring promises a maximum of 1. A test pins the 1/num convergence so the quadrature cannot quietly change
+*   test the kernel paths an ordinary Mie call never reaches, taking both ``mie_jit.py`` and ``mie_nojit.py`` to 100%.  ``_D_upwards`` is kept for comparison but ``D_calc`` no longer selects it, so it is now checked against SciPy where it is valid and against ``_D_downwards``.  Also covered: the overflow rescale inside ``_psi_downwards``, which a small argument triggers and which the normalisation afterwards has to undo exactly; ``cn_dn`` for a sphere of no size; and the ``m=0`` shorthand for a perfect conductor, now shown to be identical to passing ``1-10000j``.  Every module except ``monte_carlo.py`` is fully covered, with no partial branches left anywhere
+*   test the scattered-only fields and the explicit term count in ``field.py``, taking it to 100%.  Nothing had ever called a near-field routine with ``include_incident=False`` for H, or passed ``n_pole`` at all.  Outside the sphere the total field minus the scattered field is now checked against an incident plane wave written out independently of miepython, and inside the sphere ``include_incident`` is confirmed to make no difference
+*   test the array dispatch and error paths in ``core.py``, taking it to 100%. The ``RuntimeError`` for mismatched ``m`` and ``x`` lengths, the one for array input without ``n_pole``, the ``internal`` variants of ``coefficients`` and the mixed scalar-and-array calls were all untested, as was the rejection of an unknown normalization.  Every array result is now checked against the equivalent scalar calls
+*   fix ``S1_S2`` rejecting a list or an integer array of angles under numba.  The kernel is declared for ``float64[:]``, so ``S1_S2(m, x, [0, 1])`` worked with the JIT off and raised ``TypeError`` with it on; ``core.py`` now coerces the angles once, at the boundary, so both backends take the same arguments
+*   test the missing-SciPy path in ``__init__.py`` and the remaining parts of ``rayleigh.py``, taking them from 52% and 72% to 100%; the total reaches 95%. The SciPy fallback is what keeps the package usable in JupyterLite and had never been exercised: the tests re-import the package behind an import hook, check the placeholders name themselves and chain the original error, and confirm that a failure other than SciPy still propagates.  ``rayleigh``'s physical-units wrappers, all thirteen normalization spellings and its error paths were also untested
+*   record that ``rayleigh``'s normalization closes only to O(x**2): ``qsca`` in ``efficiencies_mx`` stops at x**4 while the ``a1`` used by ``S1_S2`` carries an x**5 term, so the 'one' normalization integrates to 1 + 0.07 x**2 rather than 1. A test pins that order so extending one expansion without the other shows up
+*   test ``vsh.py`` and ``util.py``, which the new coverage run showed at 60% and 55%.  Both are now at 100% branch coverage, and the total rises from 86% to 91%.  The four ``M_*_array``/``N_*_array`` helpers, the ``deg=True`` angle paths and the small-argument series in ``N_base`` had no tests at all.  One of the new tests checks ``vsh.py`` against ``field.py``, which holds a second copy of the same vector spherical harmonics, so the two can no longer drift apart
+*   measure coverage.  ``make coverage`` runs the suite once per backend and combines the results, and a CI job publishes the HTML report as an artifact. Naive coverage is misleading here: coverage.py cannot see inside numba's compiled functions, so ``mie_jit.py`` reports 11% no matter how well it is tested.  The second pass therefore sets ``NUMBA_DISABLE_JIT=1``, which runs the njit bodies as plain Python and lifts that file to 96%.  The combined figure is 86% with branch coverage, and ``fail_under`` is set to 84 as a floor to ratchet upward.  Two tests that deliberately assert numba is compiled were rewritten to hold in either mode rather than being skipped, so all three modes stay green
+*   widen the CI matrix.  It covered ubuntu on Python 3.10 and 3.14 only, and because it also ran just two test files, most of the suite had never executed on the oldest supported Python.  Linux now runs every version the classifiers promise, 3.10 through 3.14, and macOS and Windows run both ends of that range, since numba holds the platform-specific half of the package.  numba 0.66 ships wheels for all of those combinations
+*   discover example scripts and notebooks relative to the test file rather than the working directory.  ``test_all_examples.py`` globbed a relative path, so a run started anywhere but the repository root collected nothing and reported success; it now asserts that it found something
+*   CI now lints.  It only ran pytest, so a pull request with formatting or lint errors passed clean and the checks in ``make rcheck`` were enforced on nobody. A new job runs ``make lint``, the same target a release check uses, through uv, so the list of checks lives in the Makefile alone and cannot drift from CI
+*   add a ``make lint`` target covering ruff, black, pylint, rstcheck, yamllint, check-manifest and pyroma, and have ``make rcheck`` delegate to it.  That also closes a gap: ``yaml-check`` existed but was never part of ``rcheck``, so the workflow files were only ever checked by hand
+*   the ``test_jit*`` files now really exercise the numba backend.  ``_backend.py`` binds its kernels the first time ``miepython`` is imported, so setting ``MIEPYTHON_USE_JIT`` inside a test module only worked when that module happened to import the package first.  In a full ``make test`` run something always imported it earlier with the JIT off, so those files silently retested the pure-python kernels and passed.  ``tests/conftest.py`` now reads the backend that actually got bound and skips the files belonging to the other one, and ``make test`` runs the suite once per backend.  The backend-agnostic tests run under both, which is new coverage for them.  New ``make test-jit`` and ``make test-nojit`` targets run a single pass, and CI now runs the whole suite per backend rather than one file each
+*   raise a clear error instead of returning ``inf`` or ``nan`` when a scattering function is asked to normalise against a sphere that does not scatter.  A sphere whose index matches its surroundings gave ``i_unpolarized`` values of ``inf`` for the 'albedo', 'one' and '4pi' normalizations and a bare ``ZeroDivisionError`` for 'qext'.  The 'wiscombe', 'bohren' and 'qsca' choices do not divide by an efficiency and still work
+*   ``efficiencies_mx`` returns zero rather than ``nan`` for ``qback`` when the size parameter is zero.  The small-sphere form of ``qback`` is 0/0 there, although its limit is zero, and a single zero in an array of size parameters used to leave a ``nan`` behind
+*   fix ``util.cartesian_to_spherical``, which raised on array input because of a scalar ``if r != 0`` test.  It now broadcasts its three arguments, reports theta as zero at the origin, and clips ``z/r`` so rounding cannot push the arccos argument out of range.  ``field.py`` dropped its private duplicate of this routine
+*   fix ``util`` exporting ``_all_`` instead of ``__all__``, and list ``phasor_str_scalar`` alongside the rest
+*   the near-field routines keep two more terms than Wiscombe's criterion.  That criterion truncates the scattered series, which converges faster than the field evaluated right at the sphere surface: the tangential E and H mismatch across the boundary drops from 1.5e-5 to 3.2e-6, and the median disagreement with scattnlay over a 121x121 slice falls from 1.1e-11 to 3.3e-14.  Further orders gain almost nothing once ``psi_n`` is computed stably, so two is where it stops.  The scattering quantities are untouched, and ``e_far`` still uses the criterion unchanged.  ``miepython.core.wiscombe_terms`` names the count
+*   ``pi_tau`` now fills ``tau`` for the highest order.  It had always left the last entry zero, which was hidden by the ``an_bn`` padding above and would have silently dropped a term once the padding went away.  ``n_pole`` may now address the highest order, which the old bounds check rejected
 
 3.2.0 (03/06/2026)
 ------------------
@@ -582,17 +206,17 @@ Changelog
 ------------------
 *   add mie_phase_matrix() to calculate scattering (Mueller) matrix
 
-v2.3.2
--------------------
+2.3.2 (05/18/2023)
+------------------
 *   fix typo in README.rst that prevented pypi upload
 *   add CITATION.cff to base level of miepython repository
 
-v2.3.1
--------------------
+2.3.1 (05/18/2023)
+------------------
 *   add DOI for citation purposes
 
-v2.3.0
--------------------
+2.3.0 (07/27/2022)
+------------------
 *   add optional argument to change scattering function normalization
 *   document normalization in new notebook
 *   store data in correct place
