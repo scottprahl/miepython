@@ -1,5 +1,18 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "numpy",
+#   "scattnlay==2.4",
+# ]
+# ///
 """Generate scattnlay near-field reference arrays for notebook validation.
+
+scattnlay is deliberately not a project dependency: it is a C++ extension that
+only this script needs, and the tests read the arrays it saves.  The inline
+metadata above lets uv build a throwaway environment for it::
+
+    uv run docs/data/generate_scattnlay_reference_fields.py
 
 This script uses the Python bindings from scattnlay (`fieldnlay`, `scattnlay`)
 for two homogeneous-sphere cases and saves `.npy` outputs under `docs/data/`:

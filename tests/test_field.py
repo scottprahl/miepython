@@ -40,10 +40,65 @@ def test_e_near_vs_e_far(m_sphere, n_env, r, d_sphere):
         include_incident=False,
     )
     _Fr, Ftheta, Fphi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
-    #    print(abs(Etheta), abs(Ftheta))
 
     assert np.isclose(abs(Etheta), abs(Ftheta), rtol=1e-3), f"θ {Etheta}, far = {Ftheta}"
     assert np.isclose(abs(Ephi), abs(Fphi), rtol=1e-3), f"ɸ {Ephi}, far= {Fphi}"
+
+
+# Issue #36: e_far conjugated the outgoing exp(ikr) and flipped the sign of E_phi.
+# Comparing magnitudes at theta = phi = 45 degrees (above) cannot see either error,
+# so these compare complex components at generic angles.  Each r avoids kr being a
+# multiple of pi, where exp(ikr) is real and a conjugated phase looks correct.
+@pytest.mark.parametrize("m_sphere", [1.62, 1.5 - 0.1j, -1j])
+@pytest.mark.parametrize(
+    "r, theta, phi",
+    [(134.64, 0.44, 0.27), (777.3, 1.9, 2.5), (2000.07, 2.8, 0.6)],
+)
+def test_e_far_is_the_leading_term_of_e_near(m_sphere, r, theta, phi):
+    """Complex e_far matches the scattered e_near to O(1/kr), in every component."""
+    lambda0, d_sphere, n_env = 0.62, 0.81, 1.18
+    kr = 2 * np.pi * n_env * r / lambda0
+
+    near = np.ravel(e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=False))
+    far = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+
+    # e_far drops the O(1/kr) near-field terms; their coefficient depends on the
+    # angle and the multipole content and reaches about 12 here, so allow 25
+    # (the old phase error was O(1))
+    # the radial part is O(1/kr^2) in e_near and dropped entirely in e_far
+    scale = np.max(np.abs(near))
+    err = np.max(np.abs(far[1:] - near[1:])) / scale
+    assert err < 25 / kr, f"relative error {err:.2e} with 1/kr = {1 / kr:.2e}"
+
+    # same check after rotating both into Cartesian components
+    near_xyz = np.ravel(spherical_vector_to_cartesian(*near, r, theta, phi))
+    far_xyz = np.ravel(spherical_vector_to_cartesian(*far, r, theta, phi))
+    err_xyz = np.max(np.abs(far_xyz - near_xyz)) / scale
+    assert err_xyz < 25 / kr, f"Cartesian relative error {err_xyz:.2e} with 1/kr = {1 / kr:.2e}"
+
+
+def test_e_far_advances_by_i_per_quarter_wave():
+    """With exp(-iωt), moving out a quarter wavelength multiplies r·E by +i."""
+    lambda0, d_sphere, m_sphere, n_env = 0.62, 0.81, 1.62, 1.18
+    period = lambda0 / n_env
+    r1, r2 = 256 * period, 256.25 * period
+    e1 = e_far(lambda0, d_sphere, m_sphere, n_env, r1, 0.44, 0.27)
+    e2 = e_far(lambda0, d_sphere, m_sphere, n_env, r2, 0.44, 0.27)
+    np.testing.assert_allclose(r2 * e2, 1j * r1 * e1, atol=1e-12)
+
+
+def test_e_far_phi_component_sign():
+    """E_phi has the -S1 sin(phi) sign of Bohren & Huffman eq. 4.74."""
+    lambda0, d_sphere, m_sphere, n_env = 0.62, 0.81, 1.62, 1.18
+    r, theta, phi = 777.3, 1.9, 2.5
+    x = np.pi * d_sphere * n_env / lambda0
+    S1, S2 = mie.S1_S2(m_sphere / n_env, x, np.cos(theta), norm="wiscombe")
+    jkr = 1j * 2 * np.pi * n_env * r / lambda0
+    amp = np.exp(jkr) / (-jkr)
+
+    _er, e_theta, e_phi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
+    assert np.isclose(e_theta, np.conj(S2[0]) * amp * np.cos(phi))
+    assert np.isclose(e_phi, -np.conj(S1[0]) * amp * np.sin(phi))
 
 
 @pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.05j])

@@ -1,6 +1,21 @@
 Changelog
 =========
 
+unreleased
+----------
+*   fix the phase of ``e_far`` (#36, thanks @rcgiri-physics and @antonsoo).  It
+    conjugated the whole field, outgoing ``exp(ikr)`` included, so the radial phase
+    ran backwards for the exp(-iωt) convention, and ``E_phi`` had the wrong sign
+    relative to ``E_theta``.  Only S1 and S2 are conjugated now, and ``E_phi``
+    carries the ``-S1 sin(phi)`` of Bohren & Huffman eq. 4.74.  ``e_far`` now
+    agrees with ``e_near(..., include_incident=False)`` to O(1/kr) in every complex
+    component; before, it was off by O(1).  The old test compared magnitudes at
+    theta = phi = 45 degrees, which could see neither error.  Magnitudes, and so
+    intensities, are unchanged
+*   add PEP 723 inline metadata to ``docs/data/generate_scattnlay_reference_fields.py``
+    so ``uv run`` builds scattnlay 2.4 for it on demand.  scattnlay stays out of
+    the project extras, because nothing else needs it
+
 3.3.1 (10/28/2026)
 -------------------
 *   fix ``rayleigh.efficiencies_mx`` subtracting scattering from extinction.  With

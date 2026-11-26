@@ -208,6 +208,15 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     Returns:
         ndarray: Complex spherical components ``[E_r, E_theta, E_phi]`` with
             shape ``(3, ...)`` following broadcasted input shape.
+
+    Notes:
+        This is Bohren & Huffman eq. 4.74 for a unit x-polarized incident wave,
+        ``E_theta = S2 cos(phi) exp(ikr)/(-ikr)`` and
+        ``E_phi = -S1 sin(phi) exp(ikr)/(-ikr)``, with the same exp(-iωt) time
+        convention as ``e_near``.  Only S1 and S2 are conjugated, because the
+        kernels return them for the m = n - ik convention; the outgoing
+        exp(ikr) factor is not.  It is the leading term of
+        ``e_near(..., include_incident=False)`` and differs from it by O(1/kr).
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
@@ -217,10 +226,8 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     S1, S2 = S1_S2(m_rel, x, np.cos(theta), norm="wiscombe")
 
     E_r = np.zeros_like(S1, dtype=complex)
-    E_theta = S2 * amp * np.cos(phi)
-    E_phi = S1 * amp * np.sin(phi)
-    E_theta = np.conjugate(-E_theta)
-    E_phi = np.conjugate(-E_phi)
+    E_theta = np.conjugate(S2) * amp * np.cos(phi)
+    E_phi = -np.conjugate(S1) * amp * np.sin(phi)
     return np.array([E_r, E_theta, E_phi])
 
 
