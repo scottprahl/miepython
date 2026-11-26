@@ -9,6 +9,8 @@ on:    # yamllint disable-line rule:truthy
 jobs:
   update-citation:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # pushes the updated CITATION.cff and README.rst
 
     steps:
       - name: Checkout code

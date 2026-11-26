@@ -44,7 +44,6 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "numpy",
-    "matplotlib",
     "scipy",
     "numba; sys_platform != 'emscripten'",
 ]
@@ -62,8 +61,9 @@ dev = [
   # Testing
   "pytest",
   "pytest-cov",
-  "imageio",
   "requests",
+  # miepython/examples and the notebooks plot; the package itself does not
+  "matplotlib",
 
   # Lint / QA
   "ruff",
@@ -78,7 +78,6 @@ dev = [
   "check-manifest",
   # setuptools is not listed: check-manifest and pyroma both require it, and the
   # backend is installed by build isolation, so an explicit pin adds nothing
-  "libarchive-c",
   "pyyaml",
 
   # Notebooks (local JupyterLab workflows)
@@ -89,6 +88,7 @@ dev = [
 
 lite = [
   "jupyterlite-core>=0.7,<0.8",
+  "libarchive-c",
   "jupyterlite-pyodide-kernel>=0.7,<0.8",
 ]
 
@@ -159,9 +159,7 @@ ignore = [
   ".gh-pages/**",
   ".lite_src/**",
   ".readthedocs.yaml",
-  ".testignore",
-  ".yamllint",
-  "jupyter_lite_config.json",
+  "miepython/jupyter_lite_config.json",
   "Makefile",
   "release.txt",
   "docs/**",

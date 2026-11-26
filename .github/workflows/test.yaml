@@ -104,10 +104,10 @@ jobs:
           # backend comes from [build-system] requires, not from this env
           python -m pip install --upgrade pip
           python -m pip install -e .
-          python -m pip install pytest
+          python -m pip install pytest matplotlib
 
       # The backend is bound when miepython is first imported, so each
-      # process tests only one of them.  conftest.py skips the other's files.
+      # process tests only one of them, so run the suite once per backend.
       - name: Run pytest with the pure python backend
         env:
           MIEPYTHON_USE_JIT: "0"

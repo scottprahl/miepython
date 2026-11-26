@@ -1,29 +1,34 @@
-Releasing a new version
+Releasing a new version (X.Y.Z below; tags have no "v" prefix)
 
-# run sanity checks
+# update the version in miepython/__init__.py
+# update CHANGELOG.rst: rename the newest heading to "X.Y.Z (MM/DD/YYYY)"
+  git shortlog $(git describe --tags --abbrev=0)..HEAD
+  git commit miepython/__init__.py CHANGELOG.rst -m 'Bump version to X.Y.Z'
+  git push
+
+# leave README.rst and CITATION.cff alone: the citation workflow
+# updates their version and date when the release is published
+
+# run sanity checks (after the bump, so the wheel carries the new version)
   make rcheck
 
-# lite need to wait about 10 minutes for the changes to propagate
+# lite needs about 10 minutes for the changes to propagate
   make lite-deploy
   open https://scottprahl.github.io/miepython/
-  
-# update the version in miepython/__init__.py
-  git commit miepython/__init__.py -m 'update version'
-  git push
-
-# update CHANGELOG.rst
-  git shortlog 3.0.0..HEAD
-  git commit CHANGELOG.rst -m 'update recent changes'
-  git push
 
 # create release tag on github
-  git tag 3.0.0
-  git push origin 3.0.0
+  git tag X.Y.Z
+  git push origin X.Y.Z
 
-# manually publish release at
-  open https://github.com/scottprahl/miepython
+# manually publish the release; publishing is what triggers
+# pypi.yaml (upload to PyPI) and citation.yaml (README/CITATION update)
+  open https://github.com/scottprahl/miepython/releases/new
+
+# pull the citation commit the workflow pushed
+  git pull
 
 # verify action success
+  open https://github.com/scottprahl/miepython/actions
   open https://pypi.org/project/miepython/
   open https://miepython.readthedocs.io
 

@@ -18,7 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          # a manual run has no release, so build the ref it was started from
+          ref: ${{ github.event.release.tag_name || github.ref }}
 
       - uses: actions/setup-python@v7
         with:

@@ -86,18 +86,18 @@ readme_images:
 	cd docs/images && $(RUN) python make_readme_images.py
 
 # The backend is chosen when miepython is first imported, so one pytest process
-# can only exercise one of them.  Run the suite once per backend; conftest.py
-# skips the files belonging to the other one.
+# can only exercise one of them for the high-level API, so run the suite once
+# per backend.  Kernel tests use the conftest fixture and cover both every time.
 .PHONY: test
 test: test-nojit test-jit
 
 .PHONY: test-nojit
 test-nojit:
-	MIEPYTHON_USE_JIT=0 $(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
+	MIEPYTHON_USE_JIT=0 $(RUN) pytest $(PYTEST_OPTS) tests
 
 .PHONY: test-jit
 test-jit:
-	MIEPYTHON_USE_JIT=1 $(RUN) pytest $(PYTEST_OPTS) tests --ignore=tests/test_all_notebooks.py
+	MIEPYTHON_USE_JIT=1 $(RUN) pytest $(PYTEST_OPTS) tests
 
 # Coverage needs both backends, and NUMBA_DISABLE_JIT lets coverage.py see inside
 # the njit bodies: without it mie_jit.py reports 11% however well it is tested.
