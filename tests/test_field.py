@@ -17,6 +17,10 @@ from miepython.bessel import d_riccati_bessel_h1, spherical_h1
 from miepython.core import wiscombe_terms
 from miepython.util import spherical_vector_to_cartesian
 
+# these physics checks are written in exp(-iωt): exp(+ikz) incidence, eps = conj(m)**2,
+# Bohren & Huffman eq. 4.74.  tests/test_time_convention.py checks that exp(+jωt) is the conjugate
+pytestmark = pytest.mark.usefixtures("minus_convention")
+
 
 @pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.1j])
 @pytest.mark.parametrize("n_env", [1.0, 1.33])
@@ -97,8 +101,9 @@ def test_e_far_phi_component_sign():
     amp = np.exp(jkr) / (-jkr)
 
     _er, e_theta, e_phi = e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi)[:, 0]
-    assert np.isclose(e_theta, np.conj(S2[0]) * amp * np.cos(phi))
-    assert np.isclose(e_phi, -np.conj(S1[0]) * amp * np.sin(phi))
+    # this module runs in exp(-iωt), where S1_S2 returns Bohren & Huffman's amplitudes
+    assert np.isclose(e_theta, S2[0] * amp * np.cos(phi))
+    assert np.isclose(e_phi, -S1[0] * amp * np.sin(phi))
 
 
 @pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.05j])

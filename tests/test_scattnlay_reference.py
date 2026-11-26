@@ -28,6 +28,9 @@ import pytest
 import miepython as mie
 from miepython.field import eh_near_cartesian
 
+# scattnlay works in exp(-iωt), so the fields are compared in that convention
+pytestmark = pytest.mark.usefixtures("minus_convention")
+
 DATA = pathlib.Path(__file__).resolve().parent.parent / "docs" / "data"
 METADATA = DATA / "scattnlay_reference_metadata.json"
 
@@ -167,3 +170,51 @@ def test_field_agrees_across_the_grid(case):
 
     assert np.max(e_err[off_surface]) < 2e-3
     assert np.max(h_err[off_surface]) < 2e-3
+
+
+def component_errors(grids, e_mie, h_mie):
+    """Largest complex Cartesian difference at each point, relative to the local field.
+
+    The magnitude comparison above cannot see a phase error, a conjugated field
+    included, so this compares the components themselves.
+    """
+    h_ref = (ETA0 / N_ENV) * grids["H"]
+    e_scale = np.sqrt(np.sum(np.abs(grids["E"]) ** 2, axis=0))
+    h_scale = np.sqrt(np.sum(np.abs(h_ref) ** 2, axis=0))
+    e_err = np.max(np.abs(e_mie - grids["E"]), axis=0) / np.maximum(e_scale, 1e-12)
+    h_err = np.max(np.abs(h_mie - h_ref), axis=0) / np.maximum(h_scale, 1e-12)
+    return e_err, h_err
+
+
+@grids_required
+@pytest.mark.parametrize("case", CASES)
+def test_complex_field_components_agree(case):
+    """Every complex E and H component matches scattnlay, phase included."""
+    grids, e_mie, h_mie = load_case(case)
+    e_err, h_err = component_errors(grids, e_mie, h_mie)
+
+    radius = D_SPHERE / 2
+    spacing = 2 * EXTENT / (NPTS - 1)
+    off_surface = np.abs(np.hypot(grids["X"], grids["Z"]) - radius) > spacing / 2
+
+    # medians are 1e-13 for E and 5e-10 for H, as for the magnitudes
+    assert np.median(e_err) < 1e-12
+    assert np.median(h_err) < 5e-9
+    # the absorbing case reaches 4.7e-3 one grid step from the surface
+    assert np.max(e_err[off_surface]) < 1e-2
+    assert np.max(h_err[off_surface]) < 1e-2
+
+
+@grids_required
+@pytest.mark.parametrize("case", CASES)
+def test_default_convention_is_the_conjugate_of_scattnlay(case):
+    """In exp(+jωt) the fields are the complex conjugates of scattnlay's exp(-iωt) ones."""
+    with mie.time_convention("+"):
+        grids, e_mie, h_mie = load_case(case)
+    e_err, h_err = component_errors(grids, np.conjugate(e_mie), np.conjugate(h_mie))
+    assert np.median(e_err) < 1e-12
+    assert np.median(h_err) < 5e-9
+
+    # and not equal to them unconjugated, so the check above means something
+    e_raw, _ = component_errors(grids, e_mie, h_mie)
+    assert np.median(e_raw) > 0.1

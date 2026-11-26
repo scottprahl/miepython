@@ -35,6 +35,7 @@ Normalized Mie scattering intensities for angles mu=cos(theta)::
 
 import numpy as np
 from ._backend import _S1_S2, an_bn, cn_dn, single_sphere
+from ._convention import _convert
 
 # not really needed but included for clarity
 __all__ = (
@@ -150,6 +151,10 @@ def coefficients(m, x, n_pole=0, internal=False):
     Notes:
         - If the imaginary part of the refractive index is positive, it is
           automatically corrected to its conjugate value to ensure a valid input.
+        - The coefficients follow the active time convention (see
+          ``miepython.set_time_convention``).  With the default exp(+jωt) they
+          are the conjugates of Bohren & Huffman's a_n and b_n; inside
+          ``miepython.time_convention("-")`` they are Bohren & Huffman's own.
         - Every returned coefficient is a real term; the arrays carry no padding.
 
     Raises:
@@ -164,9 +169,9 @@ def coefficients(m, x, n_pole=0, internal=False):
         >>> len(a), len(b)
         (3, 3)
         >>> print(f"{a[0]:.6e}")
-        3.333700e-05-1.973631e-04j
+        3.333700e-05+1.973631e-04j
         >>> print(f"{b[0]:.6e}")
-        6.672963e-08-2.754694e-07j
+        6.672963e-08+2.754694e-07j
 
         Keep only the dipole term for each of several spheres:
 
@@ -174,8 +179,13 @@ def coefficients(m, x, n_pole=0, internal=False):
         >>> a.shape
         (2, 1)
         >>> print(f"{a[0, 0]:.6f}")
-        0.447946-0.386652j
+        0.447946+0.386652j
     """
+    return _convert(_coefficients(m, x, n_pole, internal))
+
+
+def _coefficients(m, x, n_pole=0, internal=False):
+    """Return ``coefficients`` in exp(-iωt), whatever the active convention."""
     _check_m_x(m, x)
     mlen = np.size(m) if np.ndim(m) > 0 else 0
     xlen = np.size(x) if np.ndim(x) > 0 else 0
@@ -420,13 +430,22 @@ def S1_S2(m, x, mu, norm="albedo", n_pole=0):
             series raise a ValueError.
 
     Returns:
-        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)].  They
+        follow the active time convention: with the default exp(+jωt) they are
+        Wiscombe's MIEV0 amplitudes, the conjugates of Bohren & Huffman's, and
+        inside ``miepython.time_convention("-")`` they are Bohren & Huffman's.
 
     Raises:
         ValueError: if m or x is not finite, x is negative, or the real part of
             m is negative.  A perfect conductor is m.real == 0, not m.real < 0.
             Also if m or x is an array, since this describes one sphere.
     """
+    S1, S2 = _S1_S2_normalized(m, x, mu, norm, n_pole)
+    return _convert(S1), _convert(S2)
+
+
+def _S1_S2_normalized(m, x, mu, norm="albedo", n_pole=0):
+    """Return ``S1_S2`` in exp(-iωt), whatever the active convention."""
     _check_m_x(m, x)
     _check_one_sphere(m, x)
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
@@ -461,6 +480,12 @@ def phase_matrix(m, x, mu, norm="albedo", n_pole=0):
 
     Bohren and Huffman, *Absorption and Scattering of Light by Small Particles*,
     JOHN WILEY & SONS, page 112, (1983).
+
+    S11, S12 and S33 do not depend on the time convention, but S34 does, and so
+    does the handedness of the Stokes V it couples to.  With exp(-iωt), inside
+    ``miepython.time_convention("-")``, the matrix is Bohren & Huffman's
+    eq. 3.16 with ``p[2, 3] = S34`` and ``p[3, 2] = -S34``.  With the default
+    exp(+jωt) both elements change sign.
 
     The normalization is controlled by `norm` and should be one of
     ['albedo', 'one', '4pi', 'qext', 'qsca', 'bohren', or 'wiscombe']

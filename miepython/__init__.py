@@ -42,6 +42,21 @@ The scattering matrix
 
     mie.phase_matrix(m, x, mu)
 
+Time convention
+---------------
+
+Complex results (coefficients, S1 and S2, fields, the S34 element of the phase
+matrix) depend on whether the time dependence is written exp(+jωt) or exp(-iωt);
+the two are complex conjugates.  The default is exp(+jωt), which goes with the
+m = n - ik form of the refractive index and reproduces Wiscombe's MIEV0.  Bohren
+& Huffman, Jackson and scattnlay use exp(-iωt)::
+
+    mie.set_time_convention("-")        # for the rest of the session
+    with mie.time_convention("-"):      # or just for a block
+        a, b = mie.coefficients(m, x)
+
+Efficiencies, g and intensities are the same either way.
+
 Submodules
 ----------
 
@@ -90,6 +105,8 @@ from ._backend import single_sphere, small_conducting_sphere, small_sphere
 
 from .core import efficiencies, intensities, i_par, i_per, i_unpolarized
 from .core import efficiencies_mx, S1_S2, phase_matrix, coefficients
+
+from ._convention import get_time_convention, set_time_convention, time_convention
 
 from . import rayleigh
 
@@ -148,6 +165,9 @@ else:
 # scipy is installed, and a star-import must not depend on that.
 __all__ = (
     "rayleigh",
+    "get_time_convention",
+    "set_time_convention",
+    "time_convention",
     "intensities",
     "i_par",
     "i_per",

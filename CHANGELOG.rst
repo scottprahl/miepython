@@ -3,6 +3,35 @@ Changelog
 
 unreleased
 ----------
+*   **behaviour change:** one time convention for every complex result, chosen by
+    the new ``set_time_convention``, ``get_time_convention`` and the context
+    manager ``time_convention``.  The default is exp(+jωt), which goes with
+    m = n - ik and with Wiscombe's MIEV0; ``"-"`` gives exp(-iωt), the convention
+    of Bohren & Huffman, Jackson and scattnlay.  The two differ only by complex
+    conjugation, and efficiencies, g and intensities are the same in both.
+    Before, the package mixed them: ``S1_S2`` and ``phase_matrix`` were exp(+jωt)
+    while ``coefficients`` and every field function were exp(-iωt), which is
+    what let the ``e_far`` error below go unnoticed.  Under the default,
+
+    - ``S1_S2``, ``rayleigh.S1_S2`` and ``phase_matrix`` are unchanged;
+    - ``coefficients`` returns the conjugates of its previous values;
+    - ``e_near``, ``h_near``, ``eh_near``, their Cartesian forms and ``e_far``
+      return the conjugates of their previous fields, and a caller's ``abcd``
+      must come from ``coefficients`` under the same convention;
+    - the ``miepython.vsh`` harmonics use h_n^(2) outside the sphere, and take
+      ``m_index`` in the form that matches the active convention.
+
+    Inside ``time_convention("-")`` the coefficients, fields and harmonics match
+    3.3.1, while ``S1_S2`` returns Bohren & Huffman's amplitudes and
+    ``phase_matrix`` puts S34 where their eq. 3.16 does.  The raw kernels
+    (``an_bn``, ``cn_dn``, ``_S1_S2``) ignore the setting and always return
+    exp(-iωt); ``_S1_S2`` no longer conjugates its sum a second time
+*   compare the scattnlay reference fields component by component, phase included,
+    rather than only as magnitudes, which could not see a conjugated field
+*   stop flipping the sign of S34 by hand in ``docs/07_algorithm.ipynb``: Bohren's
+    sample calculation now runs inside ``time_convention("-")`` and matches his
+    table directly.  ``docs/01_basics.ipynb`` explains both conventions, and
+    ``docs/14_boundary_conditions.ipynb`` uses eps = n**2 for exp(+jωt)
 *   fix the phase of ``e_far`` (#36, thanks @rcgiri-physics and @antonsoo).  It
     conjugated the whole field, outgoing ``exp(ikr)`` included, so the radial phase
     ran backwards for the exp(-iωt) convention, and ``E_phi`` had the wrong sign

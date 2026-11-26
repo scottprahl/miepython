@@ -18,6 +18,9 @@ from miepython.bessel import (
 )
 from miepython.util import cs
 
+# the references here (Bohren & Huffman's tables, bhmie, PyMieScatt) are exp(-iωt)
+pytestmark = pytest.mark.usefixtures("minus_convention")
+
 
 class Test1:
     """Regression test cases."""
