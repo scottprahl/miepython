@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 type: software
-message: If you use this software, please cite it as below.
+message: If you use this software, please cite it using the DOI https://doi.org/10.5281/zenodo.7949263
 title: 'miepython: Pure python calculation of Mie scattering'
 version: 3.4.0
 doi: 10.5281/zenodo.7949263
