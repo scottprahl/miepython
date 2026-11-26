@@ -1,8 +1,8 @@
 Changelog
 =========
 
-unreleased
-----------
+3.4.0 (11/26/2026)
+------------------
 *   treat zero-dimensional NumPy arrays for ``m`` and ``x`` as scalar inputs
     throughout the public Mie API, including the JIT backend
 *   return length-one arrays from the Rayleigh angular functions when ``mu`` is

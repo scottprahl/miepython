@@ -198,7 +198,7 @@ __all__ = (
     "_D_downwards",
 )
 
-__version__ = "3.3.1"
+__version__ = "3.4.0"
 __author__ = "Scott Prahl"
 __email__ = "scott.prahl@oit.edu"
 __copyright__ = "2017-2026, Scott Prahl"
