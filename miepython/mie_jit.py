@@ -211,6 +211,9 @@ def _an_bn_nb(m, x, n_pole=0):
     Returns:
         a, b: arrays of Mie coefficents An and Bn, one entry per order,
         with no padding.  ``_cn_dn`` returns the same number of terms.
+        They are in the exp(-iωt) convention of Bohren & Huffman: the series is
+        built with m = n - ik and xi = x h_n^(2), which is exp(+jωt), and the
+        conjugate is returned.
     """
     # make sure sign of imaginary part is negative
     m_re = m.real
@@ -275,6 +278,7 @@ def _an_bn_nb(m, x, n_pole=0):
             chi_nm1 = chi_n
             chi_n = chi
 
+    # computed in exp(+jωt); every kernel returns exp(-iωt)
     return np.conjugate(a), np.conjugate(b)
 
 
@@ -294,6 +298,7 @@ def _cn_dn_nb(m, x, n_pole):
 
     Returns:
         (np.ndarray, np.ndarray): Arrays of c_n and d_n coefficients.
+            Like a_n and b_n they are returned in the exp(-iωt) convention.
     """
     # make sure sign of imaginary part is negative
     m_re = m.real
@@ -404,6 +409,8 @@ def _S1_S2_nb(m, x, mu, n_pole):
 
     Returns:
         S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+        in the exp(-iωt) convention of Bohren & Huffman, like every kernel.
+        The public ``S1_S2`` converts them to the active time convention.
     """
     a, b = _an_bn_nb(m, x, 0)
     N = len(a)
@@ -437,7 +444,8 @@ def _S1_S2_nb(m, x, mu, n_pole):
             S1[k] = scale[j] * (pi[j] * a[j] + tau[j] * b[j])
             S2[k] = scale[j] * (tau[j] * a[j] + pi[j] * b[j])
 
-    return np.conjugate(S1), np.conjugate(S2)
+    # a and b are already exp(-iωt), so the sums need no further conjugation
+    return S1, S2
 
 
 @njit((complex128, float64), cache=True)

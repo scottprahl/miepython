@@ -43,6 +43,9 @@ from miepython.vsh import M_odd, M_even, N_odd, N_even
 from miepython import vsh
 from miepython.field import _vsh_components_base  # the duplicate implementation
 
+# the reference expressions here use h_n^(1), the outgoing wave in exp(-iωt)
+pytestmark = pytest.mark.usefixtures("minus_convention")
+
 # Constants for testing
 LAMBDA0_DEFAULT = 500e-9  # wavelength in meters
 D_SPHERE_DEFAULT = 1e-6  # sphere diameter in meters

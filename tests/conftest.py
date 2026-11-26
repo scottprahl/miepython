@@ -20,6 +20,12 @@ only one copy.  Prefer it over writing a ``test_jit*``/``test_nojit*`` pair.
 Tests that go through the high-level API in ``core.py`` cannot use the fixture,
 but ``core.py`` holds no backend-specific code, so one copy of those run under
 both passes is enough.
+
+The time convention is process-wide state, so ``_default_time_convention``
+puts it back to the default after every test, and a test that changes it cannot
+leak into the next one.  Modules validated against exp(-iωt) references (Bohren
+& Huffman's equations, scattnlay) opt into that convention with
+``pytestmark = pytest.mark.usefixtures("minus_convention")``.
 """
 
 from types import SimpleNamespace
@@ -68,6 +74,21 @@ def kernels(request):
     for name in SHARED_NAMES:
         setattr(namespace, name.lstrip("_"), getattr(module, name))
     return namespace
+
+
+@pytest.fixture(autouse=True)
+def _default_time_convention():
+    """Run every test from the default convention and restore it afterwards."""
+    miepython.set_time_convention("+")
+    yield
+    miepython.set_time_convention("+")
+
+
+@pytest.fixture
+def minus_convention():
+    """Run a test in exp(-iωt), the convention of Bohren & Huffman and scattnlay."""
+    with miepython.time_convention("-"):
+        yield
 
 
 def pytest_report_header(config):

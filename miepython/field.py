@@ -64,9 +64,15 @@ Reuse precomputed Mie coefficients for repeated field evaluations:
 
 Conventions
 -----------
-- Phasor time dependence: ``exp(-i * omega * t)``.
+- Phasor time dependence: the active time convention, ``exp(+j * omega * t)`` by
+  default or ``exp(-i * omega * t)`` inside ``miepython.time_convention("-")``.
+  Every field returned here is the complex conjugate of the field in the other
+  convention.  The calculation itself is done in ``exp(-i * omega * t)`` and
+  converted on return, and a caller's ``abcd`` is converted on the way in, so
+  ``abcd`` must come from ``miepython.coefficients`` under the same convention.
 - Incident plane wave: propagation along ``+z``, ``E`` along ``+x``, ``H`` along ``+y``,
-  incident amplitude ``E0 = 1``.
+  incident amplitude ``E0 = 1``.  It is ``exp(-jkz)`` for exp(+jωt) and
+  ``exp(+ikz)`` for exp(-iωt).
 - Spherical coordinates: ``theta`` from ``+z`` and ``phi`` from ``+x`` toward ``+y``.
 - ``lambda0`` is vacuum wavelength.
 - ``n_env`` is the surrounding-medium index and ``m_sphere`` is the sphere index;
@@ -82,7 +88,8 @@ import numpy as np
 from scipy.special import factorial2, spherical_jn
 from ._backend import D_calc, pi_tau
 from .bessel import spherical_h1
-from .core import S1_S2, _check_m_x, coefficients, wiscombe_terms
+from ._convention import _convert
+from .core import _S1_S2_normalized, _check_m_x, _coefficients, wiscombe_terms
 from .util import cartesian_to_spherical, spherical_vector_to_cartesian
 
 __all__ = (
@@ -208,20 +215,26 @@ def e_far(lambda0, d_sphere, m_sphere, n_env, r, theta, phi):
     Returns:
         ndarray: Complex spherical components ``[E_r, E_theta, E_phi]`` with
             shape ``(3, ...)`` following broadcasted input shape.
+
+    Notes:
+        This is Bohren & Huffman eq. 4.74 for a unit x-polarized incident wave,
+        ``E_theta = S2 cos(phi) exp(ikr)/(-ikr)`` and
+        ``E_phi = -S1 sin(phi) exp(ikr)/(-ikr)``, evaluated in exp(-iωt) with
+        Bohren & Huffman's own S1 and S2 and then converted, like every other
+        result, to the active time convention.  It is the leading term of
+        ``e_near(..., include_incident=False)`` and differs from it by O(1/kr).
     """
     x = np.pi * d_sphere * n_env / lambda0
     m_rel = m_sphere / n_env
     jkr = 1j * 2 * np.pi * n_env * r / lambda0
     amp = np.exp(jkr) / (-jkr)
 
-    S1, S2 = S1_S2(m_rel, x, np.cos(theta), norm="wiscombe")
+    S1, S2 = _S1_S2_normalized(m_rel, x, np.cos(theta), norm="wiscombe")
 
     E_r = np.zeros_like(S1, dtype=complex)
     E_theta = S2 * amp * np.cos(phi)
-    E_phi = S1 * amp * np.sin(phi)
-    E_theta = np.conjugate(-E_theta)
-    E_phi = np.conjugate(-E_phi)
-    return np.array([E_r, E_theta, E_phi])
+    E_phi = -S1 * amp * np.sin(phi)
+    return _convert(np.array([E_r, E_theta, E_phi]))
 
 
 def _incident_e_spherical(lambda0, n_env, r, theta, phi, amplitude=1.0):
@@ -296,8 +309,19 @@ def _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole):
         # 3.6e-6 with one extra order and 3.2e-6 with two, then flattens out, so
         # two is where it stops being worth more terms.
         n_pole = wiscombe_terms(x) + 2
-    a, b, c, d = coefficients(m_rel, x, n_pole=n_pole, internal=True)
+    a, b, c, d = _coefficients(m_rel, x, n_pole=n_pole, internal=True)
     return np.array([a, b, c, d])
+
+
+def _internal_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole, abcd):
+    """Return exp(-iωt) coefficients, computing them or converting the caller's.
+
+    A caller's ``abcd`` comes from ``miepython.coefficients`` and so is in the
+    active convention; everything in this module works in exp(-iωt).
+    """
+    if abcd is None:
+        return _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+    return _convert(np.asarray(abcd))
 
 
 def _near_fields(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident, want_e, want_h):
@@ -351,8 +375,8 @@ def _near_fields(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
         if not group.any():
             continue
 
-        # miepython coefficients follow the n-ik convention and are conjugated
-        # internally; use conjugated sphere index so internal fields are consistent.
+        # this module works in exp(-iωt), where an absorbing index is n + ik, so the
+        # caller's n - ik is conjugated for the interior
         m_index = np.conjugate(m_sphere) if inside else n_env
         M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
             n_terms, lambda0, m_index, r_flat[group], theta_flat[group], inside
@@ -445,17 +469,17 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
-            If provided, ``n_pole`` is ignored.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``
+            from ``miepython.coefficients(..., internal=True)`` under the same time
+            convention.  If provided, ``n_pole`` is ignored.
 
     Returns:
         ndarray: Spherical electric components ``[E_r, E_theta, E_phi]`` with
             shape ``(3, ...)``.
     """
-    if abcd is None:
-        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+    abcd = _internal_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole, abcd)
 
-    return _near_fields(
+    e_sph = _near_fields(
         abcd,
         lambda0,
         d_sphere,
@@ -468,6 +492,7 @@ def e_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         want_e=True,
         want_h=False,
     )[0]
+    return _convert(e_sph)
 
 
 def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=True, n_pole=0, abcd=None):
@@ -485,17 +510,17 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
-            If provided, ``n_pole`` is ignored.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``
+            from ``miepython.coefficients(..., internal=True)`` under the same time
+            convention.  If provided, ``n_pole`` is ignored.
 
     Returns:
         ndarray: Spherical magnetic components ``[H_r, H_theta, H_phi]`` with
             shape ``(3, ...)``.
     """
-    if abcd is None:
-        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+    abcd = _internal_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole, abcd)
 
-    return _near_fields(
+    h_sph = _near_fields(
         abcd,
         lambda0,
         d_sphere,
@@ -508,6 +533,7 @@ def h_near(lambda0, d_sphere, m_sphere, n_env, r, theta, phi, include_incident=T
         want_e=False,
         want_h=True,
     )[1]
+    return _convert(h_sph)
 
 
 def eh_near(
@@ -536,17 +562,17 @@ def eh_near(
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
-            If provided, ``n_pole`` is ignored.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``
+            from ``miepython.coefficients(..., internal=True)`` under the same time
+            convention.  If provided, ``n_pole`` is ignored.
 
     Returns:
         tuple[ndarray, ndarray]: Tuple ``(E, H)`` in spherical components,
             each with shape ``(3, ...)``.
     """
-    if abcd is None:
-        abcd = _coefficients_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole)
+    abcd = _internal_abcd(lambda0, d_sphere, m_sphere, n_env, n_pole, abcd)
 
-    return _near_fields(
+    e_sph, h_sph = _near_fields(
         abcd,
         lambda0,
         d_sphere,
@@ -559,6 +585,7 @@ def eh_near(
         want_e=True,
         want_h=True,
     )
+    return _convert(e_sph), _convert(h_sph)
 
 
 def e_near_cartesian(
@@ -587,7 +614,8 @@ def e_near_cartesian(
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``,
+            in the active time convention.
 
     Returns:
         ndarray: Cartesian electric components ``[E_x, E_y, E_z]``.
@@ -623,7 +651,8 @@ def h_near_cartesian(
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``,
+            in the active time convention.
 
     Returns:
         ndarray: Cartesian magnetic components ``[H_x, H_y, H_z]``.
@@ -659,7 +688,8 @@ def eh_near_cartesian(
         n_pole (int): Number of multipole terms to keep. ``0`` (the default) keeps
             two more than Wiscombe's criterion, which converges the near field at
             the sphere surface roughly five times closer than the criterion alone.
-        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``.
+        abcd (ndarray or None): Optional precomputed coefficients ``[a, b, c, d]``,
+            in the active time convention.
 
     Returns:
         tuple[ndarray, ndarray]: Tuple ``(E_xyz, H_xyz)`` where each array is

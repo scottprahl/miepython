@@ -24,8 +24,12 @@ Bessel Function Selection:
         - For points inside the sphere (r < d_sphere/2), the regular spherical
           Bessel functions (``spherical_jn``) are used.
         - For points outside the sphere (r >= d_sphere/2), the spherical Hankel
-          functions of the first kind (``spherical_h1``) are employed to represent
-          the radiating field.
+          function that radiates outward in the active time convention is used:
+          the second kind (``spherical_h2``) for the default exp(+jωt), the first
+          kind (``spherical_h1``) inside ``miepython.time_convention("-")``.
+
+    ``m_index`` is used exactly as given, so pass an absorbing index in the form
+    that matches the active convention: n - ik for exp(+jωt), n + ik for exp(-iωt).
 
 Functions:
 
@@ -63,7 +67,8 @@ Additional Utility Functions:
 
 import numpy as np
 from scipy.special import spherical_jn, lpmv, factorial2
-from .bessel import spherical_h1, d_riccati_bessel_h1
+from .bessel import spherical_h1, spherical_h2, d_riccati_bessel_h1, d_riccati_bessel_h2
+from ._convention import get_time_convention
 from ._backend import D_calc
 
 __all__ = (
@@ -138,6 +143,16 @@ def mie_tau(n, theta, deg=False):
     return ((n + 1) * x * lpmv(1, n, x) - n * lpmv(1, n + 1, x)) / np.sqrt(1 - x * x)
 
 
+def _outgoing_h(n, rho):
+    """Spherical Hankel function of an outgoing wave in the active time convention."""
+    return spherical_h2(n, rho) if get_time_convention() == "+" else spherical_h1(n, rho)
+
+
+def _outgoing_d_riccati_h(n, rho):
+    """Derivative of the outgoing Riccati-Hankel function in the active time convention."""
+    return d_riccati_bessel_h2(n, rho) if get_time_convention() == "+" else d_riccati_bessel_h1(n, rho)
+
+
 def M_base(n, rho, theta, inside):
     """
     Compute the non-phi part of magnetic vector spherical harmonic (m=1).
@@ -154,7 +169,7 @@ def M_base(n, rho, theta, inside):
     if inside:
         factor = spherical_jn(n, rho)
     else:
-        factor = spherical_h1(n, rho)
+        factor = _outgoing_h(n, rho)
 
     M_r = 0
     M_theta = mie_pi(n, theta) * factor
@@ -325,8 +340,8 @@ def N_base(n, m_index, kr, theta, inside):
             factor2 = factor1 * Dn
             factor1 /= rho
     else:
-        factor1 = spherical_h1(n, rho) / rho
-        factor2 = d_riccati_bessel_h1(n, rho) / rho
+        factor1 = _outgoing_h(n, rho) / rho
+        factor2 = _outgoing_d_riccati_h(n, rho) / rho
 
     N_r = n * (n + 1) * np.sin(theta) * mie_pi(n, theta) * factor1
     N_theta = mie_tau(n, theta) * factor2

@@ -119,6 +119,7 @@ Examples:
 
 import numpy as np
 
+from ._convention import _convert
 from .core import _check_m_x, _check_one_sphere
 from .core import normalization_factor as core_normalization_factor
 
@@ -248,7 +249,8 @@ def S1_S2(m, x, mu, norm="albedo"):
         norm: (optional) string describing scattering function normalization
 
     Returns:
-        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)]
+        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)], in the
+        active time convention, as for ``miepython.S1_S2``
 
     Raises:
         ValueError: if m or x is not finite, x is negative, or the real part of
@@ -278,7 +280,10 @@ def S1_S2(m, x, mu, norm="albedo"):
     S1 /= normalization
     S2 /= normalization
 
-    return S1, S2
+    # a1 above is written for m = n - ik in exp(+jωt), so these amplitudes are
+    # exp(+jωt) already; conjugate to the internal exp(-iωt) and then convert to
+    # whichever convention is active, exactly as core.S1_S2 does
+    return _convert(np.conjugate(S1)), _convert(np.conjugate(S2))
 
 
 def i_per(m, x, mu, norm="albedo"):
