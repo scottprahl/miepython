@@ -249,6 +249,18 @@ def test_phase_matrix_shape_for_scalar_mu():
     assert rayleigh.phase_matrix(1.5, x, mu).shape == (4, 4, mu.size)
 
 
+@pytest.mark.parametrize("angle", [0.5, [0.5], np.array([0.5])], ids=["scalar", "list", "array"])
+def test_angular_results_have_the_same_shape_as_full_mie(angle):
+    """Rayleigh can replace the full angular API without changing result shapes."""
+    for name in ("S1_S2", "i_per", "i_par", "i_unpolarized"):
+        result = getattr(rayleigh, name)(1.5 - 0.1j, x, angle)
+        reference = getattr(mie, name)(1.5 - 0.1j, x, angle)
+        if name == "S1_S2":
+            assert all(np.shape(item) == np.shape(other) == (1,) for item, other in zip(result, reference))
+        else:
+            assert np.shape(result) == np.shape(reference) == (1,)
+
+
 @pytest.mark.parametrize("norm", ["wiscombe", "albedo"])
 def test_sign_of_the_imaginary_index_does_not_matter(norm):
     """The convention is m = n - ik, so a positive imaginary part is conjugated."""

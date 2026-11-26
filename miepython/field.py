@@ -369,15 +369,17 @@ def _near_fields(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
     e_out = np.empty((3, r_flat.size), dtype=complex) if want_e else None
     h_out = np.empty((3, r_flat.size), dtype=complex) if want_h else None
 
+    # The coefficient kernels treat either imaginary sign as absorption. Use the
+    # same physical index for the interior radial functions and H-field factor.
+    m_absorbing = np.conjugate(m_sphere) if np.imag(m_sphere) > 0 else m_sphere
     is_inside = r_flat < d_sphere / 2
     for inside in (True, False):
         group = is_inside if inside else ~is_inside
         if not group.any():
             continue
 
-        # this module works in exp(-iωt), where an absorbing index is n + ik, so the
-        # caller's n - ik is conjugated for the interior
-        m_index = np.conjugate(m_sphere) if inside else n_env
+        # This module works in exp(-iωt), where an absorbing index is n + ik.
+        m_index = np.conjugate(m_absorbing) if inside else n_env
         M_the_base, M_phi_base, N_r_base, N_the_base, N_phi_base = _vsh_components_base(
             n_terms, lambda0, m_index, r_flat[group], theta_flat[group], inside
         )
@@ -418,7 +420,7 @@ def _near_fields(abcd, lambda0, d_sphere, m_sphere, n_env, r, theta, phi, includ
                 cos_phi * N_phi_base,
             )
             if inside:
-                m_rel = np.conjugate(m_sphere / n_env)
+                m_rel = m_index / n_env
                 h_rad = m_rel * _sum_two_scaled_terms(scale, d, M_even_rad, -1.0 + 0.0j, c, N_odd_rad, -1.0j)
                 h_the = m_rel * _sum_two_scaled_terms(scale, d, M_even_the, -1.0 + 0.0j, c, N_odd_the, -1.0j)
                 h_phi = m_rel * _sum_two_scaled_terms(scale, d, M_even_phi, -1.0 + 0.0j, c, N_odd_phi, -1.0j)

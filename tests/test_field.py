@@ -273,6 +273,25 @@ def test_h_boundary_normal_flux_continuity(m_sphere, n_env, theta):
     np.testing.assert_allclose(h_in[0], h_out[0], rtol=3e-3, atol=2e-6)
 
 
+@pytest.mark.parametrize("convention", ["+", "-"])
+@pytest.mark.parametrize("precomputed", [False, True])
+def test_absorbing_index_sign_does_not_change_near_fields(convention, precomputed):
+    """Either sign of the input index gives the same interior E and H fields."""
+    lambda0, d_sphere, n_env = 0.62, 0.81, 1.18
+    m_absorbing = 1.62 - 0.05j
+    r = np.array([0.2, d_sphere / 2 - 1e-7, d_sphere / 2 + 1e-7])
+    kwargs = {}
+    with mie.time_convention(convention):
+        if precomputed:
+            x = np.pi * d_sphere * n_env / lambda0
+            kwargs["abcd"] = mie.coefficients(m_absorbing / n_env, x, internal=True)
+        negative = eh_near(lambda0, d_sphere, m_absorbing, n_env, r, 1.1, 0.4, **kwargs)
+        positive = eh_near(lambda0, d_sphere, np.conjugate(m_absorbing), n_env, r, 1.1, 0.4, **kwargs)
+
+    for field_negative, field_positive in zip(negative, positive):
+        np.testing.assert_allclose(field_positive, field_negative, rtol=1e-12, atol=1e-12)
+
+
 @pytest.mark.parametrize("m_sphere", [1.5, 1.5 - 0.05j])
 @pytest.mark.parametrize("n_env", [1.0, 1.33])
 def test_eh_near_matches_individual_calls(m_sphere, n_env):

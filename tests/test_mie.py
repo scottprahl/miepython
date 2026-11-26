@@ -892,6 +892,20 @@ class TestArrayDispatchAndErrors:
         for i, m_one in enumerate(m_arr):
             np.testing.assert_allclose(by_index[0][i], mie.coefficients(m_one, 2.0, n_pole=3)[0], rtol=1e-13)
 
+    @pytest.mark.parametrize("wrap_m,wrap_x", [(True, False), (False, True), (True, True)])
+    def test_zero_dimensional_arrays_behave_like_scalars(self, wrap_m, wrap_x):
+        """A NumPy scalar container must reach the kernels as a scalar on either backend."""
+        m, x = 1.5 - 0.1j, 2.0
+        m_in = np.array(m) if wrap_m else m
+        x_in = np.array(x) if wrap_x else x
+
+        np.testing.assert_allclose(mie.coefficients(m_in, x_in, internal=True), mie.coefficients(m, x, internal=True))
+        np.testing.assert_allclose(mie.efficiencies_mx(m_in, x_in), mie.efficiencies_mx(m, x))
+        np.testing.assert_allclose(mie.S1_S2(m_in, x_in, 0.5), mie.S1_S2(m, x, 0.5))
+        assert mie.core.normalization_factor(m_in, x_in, "albedo") == pytest.approx(
+            mie.core.normalization_factor(m, x, "albedo")
+        )
+
     def test_efficiencies_mx_rejects_mismatched_array_lengths(self):
         """Same rule for the efficiencies."""
         with pytest.raises(RuntimeError, match="same length"):

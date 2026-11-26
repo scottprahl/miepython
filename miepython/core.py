@@ -119,6 +119,11 @@ def _check_one_sphere(m, x):
         raise ValueError("this function takes one sphere, so m and x must be scalars; loop over spheres for more")
 
 
+def _scalarize_0d(value):
+    """Pass a zero-dimensional NumPy array to scalar kernels as a scalar."""
+    return value.item() if isinstance(value, np.ndarray) and value.ndim == 0 else value
+
+
 def coefficients(m, x, n_pole=0, internal=False):
     """
     Computes the Mie coefficients for a sphere.
@@ -126,7 +131,7 @@ def coefficients(m, x, n_pole=0, internal=False):
     This function calculates the Mie coefficients for electromagnetic scattering
     by a sphere. It supports both single values and arrays for the refractive
     index and size parameter. For arrays, the lengths of `m` and `x` must match.
-    If the length of `m` or `x` is zero, the function assumes scalar values.
+    Zero-dimensional NumPy arrays are treated as scalar values.
 
     If `n_pole > 0`, the function returns only the 1 to nth multipole coefficients
     for each input.
@@ -187,6 +192,7 @@ def coefficients(m, x, n_pole=0, internal=False):
 def _coefficients(m, x, n_pole=0, internal=False):
     """Return ``coefficients`` in exp(-iωt), whatever the active convention."""
     _check_m_x(m, x)
+    m, x = _scalarize_0d(m), _scalarize_0d(x)
     mlen = np.size(m) if np.ndim(m) > 0 else 0
     xlen = np.size(x) if np.ndim(x) > 0 else 0
 
@@ -297,6 +303,7 @@ def efficiencies_mx(m, x, n_pole=0, e_field=True):
         known rather than the size parameter.
     """
     _check_m_x(m, x)
+    m, x = _scalarize_0d(m), _scalarize_0d(x)
 
     # ensure imaginary part of refractive index is negative
     if np.isscalar(m):
@@ -359,6 +366,7 @@ def normalization_factor(m, x, norm_str, efficiency_source=_mie_efficiencies):
     Returns:
         scaling factor needed for scattering function
     """
+    m, x = _scalarize_0d(m), _scalarize_0d(x)
     factor = None
     norm = norm_str.lower()
 
@@ -448,6 +456,7 @@ def _S1_S2_normalized(m, x, mu, norm="albedo", n_pole=0):
     """Return ``S1_S2`` in exp(-iωt), whatever the active convention."""
     _check_m_x(m, x)
     _check_one_sphere(m, x)
+    m, x = _scalarize_0d(m), _scalarize_0d(x)
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 

@@ -245,12 +245,14 @@ def S1_S2(m, x, mu, norm="albedo"):
     Args:
         m: the complex index of refraction of the sphere
         x: the size parameter of the sphere
-        mu: the angles, cos(theta), to calculate scattering amplitudes
+        mu: the angles, cos(theta), to calculate scattering amplitudes. A scalar
+            is treated as one angle and yields a length-one array.
         norm: (optional) string describing scattering function normalization
 
     Returns:
-        S1, S2: the scattering amplitudes at each angle mu [sr**(-0.5)], in the
-        active time convention, as for ``miepython.S1_S2``
+        S1, S2: length-one or longer arrays of scattering amplitudes at each
+        angle mu [sr**(-0.5)], in the active time convention, as for
+        ``miepython.S1_S2``
 
     Raises:
         ValueError: if m or x is not finite, x is negative, or the real part of
@@ -259,6 +261,7 @@ def S1_S2(m, x, mu, norm="albedo"):
     """
     _check_m_x(m, x)
     _check_one_sphere(m, x)
+    mu = np.atleast_1d(np.asarray(mu, dtype=float))
     if np.imag(m) > 0:  # ensure imaginary part of refractive index is negative
         m = np.conj(m)
 
